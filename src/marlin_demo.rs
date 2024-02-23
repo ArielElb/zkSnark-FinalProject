@@ -107,15 +107,13 @@ mod test {
     use blake2::Blake2s;
     use ark_marlin::Marlin;
 
-
-
     #[test]
     fn test_marlin_multi_circuit_cubic_multiply() {
         type MultiPC = MarlinKZG10<Bls12_381, DensePolynomial<BlsFr>>;
         type MarlinInst = Marlin<BlsFr, MultiPC, Blake2s>;
         
         // use trace  to print the trace of the circuit
-        
+
 
         let num_constraints: usize = 24;
         let num_variables: usize = 24;
