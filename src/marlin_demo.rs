@@ -112,8 +112,6 @@ mod test {
         type MultiPC = MarlinKZG10<Bls12_381, DensePolynomial<BlsFr>>;
         type MarlinInst = Marlin<BlsFr, MultiPC, Blake2s>;
         
-        // use trace  to print the trace of the circuit
-
 
         let num_constraints: usize = 24;
         let num_variables: usize = 24;
