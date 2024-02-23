@@ -126,6 +126,8 @@ mod marlin {
     use rand_chacha::ChaChaRng;
 
     type MultiPC = MarlinKZG10<Bls12_381, DensePolynomial<Fr>>;
+    // blake2s is used for the Fiat-Shamir transform - a hash function
+
     type FS = SimpleHashFiatShamirRng<Blake2s, ChaChaRng>;
     type MarlinInst = Marlin<Fr, MultiPC, FS>;
 
@@ -154,6 +156,7 @@ mod marlin {
 
             let proof = MarlinInst::prove(&index_pk, circ, rng).unwrap();
             println!("Called prover");
+            proof.print_size_info();
 
             assert!(MarlinInst::verify(&index_vk, &[c, d], &proof, rng).unwrap());
             println!("Called verifier");
