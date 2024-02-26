@@ -23,7 +23,6 @@ impl<F: Field> ConstraintSynthesizer<F> for CubicDemoCircuit<F> {
         // allocate witness x
         let x_val = self.x;
         let x = cs.new_witness_variable(|| x_val.ok_or(SynthesisError::AssignmentMissing))?;
-
         // x * x = tmp_1, allocate tmp_1
         let tmp_1_val = x_val.map(|e| e.square());
         let tmp_1 =
