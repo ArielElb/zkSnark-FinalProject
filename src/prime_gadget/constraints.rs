@@ -19,12 +19,7 @@ pub struct ParamTypeVar<ConstraintF: PrimeField> {
     pub inner: FpVar<ConstraintF>,
 }
 
-// TODO remove it
-impl<F: PrimeField> ParamTypeVar<F> {
-    pub fn new(inner: FpVar<F>) -> Self {
-        Self { inner }
-    }
-}
+
 
 impl<ConstraintF: PrimeField> AllocVar<ParamType<ConstraintF>, ConstraintF>
     for ParamTypeVar<ConstraintF>

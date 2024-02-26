@@ -5,6 +5,7 @@ use ark_relations::{
 };
 
 
+
 // verifier wants to prove that she knows some x such that x^3 + x + 5 == 35
 // or more general x^3 + x + 5 == (a public value)
 struct CubicDemoCircuit<F: Field> {
@@ -99,6 +100,8 @@ impl<ConstraintF: Field> ConstraintSynthesizer<ConstraintF> for MultiplyDemoCirc
 #[cfg(test)]
 mod test {
     use super::*;
+    // bls12_381 is a pairing-friendly elliptic curve
+    // Fr is the base field of bls12_381
     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
     use ark_poly::univariate::DensePolynomial;
     use ark_poly_commit::marlin_pc::MarlinKZG10;

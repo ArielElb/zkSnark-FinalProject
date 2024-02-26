@@ -7,10 +7,6 @@ use super::{CubicRootTrait, ParamType, SolutionDemo};
 
 // r1cs constraints
 
-
-
-
-
 pub trait CubicRootGadgetTrait<S: CubicRootTrait, ConstraintF: Field> {
     type ParamTypeVar: AllocVar<S::ParamType, ConstraintF>;
     fn verify(&self, y: &Self::ParamTypeVar) -> Result<Boolean<ConstraintF>, SynthesisError>;
