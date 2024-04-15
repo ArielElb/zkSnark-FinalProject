@@ -10,11 +10,12 @@ pub struct PrimeCircut<ConstraintF: PrimeField>{
     k: usize,
 }
 //<ConstraintF: PrimeField>
-pub fn miller_rabin_test2(n: u64, k: usize) -> bool{
-    if n == 2{
+pub fn miller_rabin_test2(n: BigUint, k: usize) -> bool{
+    let two: BigUint = 2.to_biguint().unwrap();
+    if n.eq(&two){
         return true;
     }
-    if n%2== 0 {
+    if n.is_even() {
         return false;
     }
     let modulus = <F as PrimeField>::MODULUS;
@@ -26,7 +27,6 @@ pub fn miller_rabin_test2(n: u64, k: usize) -> bool{
     let n_minus_one = n_bigint.clone() - one.clone();
     let mut rng = rand::thread_rng();
     let mut s = 0;
-    let two = 2.to_biguint().unwrap();
     let mut zero = 0.to_biguint().unwrap();
 
 
@@ -71,11 +71,11 @@ mod tests {
     use rand_chacha::ChaChaCore;
     #[test]
     fn test_prime_native() {
-        assert!(!miller_rabin_test2(10, 1));
-        assert!(miller_rabin_test2(7, 1));
-        assert!(miller_rabin_test2(11, 1));
-        assert!(!miller_rabin_test2(15, 1));
-        assert!(!miller_rabin_test2(21, 1))
+        assert!(!miller_rabin_test2(10.to_biguint().unwrap(), 1));
+        assert!(miller_rabin_test2(7.to_biguint().unwrap(), 1));
+        assert!(miller_rabin_test2(11.to_biguint().unwrap(), 1));
+        assert!(!miller_rabin_test2(15.to_biguint().unwrap(), 1));
+        assert!(!miller_rabin_test2(21.to_biguint().unwrap(), 1))
     }
 
 }
