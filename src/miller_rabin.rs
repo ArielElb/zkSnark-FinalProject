@@ -1,13 +1,8 @@
 use std::ops::Div;
-
 use ark_ff::{PrimeField};   
-use ark_relations::r1cs::{SynthesisError, ConstraintSystem,ConstraintSynthesizer,ConstraintSystemRef};
 use ark_r1cs_std::fields::fp::FpVar;
-use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
-use rand::{thread_rng};
-use sha2::Sha256;
 use ark_bls12_381::Fq as F;
-use num_bigint::{BigUint, RandBigInt, ToBigInt, ToBigUint};
+use num_bigint::{BigUint, RandBigInt, ToBigUint};
 use num_integer::Integer;
 
 pub struct PrimeCircut<ConstraintF: PrimeField>{
@@ -15,7 +10,7 @@ pub struct PrimeCircut<ConstraintF: PrimeField>{
     k: usize,
 }
 //<ConstraintF: PrimeField>
-fn miller_rabin_test2(n: u64, k: usize) -> bool{
+pub fn miller_rabin_test2(n: u64, k: usize) -> bool{
     if n == 2{
         return true;
     }
