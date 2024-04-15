@@ -1,22 +1,15 @@
-use std::{borrow::Borrow, ops::Div};
+use std::ops::Div;
 
-use ark_ff::{BigInt, One, PrimeField};   
-use ark_r1cs_std::{
-    prelude::{Boolean, EqGadget, AllocVar},
-    uint64::UInt64,
-};
-use ark_r1cs_std::fields::FieldVar;
-use ark_r1cs_std::R1CSVar;
+use ark_ff::{PrimeField};   
 use ark_relations::r1cs::{SynthesisError, ConstraintSystem,ConstraintSynthesizer,ConstraintSystemRef};
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
 use rand::{thread_rng};
-use ark_ff::{biginteger::BigInteger64,BigInteger};
 use sha2::Sha256;
 use ark_bls12_381::Fq as F;
-use ark_ff::Field;
 use num_bigint::{BigUint, RandBigInt, ToBigInt, ToBigUint};
 use num_integer::Integer;
+
 pub struct PrimeCircut<ConstraintF: PrimeField>{
     n: FpVar<ConstraintF>,
     k: usize,
