@@ -8,7 +8,7 @@ use ark_relations::{
     lc,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
-
+mod miller_rabin_test2;
 #[derive(Copy, Clone)]
 struct PrimeCircut<ConstraintF: PrimeField> {
     x: Option<ConstraintF>, // x is the number to be checked
@@ -48,7 +48,7 @@ mod tests {
     use rand_chacha::ChaChaCore;
     #[test]
     fn test_prime_native() {
-
+        miller_rabin_test2(12.to_biguint.unwrap,1);
         let cs = ConstraintSystem::<BlsFr>::new_ref();
         let n = BlsFr::from(12u8);
         let d = BlsFr::from(3u8);
