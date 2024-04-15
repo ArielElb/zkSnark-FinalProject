@@ -2,12 +2,13 @@ use ark_ff::{ Field, One, PrimeField, Zero};
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::{fields::fp::FpVar, R1CSVar};
-use ark_r1cs_std::bits::uint32::UInt32;
-use ark_snark::SNARK;
+use  sha2::Sha256;
+use ark_ff::BigInteger;
 use crate::miller_rabin::miller_rabin_test2;
+// use crate::check_hash::hash_checker_fp;
+use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
 
 use ark_relations::{
-    lc,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
 #[derive(Copy, Clone)]
@@ -28,16 +29,29 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
 
         // we want to check of hash(x) is prime
         let mut curr_var: FpVar<ConstraintF> = x.clone();
-
-        
-
+        let hasher = <DefaultFieldHasher<Sha256> as HashToField<ConstraintF>>::new(&[]);
 
 
-
-        
-
-
-
+        // i want to hash(x) check if x is prime then hash(x+1) and check if hash(x+1) is prime
+        for i in 0..num_of_rounds {
+            // hash the current value
+            let preimage = curr_var.value().unwrap().into_bigint().to_bytes_be(); // Converting to big-endian
+            let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 2
+            // take the actual number of the hash[0]
+            let hash = hashes[0];
+            print!("hash: {:?}\n", hash);
+            // check if hash is prime
+            let hash_bigint = hash.into_bigint();
+            let is_prime = miller_rabin_test2(hash_bigint.into(), 1);
+            if is_prime == true {
+                // if hash is prime then add the constraint that hash(x) = hash
+                let _ = curr_var.enforce_equal(&FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(hash))?);
+                
+            }
+            // if hash is prime then hash the next value
+            curr_var = curr_var + FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(ConstraintF::one()))?;
+        }
+    
         Ok(())
 
     }
@@ -57,7 +71,7 @@ mod tests {
     fn test_prime_native() {
         miller_rabin_test2(2.to_biguint().unwrap(), 1);
         let cs = ConstraintSystem::<BlsFr>::new_ref();
-        let x = BlsFr::from(12u8);
+        let x = BlsFr::from(227u8);
         // let the number of rounds be 3
         let num_of_rounds = 3;
         let circuit = PrimeCircut { x: Some(x), num_of_rounds };

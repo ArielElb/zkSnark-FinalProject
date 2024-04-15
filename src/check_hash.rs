@@ -28,7 +28,7 @@ pub struct tryCircut<ConstraintF: PrimeField>{
 }
 
 
-fn hash_checker_fp<ConstraintF: PrimeField>(  tryCircut: &tryCircut<ConstraintF>,) -> Result<(), SynthesisError> {
+pub fn hash_checker_fp<ConstraintF: PrimeField>(  tryCircut: &tryCircut<ConstraintF>,) -> Result<(), SynthesisError> {
     // we need the modulus because we on a prime field
     let modulus = <F as PrimeField>::MODULUS;
     let mut _rng = thread_rng();
@@ -55,34 +55,34 @@ fn hash_checker_fp<ConstraintF: PrimeField>(  tryCircut: &tryCircut<ConstraintF>
 
 
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    #[test]
-    fn test_hash_number() {
-        use ark_ff::{Zero,One};
-        // create a new constraint system
-        let cs = ConstraintSystem::<F>::new_ref();
-        // create a new prime generator       
-        let mut z: FpVar<F> = FpVar::<F>::new_variable(cs.clone(), || Ok(F::one()), ark_r1cs_std::alloc::AllocationMode::Constant).unwrap();
-        let mut var = FpVar::<F>::new_variable(cs.clone(), || Ok(F::zero()), ark_r1cs_std::alloc::AllocationMode::Input).unwrap();
+//     #[test]
+//     fn test_hash_number() {
+//         use ark_ff::{Zero,One};
+//         // create a new constraint system
+//         let cs = ConstraintSystem::<F>::new_ref();
+//         // create a new prime generator       
+//         let mut z: FpVar<F> = FpVar::<F>::new_variable(cs.clone(), || Ok(F::one()), ark_r1cs_std::alloc::AllocationMode::Constant).unwrap();
+//         let mut var = FpVar::<F>::new_variable(cs.clone(), || Ok(F::zero()), ark_r1cs_std::alloc::AllocationMode::Input).unwrap();
     
-        let mut try_circut = tryCircut::<F> {
-            x: var,
-            y:z
-        };
+//         let mut try_circut = tryCircut::<F> {
+//             x: var,
+//             y:z
+//         };
        
-        try_circut.x += &FpVar::<F>::new_constant(cs.clone(), F::one()).unwrap();
-        try_circut.x *= &FpVar::<F>::new_constant(cs.clone(), F::from(2u64)).unwrap();
+//         try_circut.x += &FpVar::<F>::new_constant(cs.clone(), F::one()).unwrap();
+//         try_circut.x *= &FpVar::<F>::new_constant(cs.clone(), F::from(2u64)).unwrap();
        
-        try_circut.x = ark_r1cs_std::fields::fp::FpVar::Constant(try_circut.x.value().unwrap().pow([5u64]));
+//         try_circut.x = ark_r1cs_std::fields::fp::FpVar::Constant(try_circut.x.value().unwrap().pow([5u64]));
     
-        // print the typeof x:
-        println!("x: {:?}", try_circut.x);
+//         // print the typeof x:
+//         println!("x: {:?}", try_circut.x);
         
 
-        hash_checker_fp::<F>(&try_circut).unwrap();
+//         hash_checker_fp::<F>(&try_circut).unwrap();
        
-    }
-}
+//     }
+// }

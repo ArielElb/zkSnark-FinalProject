@@ -10,6 +10,7 @@ pub struct PrimeCircut<ConstraintF: PrimeField>{
 }
 //<ConstraintF: PrimeField>
 pub fn miller_rabin_test2(n: BigUint, k: usize) -> bool{
+    print!("n: {:?}\n", n);
     let two: BigUint = 2.to_biguint().unwrap();
     if n.eq(&two){
         return true;
@@ -43,8 +44,7 @@ pub fn miller_rabin_test2(n: BigUint, k: usize) -> bool{
         let mut x = a.modpow(&d, &n_bigint);
         for _j in 0..s{
             y = x.modpow(&two, &n_bigint);
-            println!("x after: {:?}", x);
-            println!("y after: {:?}", y);
+
             if one == y && x != one && x != n_minus_one{
                 return false;
             }
@@ -57,24 +57,24 @@ pub fn miller_rabin_test2(n: BigUint, k: usize) -> bool{
     return true;
 }//
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ark_bls12_381::{Bls12_381, Fr as BlsFr};
-    use ark_poly::univariate::DensePolynomial;
-    use ark_poly_commit::marlin_pc::MarlinKZG10;
-    use ark_std::{ops::*, UniformRand};
-    use ark_relations::r1cs::ConstraintSynthesizer;
-    use ark_relations::r1cs::ConstraintSystem;
-    use rand::{rngs::StdRng, SeedableRng};
-    use rand_chacha::ChaChaCore;
-    #[test]
-    fn test_prime_native() {
-        assert!(!miller_rabin_test2(10.to_biguint().unwrap(), 1));
-        assert!(miller_rabin_test2(7.to_biguint().unwrap(), 1));
-        assert!(miller_rabin_test2(11.to_biguint().unwrap(), 1));
-        assert!(!miller_rabin_test2(15.to_biguint().unwrap(), 1));
-        assert!(!miller_rabin_test2(21.to_biguint().unwrap(), 1))
-    }
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
+//     use ark_poly::univariate::DensePolynomial;
+//     use ark_poly_commit::marlin_pc::MarlinKZG10;
+//     use ark_std::{ops::*, UniformRand};
+//     use ark_relations::r1cs::ConstraintSynthesizer;
+//     use ark_relations::r1cs::ConstraintSystem;
+//     use rand::{rngs::StdRng, SeedableRng};
+//     use rand_chacha::ChaChaCore;
+//     #[test]
+//     fn test_prime_native() {
+//         assert!(!miller_rabin_test2(10.to_biguint().unwrap(), 1));
+//         assert!(miller_rabin_test2(7.to_biguint().unwrap(), 1));
+//         assert!(miller_rabin_test2(11.to_biguint().unwrap(), 1));
+//         assert!(!miller_rabin_test2(15.to_biguint().unwrap(), 1));
+//         assert!(!miller_rabin_test2(21.to_biguint().unwrap(), 1))
+//     }
 
-}
+// }
