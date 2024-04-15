@@ -4,16 +4,12 @@ use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::{fields::fp::FpVar, R1CSVar};
 use ark_r1cs_std::bits::uint32::UInt32;
 use ark_snark::SNARK;
+use crate::miller_rabin::miller_rabin_test2;
+
 use ark_relations::{
     lc,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
-<<<<<<< HEAD
-mod miller_rabin_test2;
-=======
-
-
->>>>>>> 1d5ed54613721d72d455ee89873de96f8502e89a
 #[derive(Copy, Clone)]
 struct PrimeCircut<ConstraintF: PrimeField> {
     x: Option<ConstraintF>, // x is the number to be checked
@@ -55,10 +51,11 @@ mod tests {
     use ark_std::{ops::*, UniformRand};
     use ark_relations::r1cs::ConstraintSynthesizer;
     use ark_relations::r1cs::ConstraintSystem;
+    use num_bigint::ToBigUint;
     use rand::{rngs::StdRng, SeedableRng};
     #[test]
     fn test_prime_native() {
-        miller_rabin_test2(12.to_biguint.unwrap,1);
+        miller_rabin_test2(2.to_biguint().unwrap(), 1);
         let cs = ConstraintSystem::<BlsFr>::new_ref();
         let x = BlsFr::from(12u8);
         // let the number of rounds be 3
