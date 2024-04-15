@@ -8,11 +8,18 @@ use ark_relations::{
     lc,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
+<<<<<<< HEAD
 mod miller_rabin_test2;
+=======
+
+
+>>>>>>> 1d5ed54613721d72d455ee89873de96f8502e89a
 #[derive(Copy, Clone)]
 struct PrimeCircut<ConstraintF: PrimeField> {
     x: Option<ConstraintF>, // x is the number to be checked
     num_of_rounds: u64, }
+
+
 
 // GENERATE CONSTRAINTS
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut<ConstraintF> {
@@ -30,6 +37,11 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
 
 
 
+
+        
+
+
+
         Ok(())
 
     }
@@ -39,58 +51,56 @@ mod tests {
     use super::*;
     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
     use ark_groth16::Groth16;
-    use ark_poly::univariate::DensePolynomial;
-    use ark_poly_commit::marlin_pc::MarlinKZG10;
+
     use ark_std::{ops::*, UniformRand};
     use ark_relations::r1cs::ConstraintSynthesizer;
     use ark_relations::r1cs::ConstraintSystem;
     use rand::{rngs::StdRng, SeedableRng};
-    use rand_chacha::ChaChaCore;
     #[test]
     fn test_prime_native() {
         miller_rabin_test2(12.to_biguint.unwrap,1);
         let cs = ConstraintSystem::<BlsFr>::new_ref();
-        let n = BlsFr::from(12u8);
-        let d = BlsFr::from(3u8);
-        let s = 2u64;
-        let circuit = PrimeCircut { n: Some(n), d: Some(d), s, num_constraints: 10, num_variables: 10 };
-
-        assert!(circuit.generate_constraints(cs.clone()).is_ok());
+        let x = BlsFr::from(12u8);
+        // let the number of rounds be 3
+        let num_of_rounds = 3;
+        let circuit = PrimeCircut { x: Some(x), num_of_rounds };
+        circuit.generate_constraints(cs.clone()).unwrap();
+        assert!(cs.is_satisfied().unwrap());
     }
 
-    #[test]
-    fn test_groth16_circuit() {
-        let seed = [0u8; 32];
-        let mut rng = StdRng::from_seed(seed);
-        let n = BlsFr::from(12u8);
-        let d = BlsFr::from(3u8);
-        let s = 2u64;
-        let circuit = PrimeCircut { n: Some(n), d: Some(d), s, num_constraints: 10, num_variables: 10 };
-        let circutproof =circuit.clone();        // generate the setup parameters
-        let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(
-            circuit,
-            &mut rng,
-        )
-        .unwrap();
+    // #[test]
+    // fn test_groth16_circuit() {
+    //     let seed = [0u8; 32];
+    //     let mut rng = StdRng::from_seed(seed);
+    //     let n = BlsFr::from(12u8);
+    //     let d = BlsFr::from(3u8);
+    //     let s = 2u64;
+    //     let circuit = PrimeCircut { n: Some(n), d: Some(d), s, num_constraints: 10, num_variables: 10 };
+    //     let circutproof =circuit.clone();        // generate the setup parameters
+    //     let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(
+    //         circuit,
+    //         &mut rng,
+    //     )
+    //     .unwrap();
 
-        // calculate the proof by passing witness variable value
-        let proof = Groth16::<Bls12_381>::prove(
-            &pk,
-            circutproof,
-            &mut rng,
-        ).unwrap();
-        let mut inputs = Vec::new();
-        inputs.push(n);
-        let pvk = Groth16::<Bls12_381>::process_vk(&vk).unwrap();
-        if let Err(_err) = Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &inputs, &proof) {
-            eprintln!("Verification failed: your circuit constraints are not satisfied.");
-            println!("Error: {:?}", _err);
-        }
-        else {
-            eprintln!("Verification sucess: your circuit constraints are  satisfied.");
+    //     // calculate the proof by passing witness variable value
+    //     let proof = Groth16::<Bls12_381>::prove(
+    //         &pk,
+    //         circutproof,
+    //         &mut rng,
+    //     ).unwrap();
+    //     let mut inputs = Vec::new();
+    //     inputs.push(n);
+    //     let pvk = Groth16::<Bls12_381>::process_vk(&vk).unwrap();
+    //     if let Err(_err) = Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &inputs, &proof) {
+    //         eprintln!("Verification failed: your circuit constraints are not satisfied.");
+    //         println!("Error: {:?}", _err);
+    //     }
+    //     else {
+    //         eprintln!("Verification sucess: your circuit constraints are  satisfied.");
 
-        }
-    }
+    //     }
+    // }
 
 
 

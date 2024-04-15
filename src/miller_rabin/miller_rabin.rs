@@ -4,6 +4,10 @@ use ark_r1cs_std::fields::fp::FpVar;
 use ark_bls12_381::Fq as F;
 use num_bigint::{BigUint, RandBigInt, ToBigUint};
 use num_integer::Integer;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1d5ed54613721d72d455ee89873de96f8502e89a
 pub struct PrimeCircut<ConstraintF: PrimeField>{
     n: FpVar<ConstraintF>,
     k: usize,
