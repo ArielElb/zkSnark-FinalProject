@@ -11,7 +11,6 @@ fn hash_number(number: u64) -> [u8; 32] {
     hasher.finalize().into()
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
