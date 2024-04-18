@@ -1,21 +1,20 @@
 
-use blake2::{Blake2s, Digest};
+
 use ark_ff::{PrimeField};   
 use ark_r1cs_std::{
-    prelude::{Boolean, EqGadget, AllocVar},
     uint64::UInt64,
 };
-use ark_r1cs_std::fields::FieldVar;
+
 use ark_r1cs_std::R1CSVar;
-use ark_relations::r1cs::{SynthesisError, ConstraintSystem};
+use ark_relations::r1cs::{SynthesisError};
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
 use rand::{thread_rng};
-use ark_ff::{biginteger::BigInteger64,BigInteger};
+use ark_ff::{BigInteger};
 use sha2::Sha256;
 use ark_bls12_381::Fq as F;
-use ark_ff::Field;
-use num_bigint::{ToBigInt,BigUint, RandBigInt};
+
+
 
 pub struct PrimeCircut<ConstraintF: PrimeField>{
     x: UInt64<ConstraintF>, // input
@@ -30,7 +29,7 @@ pub struct tryCircut<ConstraintF: PrimeField>{
 
 pub fn hash_checker_fp<ConstraintF: PrimeField>(  tryCircut: &tryCircut<ConstraintF>,) -> Result<(), SynthesisError> {
     // we need the modulus because we on a prime field
-    let modulus = <F as PrimeField>::MODULUS;
+    let _modulus = <F as PrimeField>::MODULUS;
     let mut _rng = thread_rng();
     let x = &tryCircut.x;
     // do x = x + 1

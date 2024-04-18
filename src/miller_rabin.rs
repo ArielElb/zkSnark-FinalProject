@@ -9,8 +9,7 @@ pub struct PrimeCircut<ConstraintF: PrimeField>{
     k: usize,
 }
 //<ConstraintF: PrimeField>
-pub fn miller_rabin_test2(n: BigUint, k: usize) -> bool{
-    print!("n: {:?}\n", n);
+pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool{
     let two: BigUint = 2.to_biguint().unwrap();
     if n.eq(&two){
         return true;
@@ -18,16 +17,16 @@ pub fn miller_rabin_test2(n: BigUint, k: usize) -> bool{
     if n.is_even() {
         return false;
     }
-    let modulus = <F as PrimeField>::MODULUS;
+    let _modulus = <F as PrimeField>::MODULUS;
     // convert n to a biguint
     let n_bigint = n.to_biguint().unwrap();
     // convert n_bigint to a biguint:
     let one: BigUint = 1.to_biguint().unwrap();
 
     let n_minus_one = n_bigint.clone() - one.clone();
-    let mut rng = rand::thread_rng();
+    let _rng = rand::thread_rng();
     let mut s = 0;
-    let mut zero = 0.to_biguint().unwrap();
+    let _zero = 0.to_biguint().unwrap();
 
 
     let mut d = n_bigint.clone() - one.clone();
