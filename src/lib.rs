@@ -1,3 +1,3 @@
-pub mod prime_demo;
-// pub mod cubic_demo;
+pub mod prime_constrains;
+pub mod check_hash;
 pub mod miller_rabin;

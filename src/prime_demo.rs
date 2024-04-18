@@ -1,5 +1,3 @@
-
-
 use ark_ff::{ Field, One, PrimeField, Zero};
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::eq::EqGadget;

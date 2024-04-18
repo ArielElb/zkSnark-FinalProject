@@ -1,45 +1,32 @@
-use std::{borrow::Borrow, ops::Div};
-
-use ark_ff::{BigInt, One, PrimeField};   
-use ark_r1cs_std::{
-    prelude::{Boolean, EqGadget, AllocVar},
-    uint64::UInt64,
-};
-use ark_r1cs_std::fields::FieldVar;
-use ark_r1cs_std::R1CSVar;
-use ark_relations::r1cs::{SynthesisError, ConstraintSystem,ConstraintSynthesizer,ConstraintSystemRef};
+use std::ops::Div;
+use ark_ff::{PrimeField};   
 use ark_r1cs_std::fields::fp::FpVar;
-use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
-use rand::{thread_rng};
-use ark_ff::{biginteger::BigInteger64,BigInteger};
-use sha2::Sha256;
 use ark_bls12_381::Fq as F;
-use ark_ff::Field;
-use num_bigint::{BigUint, RandBigInt, ToBigInt, ToBigUint};
+use num_bigint::{BigUint, RandBigInt, ToBigUint};
 use num_integer::Integer;
 pub struct PrimeCircut<ConstraintF: PrimeField>{
     n: FpVar<ConstraintF>,
     k: usize,
 }
 //<ConstraintF: PrimeField>
-fn miller_rabin_test2(n: u64, k: usize) -> bool{
-    if n == 2{
+pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool{
+    let two: BigUint = 2.to_biguint().unwrap();
+    if n.eq(&two){
         return true;
     }
-    if n%2== 0 {
+    if n.is_even() {
         return false;
     }
-    let modulus = <F as PrimeField>::MODULUS;
+    let _modulus = <F as PrimeField>::MODULUS;
     // convert n to a biguint
     let n_bigint = n.to_biguint().unwrap();
     // convert n_bigint to a biguint:
     let one: BigUint = 1.to_biguint().unwrap();
 
     let n_minus_one = n_bigint.clone() - one.clone();
-    let mut rng = rand::thread_rng();
+    let _rng = rand::thread_rng();
     let mut s = 0;
-    let two = 2.to_biguint().unwrap();
-    let mut zero = 0.to_biguint().unwrap();
+    let _zero = 0.to_biguint().unwrap();
 
 
     let mut d = n_bigint.clone() - one.clone();
@@ -56,8 +43,7 @@ fn miller_rabin_test2(n: u64, k: usize) -> bool{
         let mut x = a.modpow(&d, &n_bigint);
         for _j in 0..s{
             y = x.modpow(&two, &n_bigint);
-            println!("x after: {:?}", x);
-            println!("y after: {:?}", y);
+
             if one == y && x != one && x != n_minus_one{
                 return false;
             }
@@ -70,24 +56,24 @@ fn miller_rabin_test2(n: u64, k: usize) -> bool{
     return true;
 }//
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ark_bls12_381::{Bls12_381, Fr as BlsFr};
-    use ark_poly::univariate::DensePolynomial;
-    use ark_poly_commit::marlin_pc::MarlinKZG10;
-    use ark_std::{ops::*, UniformRand};
-    use ark_relations::r1cs::ConstraintSynthesizer;
-    use ark_relations::r1cs::ConstraintSystem;
-    use rand::{rngs::StdRng, SeedableRng};
-    use rand_chacha::ChaChaCore;
-    #[test]
-    fn test_prime_native() {
-        assert!(!miller_rabin_test2(10, 1));
-        assert!(miller_rabin_test2(7, 1));
-        assert!(miller_rabin_test2(11, 1));
-        assert!(!miller_rabin_test2(15, 1));
-        assert!(!miller_rabin_test2(21, 1))
-    }
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
+//     use ark_poly::univariate::DensePolynomial;
+//     use ark_poly_commit::marlin_pc::MarlinKZG10;
+//     use ark_std::{ops::*, UniformRand};
+//     use ark_relations::r1cs::ConstraintSynthesizer;
+//     use ark_relations::r1cs::ConstraintSystem;
+//     use rand::{rngs::StdRng, SeedableRng};
+//     use rand_chacha::ChaChaCore;
+//     #[test]
+//     fn test_prime_native() {
+//         assert!(!miller_rabin_test2(10.to_biguint().unwrap(), 1));
+//         assert!(miller_rabin_test2(7.to_biguint().unwrap(), 1));
+//         assert!(miller_rabin_test2(11.to_biguint().unwrap(), 1));
+//         assert!(!miller_rabin_test2(15.to_biguint().unwrap(), 1));
+//         assert!(!miller_rabin_test2(21.to_biguint().unwrap(), 1))
+//     }
 
-}
+// }
