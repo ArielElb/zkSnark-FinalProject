@@ -1,5 +1,3 @@
-
-
 use ark_ff::{ Field, One, PrimeField, Zero};
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::eq::EqGadget;
@@ -13,9 +11,9 @@ use ark_relations::{
 
 
 #[derive(Copy, Clone)]
-struct PrimeCircut<F: Field> {
-    n: Option<F>,
-    d: Option<F>,
+struct PrimeCircut<ConstraintF: PrimeField> {
+    d: Option<ConstraintF>,
+    n: Option<ConstraintF>,
     s: u64,
     num_constraints: usize,
     num_variables: usize,
@@ -23,17 +21,17 @@ struct PrimeCircut<F: Field> {
 
 // GENERATE CONSTRAINTS
 
-impl<F: PrimeField> ConstraintSynthesizer<F> for PrimeCircut<F> {
+impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut<ConstraintF> {
     fn generate_constraints(
         self,
-        cs: ConstraintSystemRef<F>,
+        cs: ConstraintSystemRef<ConstraintF>,
     ) -> Result<(), SynthesisError> {
         // we need 2^s = d
-        let mut d = FpVar::<F>::new_input(cs.clone(), || self.d.ok_or(SynthesisError::AssignmentMissing))?;
-        let mut two = FpVar::<F>::new_input(cs.clone(), || Ok(F::from(2u64)))?;
+        let mut d = FpVar::<ConstraintF>::new_input(cs.clone(), || self.d.ok_or(SynthesisError::AssignmentMissing))?;
+        let mut two = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(ConstraintF::from(2u64)))?;
         let s = UInt32::new_input(cs.clone(), || Ok(self.s as u32))?;
-        let mut curr_var: FpVar<F> = FpVar::<F>::new_variable(cs.clone(), || Ok(F::one()), ark_r1cs_std::alloc::AllocationMode::Constant)?;
-        let n = FpVar::<F>::new_input(cs.clone(), || self.n.ok_or(SynthesisError::AssignmentMissing))?;
+        let mut curr_var: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_variable(cs.clone(), || Ok(ConstraintF::one()), ark_r1cs_std::alloc::AllocationMode::Constant)?;
+        let n = FpVar::<ConstraintF>::new_input(cs.clone(), || self.n.ok_or(SynthesisError::AssignmentMissing))?;
 
         print!("curr: {:?}\n", curr_var.value().unwrap().into_bigint());
         // print!("twoBig: {:?}\n", two.value().unwrap().into_bigint());
@@ -86,7 +84,8 @@ mod tests {
         let s = 2u64;
         let circuit = PrimeCircut { n: Some(n), d: Some(d), s, num_constraints: 10, num_variables: 10 };
 
-        assert!(circuit.generate_constraints(cs.clone()).is_ok());}
+        assert!(circuit.generate_constraints(cs.clone()).is_ok());
+    }
 
     #[test]
     fn test_groth16_circuit() {
