@@ -9,15 +9,18 @@ use crate::miller_rabin::miller_rabin_test2;
 use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
 use ark_snark::SNARK;
 use ark_relations::{
-    r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
+    r1cs::{ConstraintSystem,ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
 use ark_groth16::{prepare_verifying_key, Groth16, ProvingKey};
-
+use ark_bls12_381::{Bls12_381, Fr as BlsFr};
+use ark_crypto_primitives::Error;
+use rand::{rngs::StdRng, SeedableRng};
 
 #[derive(Clone)]
 struct PrimeCircut<ConstraintF: PrimeField> {
     pub x: Option<ConstraintF>, // x is the number to be checked
-    pub num_of_rounds: usize, }
+    pub num_of_rounds: usize,
+}
 
 
 
@@ -51,7 +54,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             let is_prime = miller_rabin_test2(hash_bigint.into(), 1);
             if is_prime == true {
                 println!("hash is prime: {:?}\n", hash_bigint.into());
-                let hash_var = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(hash))?;
+                let hash_var = FpVar::<ConstraintF>::new_variable(cs.clone(), || Ok(hash),ark_r1cs_std::alloc::AllocationMode::Witness)?;
                 // check if hash is prime
                 hash_var.enforce_equal(&hash_var)?;
             }
@@ -81,71 +84,37 @@ fn create_pub_input<ConstraintF: PrimeField>(x: ConstraintF, num_of_rounds: u64)
         }
         curr_var = curr_var + ConstraintF::one();
     }
+    println!("pub_input: {:?}", pub_input.len());
     pub_input
 
 }
 #[cfg(test)]
 mod tests {
+    use ark_snark::CircuitSpecificSetupSNARK;
+
     use super::*;
-    use ark_bls12_381::{Bls12_381, Fr as BlsFr};
-    use ark_crypto_primitives::Error;
-    use ark_groth16::ProvingKey;
-    use ark_relations::r1cs::ConstraintSynthesizer;
-    use ark_relations::r1cs::ConstraintSystem;
-    use rand::{rngs::StdRng, SeedableRng};
-    fn is_proof_satisfied<F: PrimeField, C: ConstraintSynthesizer<F>>(
-        circuit: C,
-    ) -> Result<bool, Error> {
-        let cs = ConstraintSystem::<BlsFr>::new_ref();
-        let x = BlsFr::from(227u8);
-        // let the number of rounds be 3
-        let num_of_rounds = 1000;
-        let circuit = PrimeCircut { x: Some(x), num_of_rounds };
-        circuit.generate_constraints(cs.clone()).unwrap();
-        // print the number of constraints
-        println!("Number of constraints: {:?}", cs.num_constraints());
-        println!("Number of variables(public inputs): {:?}", cs.num_instance_variables());
-        // print the matrix nicely
-        cs.finalize();
-        // print the matrix nicely
-        let matrix = cs.to_matrices().unwrap();
-        println!("Matrix A: {:?}", matrix.a);
-        println!("Matrix B: {:?}", matrix.b);
-
-
-        // print the number 
-        Ok(cs.is_satisfied().unwrap())
-        
-    }
-
 
 
     #[test]
-    fn verify_proof() -> Result<(), Error> {
-        let rng = &mut StdRng::seed_from_u64(0u64);
+    fn groth16(){
+        use rand::RngCore;
+        use ark_std::test_rng;
+        let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
         let circuit = PrimeCircut {
+            x: None,
+            num_of_rounds: 0,
+        };
+        let (pk, vk) = Groth16::<Bls12_381>::setup(circuit ,&mut rng).unwrap();
+        let  pub_input = vec![BlsFr::from(227u8)];
+
+        let circut2 = PrimeCircut {
             x: Some(BlsFr::from(227u8)),
             num_of_rounds: 1000,
-        };
-        let proving_key: ProvingKey<Bls12_381> =
-        // bug here
-            Groth16::<Bls12_381>::generate_random_parameters_with_reduction(circuit.clone(), rng)?;
-
-        if !is_proof_satisfied(circuit.clone())? {
-            // throw a random error
-            return Err(("Err").into());
-        }
-
-        let proof =
-            Groth16::<Bls12_381>::create_random_proof_with_reduction(circuit, &proving_key, rng)?;
-
-        let pvk = prepare_verifying_key(&proving_key.vk);
-        assert!(Groth16::<Bls12_381>::verify_proof(&pvk, &proof, &[],)?);
-
-        Ok(())
+       };
+        let proof = Groth16::<Bls12_381>::prove(&pk, circut2, &mut rng).unwrap();
+        let proof_valid = Groth16::<Bls12_381>::verify(&vk, &pub_input, &proof).unwrap();
+        print!("proof_valid: {:?}\n", proof_valid);
     }
-
-
 
 
 }
