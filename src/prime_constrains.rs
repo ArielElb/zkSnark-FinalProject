@@ -18,11 +18,9 @@ use rand::{rngs::StdRng, SeedableRng};
 
 #[derive(Clone)]
 struct PrimeCircut<ConstraintF: PrimeField> {
-    pub x: Option<ConstraintF>, // x is the number to be checked
+    pub x: Option<ConstraintF>, // x is the number to be hashed.
     pub num_of_rounds: usize,
 }
-
-
 
 
 // GENERATE CONSTRAINTS
@@ -54,7 +52,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             let is_prime = miller_rabin_test2(hash_bigint.into(), 1);
             if is_prime == true {
                 println!("hash is prime: {:?}\n", hash_bigint.into());
-                let hash_var = FpVar::<ConstraintF>::new_variable(cs.clone(), || Ok(hash),ark_r1cs_std::alloc::AllocationMode::Witness)?;
+                let hash_var = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(hash))?;
                 // check if hash is prime
                 hash_var.enforce_equal(&hash_var)?;
             }
@@ -91,7 +89,6 @@ fn create_pub_input<ConstraintF: PrimeField>(x: ConstraintF, num_of_rounds: u64)
 #[cfg(test)]
 mod tests {
     use ark_snark::CircuitSpecificSetupSNARK;
-
     use super::*;
 
 
