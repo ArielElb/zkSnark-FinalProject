@@ -8,7 +8,6 @@ pub struct PrimeCircut<ConstraintF: PrimeField>{
     n: FpVar<ConstraintF>,
     k: usize,
 }
-//<ConstraintF: PrimeField>
 pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool{
     let two: BigUint = 2.to_biguint().unwrap();
     if n.eq(&two){
@@ -54,7 +53,7 @@ pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool{
         }
     }
     return true;
-}//
+}
 
 // #[cfg(test)]
 // mod tests {
