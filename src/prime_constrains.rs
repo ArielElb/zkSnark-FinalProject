@@ -25,6 +25,8 @@ struct PrimeCircut<ConstraintF: PrimeField> {
     x: Option<ConstraintF>, // x is the number to be checked
     num_of_rounds: u64,
 }
+// For benchmarking
+use std::time::{Duration, Instant};
 
 // GENERATE CONSTRAINTS
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut<ConstraintF> {
@@ -71,6 +73,9 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             if is_prime {
                 break;
             }
+            //  IF is_prime_var is false then hash the next value AND constraint is_prime_var to be false:
+            is_prime_var.enforce_equal(&FpVar::new_constant(cs.clone(), ConstraintF::zero())?)?;
+
             //TODO: need to add the constraint that if hash is prime or not .
             // CondSelectGadget::conditionally_select(, &curr_var, &FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(ConstraintF::zero()))?)?;
             // if hash is prime then hash the next value
@@ -103,6 +108,10 @@ fn create_pub_input<ConstraintF: PrimeField>(
 }
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
+    use ark_serialize::CanonicalSerialize;
+
     use super::*;
 
     #[test]
@@ -136,11 +145,47 @@ mod tests {
         // // print the number
         assert!(cs.is_satisfied().unwrap());
     }
+
+    #[test]
+    fn constraints_bench() {
+        use ark_std::test_rng;
+        use rand::RngCore;
+        let numrounds = 200;
+        let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
+        let cs = ConstraintSystem::<BlsFr>::new_ref();
+
+        const SAMPLES: u32 = 50;
+
+        let mut total_time = Duration::new(0, 0);
+        for _ in 0..SAMPLES {
+            let x = BlsFr::rand(&mut rng);
+            // generate from 50-300 rounds
+            let num_of_rounds = rng.next_u32() % 300 + 50;
+            let circuit = PrimeCircut {
+                x: Some(x),
+                num_of_rounds: num_of_rounds as u64,
+            };
+            let start = Instant::now();
+            circuit.generate_constraints(cs.clone()).unwrap();
+            let end = start.elapsed();
+            total_time += end;
+            // Extract the public input
+            let public_input = ConstraintSystemRef::borrow(&cs)
+                .unwrap()
+                .instance_assignment
+                .clone();
+            println!("Public input: {:?}", public_input);
+        }
+        let avg = total_time / SAMPLES;
+        let avg = avg.subsec_nanos() as f64 / 1_000_000_000f64 + (avg.as_secs() as f64);
+        println!("Average time: {:?} seconds", avg);
+    }
+
     #[test]
     fn groth16() {
         use ark_std::test_rng;
         use rand::RngCore;
-        let numrounds = 200;
+        let numrounds = 2000;
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
 
         // SETUP THE GROTH16 SNARK
@@ -160,7 +205,75 @@ mod tests {
 
         // Generate the public input
         let public_input = vec![BlsFr::from(227u8)];
+
         // // Verify the proof
         let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input, &proof).unwrap();
+        assert!(is_correct);
+    }
+
+    #[test]
+    fn groth16_benchmark() {
+        use ark_std::test_rng;
+        use rand::RngCore;
+        use std::mem;
+        let numrounds = 200;
+        let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
+
+        // SETUP THE GROTH16 SNARK
+        println!("Creating parameters...");
+        let circuit = PrimeCircut {
+            x: None,
+            num_of_rounds: 0,
+        };
+        let (pk, vk) = Groth16::<Bls12_381>::setup(circuit, &mut rng).unwrap();
+
+        // Prepare the verification key (for proof verification)
+        let pvk = Groth16::<Bls12_381>::process_vk(&vk).unwrap();
+
+        // init empty vector to store the proofs of BlsFr
+        let mut pub_inputs: Vec<BlsFr> = Vec::new();
+
+        // Generate the proof
+        println!("Creating proofs...");
+        // Let's benchmark stuff!
+        const SAMPLES: u32 = 50;
+        let mut total_proving = Duration::new(0, 0);
+        let mut total_verifying = Duration::new(0, 0);
+        //  add benchmark loop for some random numbers
+        for _ in 0..SAMPLES {
+            let x = BlsFr::rand(&mut rng);
+            // start the timer
+            let start = Instant::now();
+            let c = PrimeCircut {
+                x: Some(x),
+                num_of_rounds: numrounds,
+            };
+            // print x
+            // println!("x: {:?}", x);
+            // Generate the proof
+            let proof = Groth16::<Bls12_381>::prove(&pk, c, &mut rng).unwrap();
+            // print the proof size
+            total_proving += start.elapsed();
+            // print the proof size
+
+            // print the proof size
+            println!("Proof size: {:?}", mem::size_of_val(&proof));
+            let start = Instant::now();
+            pub_inputs.push(x);
+            assert!(
+                Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &pub_inputs, &proof).unwrap()
+            );
+            total_verifying += start.elapsed();
+        }
+        let proving_avg = total_proving / SAMPLES;
+        let proving_avg =
+            proving_avg.subsec_nanos() as f64 / 1_000_000_000f64 + (proving_avg.as_secs() as f64);
+
+        let verifying_avg = total_verifying / SAMPLES;
+        let verifying_avg = verifying_avg.subsec_nanos() as f64 / 1_000_000_000f64
+            + (verifying_avg.as_secs() as f64);
+
+        println!("Average proving time: {:?} seconds", proving_avg);
+        println!("Average verifying time: {:?} seconds", verifying_avg);
     }
 }
