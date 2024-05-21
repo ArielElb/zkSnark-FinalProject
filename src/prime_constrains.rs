@@ -35,9 +35,11 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
         self,
         cs: ConstraintSystemRef<ConstraintF>,
     ) -> Result<(), SynthesisError> {
-        let num_of_rounds = self.num_of_rounds;
         let x = FpVar::<ConstraintF>::new_input(cs.clone(), || {
             self.x.ok_or(SynthesisError::AssignmentMissing)
+        })?;
+        let num_of_rounds = FpVar::<ConstraintF>::new_input(cs.clone(), || {
+            Ok(ConstraintF::from(self.num_of_rounds))
         })?;
 
         // we want to check of hash(x) or hash(x+1) or hash(x+2) or ... hash(x+num_of_rounds) is prime
@@ -45,25 +47,25 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
         let hasher = <DefaultFieldHasher<Sha256> as HashToField<ConstraintF>>::new(&[]);
 
         // i want to hash(x) check if x is prime then hash(x+1) and check if hash(x+1) is prime
-        for i in 0..num_of_rounds {
-            // hash the current value
-            let preimage = curr_var.value().unwrap().into_bigint().to_bytes_be(); // Converting to big-endian
-            let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 2
-                                                                               // take the actual number of the hash[0]
-            let hash = hashes[0];
+        for i in 0..self.num_of_rounds {
+            ////////////////////////////////////////////////
 
-            let hash_bigint = hash.into_bigint();
+            let is_prime_var = AllocatedBool::new_witness(cs.clone(), || {
+                let tmp1 = curr_var.value()?;
+                let preimage = tmp1.into_bigint().to_bytes_be(); // Converting to big-endian
+                let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 2
+                                                                                   // take the actual number of the hash[0]
+                let hash = hashes[0];
 
-            let is_prime = miller_rabin_test2(hash_bigint.into(), 128);
+                let hash_bigint = hash.into_bigint();
 
-            // use AllocatedBool to create a boolean variable
-            let is_prime_var = AllocatedBool::new_witness(cs.clone(), || Ok(is_prime))?;
+                let is_prime = miller_rabin_test2(hash_bigint.into(), 128);
+                // enforce the constraint that hash(x) is prime:
 
-            // add constraints
-            let _ = is_prime_var.and(&is_prime_var)?;
-            if is_prime {
-                break;
-            }
+                Ok(is_prime)
+            })?;
+            // add constraint that hash(x) is prime
+
             // increment the current value x+1
             curr_var = curr_var + ConstraintF::one();
         }
@@ -206,8 +208,8 @@ mod tests {
 
         // SETUP THE GROTH16 SNARK
         let circuit = PrimeCircut {
-            x: None,
-            num_of_rounds: 0,
+            x: Some(BlsFr::from(227u8)),
+            num_of_rounds: numrounds,
         };
         let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit, &mut rng).unwrap();
 
@@ -217,6 +219,7 @@ mod tests {
         };
 
         // Generate the proof
+        print!("Generating proof...");
         let proof = Groth16::<Bls12_381>::prove(&pk, circut2, &mut rng).unwrap();
 
         let cs_too = ConstraintSystem::new_ref();
@@ -225,12 +228,16 @@ mod tests {
             .unwrap()
             .instance_assignment
             .clone();
-        let res = cs_too.is_satisfied().unwrap();
-        assert!(res);
-        // println!("Public input: {:?}", public_input);
+        println!("Public input: {:?}", public_input);
+        // print the number of constraints
+        println!("Number of constraints: {:?}", cs_too.num_constraints());
+        println!("Number of variables: {:?}", cs_too.num_instance_variables());
+        println!("Public input: {:?}", public_input);
+        // // Verify the proof
+        println!("Verifying proof...");
 
-        // let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
-        // assert!(is_correct);
+        let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
+        assert!(is_correct);
     }
     #[test]
     fn groth16_benchmark() {
