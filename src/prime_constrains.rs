@@ -47,10 +47,13 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
         let hasher = <DefaultFieldHasher<Sha256> as HashToField<ConstraintF>>::new(&[]);
 
         // i want to hash(x) check if x is prime then hash(x+1) and check if hash(x+1) is prime
+        let is_done= Boolean::new_witness();
+        is_done=false; 
         for i in 0..self.num_of_rounds {
             ////////////////////////////////////////////////
+            if !is_done {
 
-            let is_prime_var = AllocatedBool::new_witness(cs.clone(), || {
+            let is_prime_var = Boolean::new_witness(cs.clone(), || {
                 let tmp1 = curr_var.value()?;
                 let preimage = tmp1.into_bigint().to_bytes_be(); // Converting to big-endian
                 let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 2
@@ -58,16 +61,18 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
                 let hash = hashes[0];
 
                 let hash_bigint = hash.into_bigint();
-
+                is_done=true;
                 let is_prime = miller_rabin_test2(hash_bigint.into(), 128);
                 // enforce the constraint that hash(x) is prime:
 
                 Ok(is_prime)
             })?;
+    
             // add constraint that hash(x) is prime
 
             // increment the current value x+1
             curr_var = curr_var + ConstraintF::one();
+        }
         }
 
         Ok(())
