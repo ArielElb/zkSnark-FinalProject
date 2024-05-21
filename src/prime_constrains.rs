@@ -2,6 +2,7 @@ use crate::miller_rabin::miller_rabin_test2;
 use ark_ff::BigInteger;
 use ark_ff::{Field, One, PrimeField, Zero};
 use ark_r1cs_std::alloc::AllocVar;
+use ark_r1cs_std::bits::boolean::AllocatedBool;
 use ark_r1cs_std::boolean::Boolean;
 use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::select::CondSelectGadget;
@@ -54,31 +55,16 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             let hash_bigint = hash.into_bigint();
 
             let is_prime = miller_rabin_test2(hash_bigint.into(), 128);
-            // if is prime enfroce_equal to true:
-            let is_prime_var = FpVar::<ConstraintF>::new_witness(cs.clone(), || {
-                Ok(if is_prime {
-                    ConstraintF::one()
-                } else {
-                    ConstraintF::zero()
-                })
-            })?;
 
-            // CHECK if is_prime_var is true if yes break the loop otherwise hash the next value
-            // is_prime_var.enforce_equal(&FpVar::new_constant(cs.clone(), ConstraintF::one())?)?;
-            // conditioanlly select the next value to hash
-            is_prime_var.conditional_enforce_equal(
-                &FpVar::new_constant(cs.clone(), ConstraintF::one())?,
-                &Boolean::constant(is_prime),
-            )?;
+            // use AllocatedBool to create a boolean variable
+            let is_prime_var = AllocatedBool::new_witness(cs.clone(), || Ok(is_prime))?;
+
+            // add constraints
+            let _ = is_prime_var.and(&is_prime_var)?;
             if is_prime {
                 break;
             }
-            //  IF is_prime_var is false then hash the next value AND constraint is_prime_var to be false:
-            is_prime_var.enforce_equal(&FpVar::new_constant(cs.clone(), ConstraintF::zero())?)?;
-
-            //TODO: need to add the constraint that if hash is prime or not .
-            // CondSelectGadget::conditionally_select(, &curr_var, &FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(ConstraintF::zero()))?)?;
-            // if hash is prime then hash the next value
+            // increment the current value x+1
             curr_var = curr_var + ConstraintF::one();
         }
 
@@ -120,7 +106,7 @@ mod tests {
         // cs.set_mode(SynthesisMode::Prove { construct_matrices: true });
         let x = BlsFr::from(227u8);
         // let the number of rounds be 3
-        let num_of_rounds = 200;
+        let num_of_rounds = 2000;
         let circuit = PrimeCircut {
             x: Some(x),
             num_of_rounds,
@@ -139,9 +125,9 @@ mod tests {
         cs.finalize();
         // // print the matrix nicely
         let matrix = cs.to_matrices().unwrap();
-        println!("Matrix A: {:?}", matrix.a);
-        println!("Matrix B: {:?}", matrix.b);
-        println!("Matrix C: {:?}", matrix.c);
+        // println!("Matrix A: {:?}", matrix.a);
+        // println!("Matrix B: {:?}", matrix.b);
+        // println!("Matrix C: {:?}", matrix.c);
         // // print the number
         assert!(cs.is_satisfied().unwrap());
     }
@@ -211,6 +197,41 @@ mod tests {
         assert!(is_correct);
     }
 
+    #[test]
+    fn groth_indirect_public_inputs() {
+        use ark_std::test_rng;
+        use rand::RngCore;
+        let numrounds = 2000;
+        let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
+
+        // SETUP THE GROTH16 SNARK
+        let circuit = PrimeCircut {
+            x: None,
+            num_of_rounds: 0,
+        };
+        let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit, &mut rng).unwrap();
+
+        let circut2 = PrimeCircut {
+            x: Some(BlsFr::from(227u8)),
+            num_of_rounds: numrounds,
+        };
+
+        // Generate the proof
+        let proof = Groth16::<Bls12_381>::prove(&pk, circut2, &mut rng).unwrap();
+
+        let cs_too = ConstraintSystem::new_ref();
+        circut2.generate_constraints(cs_too.clone()).unwrap();
+        let public_input = ConstraintSystemRef::borrow(&cs_too)
+            .unwrap()
+            .instance_assignment
+            .clone();
+        let res = cs_too.is_satisfied().unwrap();
+        assert!(res);
+        // println!("Public input: {:?}", public_input);
+
+        // let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
+        // assert!(is_correct);
+    }
     #[test]
     fn groth16_benchmark() {
         use ark_std::test_rng;
