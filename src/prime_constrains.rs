@@ -5,8 +5,9 @@ use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::bits::boolean::AllocatedBool;
 use ark_r1cs_std::boolean::Boolean;
 use ark_r1cs_std::eq::EqGadget;
-use ark_r1cs_std::select::CondSelectGadget;
+use ark_r1cs_std::select::{self, CondSelectGadget};
 use ark_r1cs_std::{fields::fp::FpVar, R1CSVar};
+use sha2::digest::typenum::NotEq;
 use sha2::Sha256;
 // use crate::check_hash::hash_checker_fp;
 use ark_bls12_381::{Bls12_381, Fr as BlsFr};
@@ -20,7 +21,7 @@ use ark_snark::CircuitSpecificSetupSNARK;
 use ark_snark::SNARK;
 use ark_std::{ops::*, UniformRand};
 use num_bigint::ToBigUint;
-use rand::{rngs::StdRng, SeedableRng};
+use rand::SeedableRng;
 #[derive(Copy, Clone)]
 struct PrimeCircut<ConstraintF: PrimeField> {
     x: Option<ConstraintF>, // x is the number to be checked
@@ -41,16 +42,15 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
         let num_of_rounds = FpVar::<ConstraintF>::new_input(cs.clone(), || {
             Ok(ConstraintF::from(self.num_of_rounds))
         })?;
+        let mut not_found_prime = Boolean::new_witness(cs.clone(), || Ok(true))?;
+        let mut is_prime_var = Boolean::new_witness(cs.clone(), || Ok(false))?;
 
         // we want to check of hash(x) or hash(x+1) or hash(x+2) or ... hash(x+num_of_rounds) is prime
         let mut curr_var: FpVar<ConstraintF> = x.clone();
         let hasher = <DefaultFieldHasher<Sha256> as HashToField<ConstraintF>>::new(&[]);
-
         // i want to hash(x) check if x is prime then hash(x+1) and check if hash(x+1) is prime
         for i in 0..self.num_of_rounds {
-            ////////////////////////////////////////////////
-
-            let is_prime_var = AllocatedBool::new_witness(cs.clone(), || {
+            is_prime_var = Boolean::new_witness(cs.clone(), || {
                 let tmp1 = curr_var.value()?;
                 let preimage = tmp1.into_bigint().to_bytes_be(); // Converting to big-endian
                 let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 2
@@ -60,12 +60,21 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
                 let hash_bigint = hash.into_bigint();
 
                 let is_prime = miller_rabin_test2(hash_bigint.into(), 128);
-                // enforce the constraint that hash(x) is prime:
 
                 Ok(is_prime)
             })?;
-            // add constraint that hash(x) is prime
 
+            // if hash(x+i) is NOT a prime - meaning is_prime_var == FALSE so we will return TRUE in the select
+            // so not_found_var == TRUE , so we will enforace_eqaual to FALSE.
+            not_found_prime = is_prime_var
+                .select(&Boolean::FALSE, &Boolean::TRUE)
+                .unwrap();
+            let res: () =
+                is_prime_var.conditional_enforce_equal(&Boolean::FALSE, &not_found_prime)?;
+            // if hash(x+i) is prime - meaning is_prime_var == TRUE so not_found_var == FALSE , so we will enforace_eqaual to TRUE.
+
+            let res2: () =
+                is_prime_var.conditional_enforce_equal(&Boolean::TRUE, &not_found_prime.not())?;
             // increment the current value x+1
             curr_var = curr_var + ConstraintF::one();
         }
@@ -98,8 +107,6 @@ fn create_pub_input<ConstraintF: PrimeField>(
 mod tests {
     use std::vec;
 
-    use ark_serialize::CanonicalSerialize;
-
     use super::*;
 
     #[test]
@@ -108,7 +115,7 @@ mod tests {
         // cs.set_mode(SynthesisMode::Prove { construct_matrices: true });
         let x = BlsFr::from(227u8);
         // let the number of rounds be 3
-        let num_of_rounds = 2000;
+        let num_of_rounds = 1000;
         let circuit = PrimeCircut {
             x: Some(x),
             num_of_rounds,
@@ -119,7 +126,7 @@ mod tests {
             .instance_assignment
             .clone();
 
-        println!("Public input: {:?}", public_input);
+        // println!("Public input: {:?}", public_input);
         // print the number of constraints
         println!("Number of constraints: {:?}", cs.num_constraints());
         println!("Number of variables: {:?}", cs.num_instance_variables());
@@ -170,51 +177,21 @@ mod tests {
     }
 
     #[test]
-    fn groth16() {
+    fn groth_indirect_public_inputs() {
         use ark_std::test_rng;
         use rand::RngCore;
-        let numrounds = 2000;
+        let numrounds = 1000;
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
 
         // SETUP THE GROTH16 SNARK
         let circuit = PrimeCircut {
             x: None,
-            num_of_rounds: 0,
-        };
-        let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit, &mut rng).unwrap();
-
-        let circut2 = PrimeCircut {
-            x: Some(BlsFr::from(227u8)),
-            num_of_rounds: numrounds,
-        };
-
-        // Generate the proof
-        let proof = Groth16::<Bls12_381>::prove(&pk, circut2, &mut rng).unwrap();
-
-        // Generate the public input
-        let public_input = vec![BlsFr::from(227u8)];
-
-        // // Verify the proof
-        let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input, &proof).unwrap();
-        assert!(is_correct);
-    }
-
-    #[test]
-    fn groth_indirect_public_inputs() {
-        use ark_std::test_rng;
-        use rand::RngCore;
-        let numrounds = 2000;
-        let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
-
-        // SETUP THE GROTH16 SNARK
-        let circuit = PrimeCircut {
-            x: Some(BlsFr::from(227u8)),
             num_of_rounds: numrounds,
         };
         let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit, &mut rng).unwrap();
 
         let circut2 = PrimeCircut {
-            x: Some(BlsFr::from(227u8)),
+            x: Some(BlsFr::from(130u8)),
             num_of_rounds: numrounds,
         };
 
@@ -228,7 +205,6 @@ mod tests {
             .unwrap()
             .instance_assignment
             .clone();
-        println!("Public input: {:?}", public_input);
         // print the number of constraints
         println!("Number of constraints: {:?}", cs_too.num_constraints());
         println!("Number of variables: {:?}", cs_too.num_instance_variables());
@@ -244,26 +220,18 @@ mod tests {
         use ark_std::test_rng;
         use rand::RngCore;
         use std::mem;
-        let numrounds = 200;
+        let numrounds = 500;
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
 
         // SETUP THE GROTH16 SNARK
-        println!("Creating parameters...");
         let circuit = PrimeCircut {
             x: None,
-            num_of_rounds: 0,
+            num_of_rounds: numrounds,
         };
-        let (pk, vk) = Groth16::<Bls12_381>::setup(circuit, &mut rng).unwrap();
+        let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit, &mut rng).unwrap();
 
-        // Prepare the verification key (for proof verification)
-        let pvk = Groth16::<Bls12_381>::process_vk(&vk).unwrap();
-
-        // init empty vector to store the proofs of BlsFr
-        let mut pub_inputs: Vec<BlsFr> = Vec::new();
-
-        // Generate the proof
         println!("Creating proofs...");
-        // Let's benchmark stuff!
+        // // Let's benchmark stuff!
         const SAMPLES: u32 = 50;
         let mut total_proving = Duration::new(0, 0);
         let mut total_verifying = Duration::new(0, 0);
@@ -272,14 +240,15 @@ mod tests {
             let x = BlsFr::rand(&mut rng);
             // start the timer
             let start = Instant::now();
-            let c = PrimeCircut {
+            let circut2 = PrimeCircut {
                 x: Some(x),
                 num_of_rounds: numrounds,
             };
-            // print x
-            // println!("x: {:?}", x);
+
             // Generate the proof
-            let proof = Groth16::<Bls12_381>::prove(&pk, c, &mut rng).unwrap();
+            print!("Generating proof...");
+            let proof = Groth16::<Bls12_381>::prove(&pk, circut2, &mut rng).unwrap();
+
             // print the proof size
             total_proving += start.elapsed();
             // print the proof size
@@ -287,10 +256,15 @@ mod tests {
             // print the proof size
             println!("Proof size: {:?}", mem::size_of_val(&proof));
             let start = Instant::now();
-            pub_inputs.push(x);
-            assert!(
-                Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &pub_inputs, &proof).unwrap()
-            );
+
+            let cs_too = ConstraintSystem::new_ref();
+            circut2.generate_constraints(cs_too.clone()).unwrap();
+            let public_input = ConstraintSystemRef::borrow(&cs_too)
+                .unwrap()
+                .instance_assignment
+                .clone();
+            let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
+            assert!(is_correct);
             total_verifying += start.elapsed();
         }
         let proving_avg = total_proving / SAMPLES;
