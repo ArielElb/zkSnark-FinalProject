@@ -1,0 +1,53 @@
+fn create_pub_input<ConstraintF: PrimeField>(
+    x: ConstraintF,
+    num_of_rounds: u64,
+) -> Vec<ConstraintF> {
+    let mut pub_input = Vec::new();
+
+    // add hash(x) , hash(x+1), hash(x+2), ... hash(x+num_of_rounds) to the public input:
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<ConstraintF>>::new(&[]);
+    let mut curr_var = x;
+    for _ in 0..num_of_rounds {
+        let preimage = curr_var.into_bigint().to_bytes_be(); // Converting to big-endian
+        let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 2
+        let hash = hashes[0];
+        // println!("hash PI: {:?}\n", hash);
+        let hash_bigint = hash.into_bigint();
+        pub_input.push(hash);
+        curr_var = curr_var + ConstraintF::one();
+    }
+    pub_input
+}
+
+
+
+
+   #[test]
+    fn groth16() {
+        use ark_std::test_rng;
+        use rand::RngCore;
+        let numrounds = 2000;
+        let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
+
+        // SETUP THE GROTH16 SNARK
+        let circuit = PrimeCircut {
+            x: None,
+            num_of_rounds: 0,
+        };
+        let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit, &mut rng).unwrap();
+
+        let circut2 = PrimeCircut {
+            x: Some(BlsFr::from(227u8)),
+            num_of_rounds: numrounds,
+        };
+
+        // Generate the proof
+        let proof = Groth16::<Bls12_381>::prove(&pk, circut2, &mut rng).unwrap();
+
+        // Generate the public input
+        let public_input = vec![BlsFr::from(227u8)];
+
+        // // Verify the proof
+        let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input, &proof).unwrap();
+        assert!(is_correct);
+    }
