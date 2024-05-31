@@ -28,4 +28,4 @@ So, we will calculate h(x),ℎ(𝑥+1),ℎ(𝑥+2),…..,ℎ(𝑥+𝑎−1),ℎ(
 arkworks is a Rust ecosystem for zkSNARK programming. 
 Libraries in the arkworks ecosystem provide efficient implementations of all components required to implement zkSNARK applications, from generic finite fields to R1CS constraints for common functionalities.
 R1CS is a NP-complete language that will help us represent our calculation.
-![image](https://github.com/ArielElb/Primes-Snark/assets/94087682/3945248c-3d48-431c-a88c-b635817e455e)
+
