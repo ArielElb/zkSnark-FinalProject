@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prime Circuit</title>
+  </head>
+  <body>
+    <h1>Prime Circuit</h1>
+    <form id="prime-form">
+      <label for="x">Enter x:</label>
+      <input type="number" id="x" name="x" required />
+      <br /><br />
+      <label for="num_of_rounds">Enter number of rounds:</label>
+      <input type="number" id="num_of_rounds" name="num_of_rounds" required />
+      <br /><br />
+      <input type="submit" value="Submit" />
+    </form>
+    <div id="result"></div>
+
+    <script>
+      document
+        .getElementById("prime-form")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const x = document.getElementById("x").value;
+          const num_of_rounds = document.getElementById("num_of_rounds").value;
+
+          const response = await fetch("/compute", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              x: parseInt(x),
+              num_of_rounds: parseInt(num_of_rounds),
+            }),
+          });
+
+          const result = await response.json();
+          document.getElementById("result").innerHTML = `
+                <h2>Result</h2>
+                <p>Proof: ${result.proof}</p>
+                <p>Public Input: ${result.public_input.join(", ")}</p>
+                <p>Number of Constraints: ${result.num_constraints}</p>
+                <p>Number of Variables: ${result.num_variables}</p>
+                <p>Proving Time: ${result.proving_time} seconds</p>
+                <p>Verifying Time: ${result.verifying_time} seconds</p>
+            `;
+        });
+    </script>
+  </body>
+</html>
