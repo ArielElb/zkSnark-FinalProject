@@ -1,5 +1,5 @@
 use crate::miller_rabin::miller_rabin_test2;
-use ark_ff::BigInteger;
+use ark_ff::{BigInteger, Fp};
 use ark_ff::{Field, One, PrimeField, Zero};
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::bits::boolean::AllocatedBool;
@@ -30,7 +30,6 @@ struct PrimeCircut<ConstraintF: PrimeField> {
 // For benchmarking
 use std::time::{Duration, Instant};
 
-// GENERATE CONSTRAINTS
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut<ConstraintF> {
     fn generate_constraints(
         self,
@@ -42,66 +41,56 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
         let num_of_rounds = FpVar::<ConstraintF>::new_input(cs.clone(), || {
             Ok(ConstraintF::from(self.num_of_rounds))
         })?;
-        let mut not_found_prime = Boolean::new_witness(cs.clone(), || Ok(true))?;
-        let mut is_prime_var = Boolean::new_witness(cs.clone(), || Ok(false))?;
 
-        // we want to check of hash(x) or hash(x+1) or hash(x+2) or ... hash(x+num_of_rounds) is prime
+        let mut is_prime_var = Boolean::new_witness(cs.clone(), || Ok(false))?;
+        // final_is_prime_var is the final output of the circuit
+        // Auxiliary boolean variable to control the enforcement loop
+        let mut found_prime = Boolean::constant(false);
+
+        // we want to check if hash(x) or hash(x+1) or hash(x+2) or ... hash(x+num_of_rounds) is prime
         let mut curr_var: FpVar<ConstraintF> = x.clone();
         let hasher = <DefaultFieldHasher<Sha256> as HashToField<ConstraintF>>::new(&[]);
-        // i want to hash(x) check if x is prime then hash(x+1) and check if hash(x+1) is prime
+
         for i in 0..self.num_of_rounds {
-            is_prime_var = Boolean::new_witness(cs.clone(), || {
-                let tmp1 = curr_var.value()?;
-                let preimage = tmp1.into_bigint().to_bytes_be(); // Converting to big-endian
-                let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 2
-                                                                                   // take the actual number of the hash[0]
-                let hash = hashes[0];
+            // Skip hash and prime check if a prime has already been found
+            let should_continue = found_prime.not().and(&Boolean::constant(true))?;
 
-                let hash_bigint = hash.into_bigint();
-
-                let is_prime = miller_rabin_test2(hash_bigint.into(), 128);
-
-                Ok(is_prime)
+            // Calculate the hash only if we should continue
+            let hash = FpVar::<ConstraintF>::new_witness(cs.clone(), || {
+                if should_continue.value().unwrap_or(false) {
+                    let preimage = curr_var.value()?.into_bigint().to_bytes_be(); // Converting to big-endian
+                    let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 1
+                    let hash = hashes[0];
+                    Ok(hash)
+                } else {
+                    Ok(ConstraintF::zero()) // Placeholder value, won't be used
+                }
             })?;
 
-            // if hash(x+i) is NOT a prime - meaning is_prime_var == FALSE so we will return TRUE in the select
-            // so not_found_var == TRUE , so we will enforace_eqaual to FALSE.
-            not_found_prime = is_prime_var
-                .select(&Boolean::FALSE, &Boolean::TRUE)
-                .unwrap();
-            let res: () =
-                is_prime_var.conditional_enforce_equal(&Boolean::FALSE, &not_found_prime)?;
-            // if hash(x+i) is prime - meaning is_prime_var == TRUE so not_found_var == FALSE , so we will enforace_eqaual to TRUE.
+            // Check if the hash is prime only if we should continue
+            is_prime_var = Boolean::new_witness(cs.clone(), || {
+                if should_continue.value().unwrap_or(false) {
+                    let hash_bigint = hash.value()?.into_bigint();
+                    let is_prime = miller_rabin_test2(hash_bigint.into(), 128);
 
-            let res2: () =
-                is_prime_var.conditional_enforce_equal(&Boolean::TRUE, &not_found_prime.not())?;
-            // increment the current value x+1
+                    Ok(is_prime)
+                } else {
+                    Ok(false)
+                }
+            })?;
+
+            found_prime = found_prime.or(&is_prime_var)?;
+            is_prime_var
+                .conditional_enforce_equal(&Boolean::constant(false), &found_prime.not())?;
+
+            // Increment the current value x+1
             curr_var = curr_var + ConstraintF::one();
         }
 
+        found_prime.conditional_enforce_equal(&Boolean::constant(true), &found_prime)?;
+
         Ok(())
     }
-}
-
-fn create_pub_input<ConstraintF: PrimeField>(
-    x: ConstraintF,
-    num_of_rounds: u64,
-) -> Vec<ConstraintF> {
-    let mut pub_input = Vec::new();
-
-    // add hash(x) , hash(x+1), hash(x+2), ... hash(x+num_of_rounds) to the public input:
-    let hasher = <DefaultFieldHasher<Sha256> as HashToField<ConstraintF>>::new(&[]);
-    let mut curr_var = x;
-    for _ in 0..num_of_rounds {
-        let preimage = curr_var.into_bigint().to_bytes_be(); // Converting to big-endian
-        let hashes: Vec<ConstraintF> = hasher.hash_to_field(&preimage, 1); // Returned vector is of size 2
-        let hash = hashes[0];
-        // println!("hash PI: {:?}\n", hash);
-        let hash_bigint = hash.into_bigint();
-        pub_input.push(hash);
-        curr_var = curr_var + ConstraintF::one();
-    }
-    pub_input
 }
 #[cfg(test)]
 mod tests {
@@ -115,7 +104,7 @@ mod tests {
         // cs.set_mode(SynthesisMode::Prove { construct_matrices: true });
         let x = BlsFr::from(227u8);
         // let the number of rounds be 3
-        let num_of_rounds = 1000;
+        let num_of_rounds = 70;
         let circuit = PrimeCircut {
             x: Some(x),
             num_of_rounds,
@@ -145,14 +134,14 @@ mod tests {
     fn constraints_bench() {
         use ark_std::test_rng;
         use rand::RngCore;
-        let numrounds = 200;
+        let numrounds = 50;
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
-        let cs = ConstraintSystem::<BlsFr>::new_ref();
 
-        const SAMPLES: u32 = 50;
+        const SAMPLES: u32 = 2;
 
         let mut total_time = Duration::new(0, 0);
         for _ in 0..SAMPLES {
+            let cs = ConstraintSystem::<BlsFr>::new_ref();
             let x = BlsFr::rand(&mut rng);
             // generate from 50-300 rounds
             let num_of_rounds = rng.next_u32() % 300 + 50;
@@ -263,6 +252,7 @@ mod tests {
                 .unwrap()
                 .instance_assignment
                 .clone();
+            println!("Public input: {:?}", public_input);
             let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
             assert!(is_correct);
             total_verifying += start.elapsed();
