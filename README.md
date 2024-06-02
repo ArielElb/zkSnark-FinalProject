@@ -5,7 +5,7 @@
 - We don’t want the client to compute the prime number.
 - We don’t want the server to have full control on the choice of the prime number.
 
-## The Protocl:
+## The Protocol:
 
 - The client samples a random number 𝑥∈ℱ .
 - The server knows 𝑥 and the client and server agree on some hash function ℎ.
