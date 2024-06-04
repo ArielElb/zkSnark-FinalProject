@@ -1,12 +1,24 @@
 // create tests:
 #[cfg(test)]
 mod tests {
-    use ark_relations::r1cs::OptimizationGoal;
-    use num_bigint::ToBigUint;
-    use web::trace;
-
     use super::*;
+    use crate::{constraints::PrimeCircut, miller_rabin::miller_rabin_test2};
 
+    use actix_web::web;
+    use ark_bls12_381::{Bls12_381, Fr as BlsFr};
+    use ark_crypto_primitives::crh::sha256::Sha256;
+    use ark_ff::{
+        field_hashers::{DefaultFieldHasher, HashToField},
+        PrimeField,
+    };
+    use ark_groth16::Groth16;
+    use ark_relations::r1cs::ConstraintSynthesizer;
+    use ark_relations::r1cs::OptimizationGoal;
+    use ark_snark::SNARK;
+    use ark_std::rand::SeedableRng;
+    use num_bigint::ToBigUint;
+    use rand::rngs::StdRng;
+    use web::trace;
     #[test]
     // test the prime circuit
     fn test_prime_circuit() {
@@ -189,12 +201,12 @@ mod tests {
         circuit.generate_constraints(cs_too.clone()).unwrap();
         let is_satisfied = cs_too.is_satisfied().unwrap();
         assert_eq!(is_satisfied, true);
-        tracesub("num_constraints", cs_too.num_constraints());
-        tracesub("num_variables", cs_too.num_instance_variables());
-        // trace the time:
-        tracesub(
-            "num_linear_combinations",
-            cs_too.borrow().unwrap().num_linear_combinations,
-        );
+        // tracesub("num_constraints", cs_too.num_constraints());
+        // tracesub("num_variables", cs_too.num_instance_variables());
+        // // trace the time:
+        // tracesub(
+        //     "num_linear_combinations",
+        //     cs_too.borrow().unwrap().num_linear_combinations,
+        // );
     }
 }
