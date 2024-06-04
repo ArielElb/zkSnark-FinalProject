@@ -13,7 +13,7 @@ use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisE
 use ark_snark::SNARK;
 use ark_std::rand::SeedableRng;
 
-use prime_Snarks::miller_rabin::miller_rabin_test2;
+use prime_snarks::miller_rabin::miller_rabin_test2;
 use rand::rngs::StdRng;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
