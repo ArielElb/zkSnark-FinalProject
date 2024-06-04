@@ -3,12 +3,7 @@ use ark_ff::PrimeField;
 use ark_r1cs_std::fields::fp::FpVar;
 use num_bigint::{BigUint, RandBigInt, ToBigUint};
 use num_integer::Integer;
-
 use std::ops::Div;
-pub struct PrimeCircut<ConstraintF: PrimeField> {
-    n: FpVar<ConstraintF>,
-    k: usize,
-}
 pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool {
     let two: BigUint = 2.to_biguint().unwrap();
     if n.eq(&two) {
