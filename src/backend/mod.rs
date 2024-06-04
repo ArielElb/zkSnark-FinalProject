@@ -1,1 +1,1 @@
-pub mod compute;
+pub mod prime_snark;

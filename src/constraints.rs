@@ -1,4 +1,3 @@
-use ark_bls12_381::Fr as BlsFr;
 use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
 use ark_ff::{BigInteger, PrimeField};
 use ark_r1cs_std::alloc::AllocVar;

@@ -11,7 +11,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(Cors::permissive())
-            .service(backend::compute::compute)
+            .service(backend::prime_snark::compute)
             .service(Files::new("/", "./build").index_file("index.html"))
     })
     .bind("127.0.0.1:8080")?
