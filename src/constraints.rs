@@ -8,7 +8,7 @@ use ark_r1cs_std::R1CSVar;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
-// import the miller_rabin_test2 function from the previous section
+
 use crate::miller_rabin::miller_rabin_test2;
 
 #[derive(Deserialize)]
