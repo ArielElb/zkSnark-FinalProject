@@ -1,4 +1,3 @@
-
 use crate::miller_rabin::miller_rabin_test2;
 use ark_bls12_381::Fr;
 use ark_crypto_primitives::crh::sha256::constraints::{DigestVar, Sha256Gadget};
@@ -68,8 +67,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             let is_prime_var = ark_r1cs_std::boolean::Boolean::new_witness(cs.clone(), || {
                 let hash_bigint = BigUint::from_bytes_be(&digest_var.value().unwrap());
 
-                Ok(miller_rabin_test2(hash_bigint, K))
-
+                Ok(miller_rabin_test2(hash_bigint, 128))
             })?;
 
             found_prime = found_prime.or(&is_prime_var)?;
@@ -109,4 +107,3 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
 
 //     Ok(digest1.to_vec())
 // })?;
-
