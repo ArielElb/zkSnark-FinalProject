@@ -1,3 +1,4 @@
+
 use crate::miller_rabin::miller_rabin_test2;
 use ark_bls12_381::Fr;
 use ark_crypto_primitives::crh::sha256::constraints::{DigestVar, Sha256Gadget};
@@ -20,10 +21,6 @@ use rand::{RngCore, SeedableRng};
 use serde::{Deserialize, Serialize};
 use sha2::Digest as OtherDigest;
 use std::ops::AddAssign;
-
-// let static K = 128;
-
-static K: usize = 128;
 
 #[derive(Deserialize)]
 pub struct InputData {
@@ -59,7 +56,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
 
         let mut found_prime = ark_r1cs_std::boolean::Boolean::constant(false);
         let mut curr_var: FpVar<ConstraintF> = x.clone();
-        // Make two distinct digests
 
         for _ in 0..self.num_of_rounds {
             let digest_var = DigestVar::new_witness(cs.clone(), || {
@@ -73,6 +69,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
                 let hash_bigint = BigUint::from_bytes_be(&digest_var.value().unwrap());
 
                 Ok(miller_rabin_test2(hash_bigint, K))
+
             })?;
 
             found_prime = found_prime.or(&is_prime_var)?;
@@ -84,8 +81,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             curr_var += ConstraintF::one();
         }
 
-        // print found_prime
-        println!("{:?}", found_prime.value()?);
         found_prime.enforce_equal(&ark_r1cs_std::boolean::Boolean::constant(true))?;
 
         Ok(())
@@ -114,3 +109,4 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
 
 //     Ok(digest1.to_vec())
 // })?;
+

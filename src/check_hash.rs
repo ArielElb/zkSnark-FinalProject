@@ -46,10 +46,10 @@ pub fn hash_checker_fp<ConstraintF: PrimeField>(
     Ok(())
 }
 
-// // #[cfg(test)]
-// // mod tests {
-// //     use super::*;
-
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+]
 //     #[test]
 //     fn test_hash_number() {
 //         use ark_ff::{Zero,One};

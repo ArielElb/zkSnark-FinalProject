@@ -5,6 +5,7 @@ mod tests {
     use crate::constraints::PrimeCircut;
     use crate::miller_rabin::miller_rabin_test2;
 
+
     use actix_web::web;
     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
     use ark_crypto_primitives::crh::sha256::Sha256;
@@ -152,11 +153,11 @@ mod tests {
 
         let proof = Groth16::<Bls12_381>::prove(&pk, circuit2, &mut rng).unwrap();
 
-        // let cs_too = ark_relations::r1cs::ConstraintSystem::new_ref();
-        // circuit2.generate_constraints(cs_too.clone()).unwrap();
-        // let public_input = cs_too.borrow().unwrap().instance_assignment.clone();
-        let public_input = vec![BlsFr::from(1)];
-        let found_prime = Groth16::<Bls12_381>::verify(&vk, &public_input, &proof).unwrap();
+        let cs_too = ark_relations::r1cs::ConstraintSystem::new_ref();
+        circuit2.generate_constraints(cs_too.clone()).unwrap();
+        let public_input = cs_too.borrow().unwrap().instance_assignment.clone();
+
+        let found_prime = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
         assert_eq!(found_prime, true);
     }
 
@@ -192,23 +193,16 @@ mod tests {
     // print out the constraints and variables and the time
     fn test_constraints() {
         let x = BlsFr::from(1);
-        //TODO: CHECK THIS
-        let num_of_rounds = 1;
+
+        let num_of_rounds = 250;
         let circuit = PrimeCircut {
             x: Some(x),
             num_of_rounds,
         };
         let cs_too = ark_relations::r1cs::ConstraintSystem::new_ref();
-        // cs_too.set_optimization_goal(OptimizationGoal::Constraints);
+        cs_too.set_optimization_goal(OptimizationGoal::Constraints);
         circuit.generate_constraints(cs_too.clone()).unwrap();
         let is_satisfied = cs_too.is_satisfied().unwrap();
-        println!("num_constraints: {}", cs_too.num_constraints());
-        println!("num_variables: {}", cs_too.num_instance_variables());
-        // trace the time:
-        println!(
-            "num_linear_combinations: {}",
-            cs_too.borrow().unwrap().num_linear_combinations
-        );
 
         assert_eq!(is_satisfied, true);
         // tracesub("num_constraints", cs_too.num_constraints());
