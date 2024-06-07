@@ -2,7 +2,9 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{constraints::PrimeCircut, miller_rabin::miller_rabin_test2};
+    use crate::constraints::PrimeCircut;
+    use crate::miller_rabin::miller_rabin_test2;
+
 
     use actix_web::web;
     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
@@ -191,6 +193,7 @@ mod tests {
     // print out the constraints and variables and the time
     fn test_constraints() {
         let x = BlsFr::from(1);
+
         let num_of_rounds = 250;
         let circuit = PrimeCircut {
             x: Some(x),
@@ -200,6 +203,7 @@ mod tests {
         cs_too.set_optimization_goal(OptimizationGoal::Constraints);
         circuit.generate_constraints(cs_too.clone()).unwrap();
         let is_satisfied = cs_too.is_satisfied().unwrap();
+
         assert_eq!(is_satisfied, true);
         // tracesub("num_constraints", cs_too.num_constraints());
         // tracesub("num_variables", cs_too.num_instance_variables());
