@@ -192,6 +192,7 @@ mod tests {
     // print out the constraints and variables and the time
     fn test_constraints() {
         let x = BlsFr::from(1);
+        //TODO: CHECK THIS
         let num_of_rounds = 1;
         let circuit = PrimeCircut {
             x: Some(x),
