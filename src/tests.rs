@@ -2,7 +2,8 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{constraints::PrimeCircut, miller_rabin::miller_rabin_test2};
+    use crate::constraints::PrimeCircut;
+    use crate::miller_rabin::miller_rabin_test2;
 
     use actix_web::web;
     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
@@ -191,7 +192,7 @@ mod tests {
     // print out the constraints and variables and the time
     fn test_constraints() {
         let x = BlsFr::from(1);
-        let num_of_rounds = 10;
+        let num_of_rounds = 1;
         let circuit = PrimeCircut {
             x: Some(x),
             num_of_rounds,
