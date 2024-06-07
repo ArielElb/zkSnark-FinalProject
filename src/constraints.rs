@@ -84,6 +84,8 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             curr_var += ConstraintF::one();
         }
 
+        // print found_prime
+        println!("{:?}", found_prime.value()?);
         found_prime.enforce_equal(&ark_r1cs_std::boolean::Boolean::constant(true))?;
 
         Ok(())
