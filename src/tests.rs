@@ -1,10 +1,8 @@
 // create tests:
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::constraints::PrimeCircut;
+    use crate::constraints::prime_constraints::PrimeCircut;
     use crate::miller_rabin::miller_rabin_test2;
-
 
     use actix_web::web;
     use ark_bls12_381::{Bls12_381, Fr as BlsFr};
@@ -130,6 +128,7 @@ mod tests {
         let hasher = <DefaultFieldHasher<Sha256> as HashToField<BlsFr>>::new(&[]);
         let preimage = vec![1, 2, 3, 4, 5];
         let hashes: Vec<BlsFr> = hasher.hash_to_field(&preimage, 1);
+
         assert_eq!(hashes.len(), 1);
     }
     #[test]
