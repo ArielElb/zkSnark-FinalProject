@@ -4,20 +4,33 @@ mod miller_rabin;
 
 use actix_cors::Cors;
 use actix_files::Files;
+use actix_web::{web, App, HttpServer};
+use backend::linear_equations::prove_linear_equations;
+use backend::prime_snark::prime_snark_compute;
+fn configure_services(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::scope("/api")
+            .route("/prime_snark", web::post().to(prime_snark_compute))
+            .route(
+                "/prove_linear_equations",
+                web::post().to(prove_linear_equations),
+            ),
+    );
+}
 
-use actix_web::{App, HttpServer};
+fn configure_app(cfg: &mut web::ServiceConfig) {
+    cfg.service(Files::new("/", "./build").index_file("index.html"));
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(Cors::permissive())
-            .service(backend::prime_snark::compute)
-            .service(Files::new("/", "./build").index_file("index.html"))
+            .configure(configure_services)
+            .configure(configure_app)
     })
     .bind("127.0.0.1:8080")?
     .run()
     .await
-    // if you want to connect directly to the frontend to a specific port :
-    
 }
