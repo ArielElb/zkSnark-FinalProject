@@ -1,8 +1,10 @@
+// pages/index.js
+"use client";
+
 import React, { useState } from "react";
 import axios from "axios";
-import "./App.css";
 
-function App() {
+export default function Home() {
   const [x, setX] = useState("");
   const [numOfRounds, setNumOfRounds] = useState("");
   const [result, setResult] = useState(null);
@@ -22,7 +24,7 @@ function App() {
   };
 
   return (
-    <div className='App'>
+    <div>
       <h1>Prime Circuit</h1>
       <form onSubmit={handleSubmit}>
         <label>
@@ -70,4 +72,6 @@ function App() {
   );
 }
 
-export default App;
+/*
+ 
+*/
