@@ -1,12 +1,10 @@
-mod backend;
-mod constraints;
-mod miller_rabin;
-
 use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::{web, App, HttpServer};
 use backend::linear_equations::prove_linear_equations;
 use backend::prime_snark::prime_snark_compute;
+use prime_snarks::backend;
+
 fn configure_services(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api")
@@ -18,6 +16,7 @@ fn configure_services(cfg: &mut web::ServiceConfig) {
     );
 }
 
+// for final deployment to production
 fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(Files::new("/", "./build").index_file("index.html"));
 }
@@ -28,7 +27,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Cors::permissive())
             .configure(configure_services)
-            .configure(configure_app)
     })
     .bind("127.0.0.1:8080")?
     .run()

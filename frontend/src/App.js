@@ -10,7 +10,7 @@ function App() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post("/api/prime_snark", {
+      const response = await axios.post("http://localhost:8080/api/prime_snark", {
         x: parseInt(x),
         num_of_rounds: parseInt(numOfRounds),
       });
