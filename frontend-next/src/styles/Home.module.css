@@ -1,6 +1,6 @@
 .backgroundContainer {
   background-image: url("../styles/zkSnark.png"); /* Replace with the correct path to your image */
-  background-size: cover; /* Ensure the image covers the entire container */
+  background-size: contain; /* Ensure the image covers the entire container */
   background-position: center; /* Center the background image */
   height: 100vh; /* Set the height of the container to fill the viewport */
   display: flex; /* Enable flexbox layout */
