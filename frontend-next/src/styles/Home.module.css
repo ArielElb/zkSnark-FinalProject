@@ -1,0 +1,49 @@
+.backgroundContainer {
+  background-image: url("../styles/zkSnark.png"); /* Replace with the correct path to your image */
+  background-size: cover; /* Ensure the image covers the entire container */
+  background-position: center; /* Center the background image */
+  height: 100vh; /* Set the height of the container to fill the viewport */
+  display: flex; /* Enable flexbox layout */
+  justify-content: center; /* Center children horizontally */
+  align-items: center; /* Center children vertically */
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.message {
+  font-size: 6vh;
+  color: white; /* Text color */
+  margin-top: 20px; /* Add missing unit */
+}
+
+.buttonContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 50px;
+  justify-items: center;
+  margin-top: 40px; /* Top margin */
+  margin-bottom: 50px; /* Bottom margin */
+}
+
+.optionButton {
+  padding: 20px 40px;
+  font-size: 20px;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: white;
+  color: black;
+  border: 2px solid #e7e7e7;
+  border-radius: 45%; /* This makes the button round */
+}
+.optionButton:hover {
+  background-color: #e7e7e7;
+}

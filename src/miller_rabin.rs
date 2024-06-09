@@ -1,6 +1,8 @@
 use ark_bls12_381::Fq as F;
 use ark_ff::PrimeField;
+
 use ark_r1cs_std::fields::fp::FpVar;
+
 use num_bigint::{BigUint, RandBigInt, ToBigUint};
 use num_integer::Integer;
 use std::ops::Div;
@@ -24,6 +26,7 @@ pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool {
     let _zero = 0.to_biguint().unwrap();
 
     let mut d = n_bigint.clone() - one.clone();
+    // find s and d such that n-1 = 2^s * d 
     while d.is_even() {
         d = d.div(2.to_biguint().unwrap());
         s = s + 1;
