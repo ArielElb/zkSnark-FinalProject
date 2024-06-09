@@ -4,12 +4,12 @@ import styles from "../styles/Home.module.css";
 
 const HomePage = () => {
   const options = [
-    "Prime number",
+    "Prime_number",
     "Fibonacci",
     "Factorization",
-    "Perfect square",
-    "quadratic equation",
-    "Proof for Linear Equations",
+    "Perfect_square",
+    "quadratic_equation",
+    "Linear Equations",
   ];
 
   return (
@@ -18,7 +18,7 @@ const HomePage = () => {
         <h1 className={styles.message}>Please Select the option you want to verify</h1>
         <div className={styles.buttonContainer}>
           {options.map((option, index) => (
-            <Link key={index} href={{ pathname: "/verify", query: { option } }} passHref>
+            <Link key={index} href={{ pathname: "/verify", query: { option } }}>
               <button className={styles.optionButton}>{option}</button>
             </Link>
           ))}
