@@ -18,7 +18,11 @@ mod tests {
     ];
 
     use super::*;
-
+    /// Witnesses bytes
+    fn to_byte_vars(cs: impl Into<Namespace<BlsFr>>, data: &[u8]) -> Vec<UInt8<BlsFr>> {
+        let cs = cs.into().cs();
+        UInt8::new_witness_vec(cs, data).unwrap()
+    }
     #[test]
     fn test_sha256_gadget() {
         let cs = ark_relations::r1cs::ConstraintSystem::new_ref();
@@ -39,24 +43,12 @@ mod tests {
 
         let res = digest_var.unwrap();
     }
-    #[test]
-    fn test_sha256() {
-        let mut hasher = Sha256::new();
-        hasher.update(&[1u8]);
-        let result = hasher.finalize();
-        print!("{:?}", result);
-    }
+
     /// Tests the CRHCheme trait
     #[test]
     fn crh() {
         let mut rng = ark_std::test_rng();
         let cs = ConstraintSystem::<BlsFr>::new_ref();
-
-        /// Witnesses bytes
-        fn to_byte_vars(cs: impl Into<Namespace<BlsFr>>, data: &[u8]) -> Vec<UInt8<BlsFr>> {
-            let cs = cs.into().cs();
-            UInt8::new_witness_vec(cs, data).unwrap()
-        }
 
         // CRH parameters are nothing
         let unit = ();
@@ -74,6 +66,11 @@ mod tests {
                     &to_byte_vars(ns!(cs, "input"), &input_str),
                 )
                 .unwrap();
+
+            println!(
+                "Computed output: {:?}",
+                computed_output.value().unwrap().to_vec()
+            );
             let expected_output = <Sha256 as CRHScheme>::evaluate(&unit, input_str).unwrap();
             assert_eq!(
                 computed_output.value().unwrap().to_vec(),

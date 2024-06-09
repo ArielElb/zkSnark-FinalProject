@@ -6,15 +6,14 @@ use ark_bls12_381::{Bls12_381, Fr};
 use ark_groth16::Groth16;
 use ark_relations::r1cs::ConstraintSystem;
 // groth trace:
-use ark_relations::r1cs::ConstraintTrace;
-use ark_relations::r1cs::TracingMode;
+// use ark_relations::r1cs::ConstraintTrace;
+// use ark_relations::r1cs::TracingMode;
 use ark_snark::SNARK;
-use ark_std::perf_trace;
+// use ark_std::perf_trace;
 use ark_std::rand::SeedableRng;
-use ark_std::start_timer;
+// use ark_std::start_timer;
 use ark_std::Zero;
 use rand::rngs::StdRng;
-use std::time::Instant;
 
 // create a function to solve the linear equations and find a witness x:
 // Assume that the matrix A is a square matrix
