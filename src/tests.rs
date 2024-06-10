@@ -204,12 +204,5 @@ mod tests {
         let is_satisfied = cs_too.is_satisfied().unwrap();
 
         assert_eq!(is_satisfied, true);
-        // tracesub("num_constraints", cs_too.num_constraints());
-        // tracesub("num_variables", cs_too.num_instance_variables());
-        // // trace the time:
-        // tracesub(
-        //     "num_linear_combinations",
-        //     cs_too.borrow().unwrap().num_linear_combinations,
-        // );
     }
 }

@@ -76,7 +76,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             )?;
             curr_var += ConstraintF::one();
         }
-
         found_prime.enforce_equal(&ark_r1cs_std::boolean::Boolean::constant(true))?;
 
         Ok(())

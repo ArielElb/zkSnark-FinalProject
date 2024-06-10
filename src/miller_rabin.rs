@@ -24,6 +24,7 @@ pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool {
     let _zero = 0.to_biguint().unwrap();
 
     let mut d = n_bigint.clone() - one.clone();
+    // n-1 = 2^s * d
     while d.is_even() {
         d = d.div(2.to_biguint().unwrap());
         s = s + 1;
@@ -50,6 +51,8 @@ pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool {
     return true;
 }
 
+// create miller_rabin in  R1CS that get the ConstraintSystemRef and the number to check if it is prime and a witness s and d such as n-1 = 2^s * d
+// pub fn miller_rabin_r1cs(cs:)
 // #[cfg(test)]
 // mod tests {
 //     use super::*;
