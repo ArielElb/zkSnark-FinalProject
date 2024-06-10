@@ -26,7 +26,7 @@ pub async fn prime_snark_compute(data: web::Json<InputData>) -> impl Responder {
     };
 
     let start = ark_std::time::Instant::now();
-    let proof = Groth16::<Bls12_381>::prove(&pk, circuit2, &mut rng).unwrap();
+    let proof = Groth16::<Bls12_381>::prove(&pk, circuit2.clone(), &mut rng).unwrap();
     let proving_time = start.elapsed().as_secs_f64();
 
     let cs_too = ConstraintSystem::new_ref();

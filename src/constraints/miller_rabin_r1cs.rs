@@ -15,6 +15,8 @@ use ark_std::test_rng;
 use ark_std::UniformRand;
 // import the miller_rabin2 function
 use crate::miller_rabin::miller_rabin_test2;
+
+// miller rabin - https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
 /*
 Create a function called miller-rabin for primality testing
 Input :
@@ -112,12 +114,12 @@ mod tests {
         // create a random number n
         let n = FpVar::<Fr>::new_input(cs.clone(), || Ok(Fr::from(5u64))).unwrap();
 
-        let is_prime = Boolean::new_witness(cs.clone(), || {
-            Ok(miller_rabin_test2(n.value()?.into_bigint().into(), 128))
-        })
-        .unwrap();
+        // let is_prime = Boolean::new_witness(cs.clone(), || {
 
-        println!("is_prime: {:?}", is_prime.value().unwrap());
+        // })
+        // .unwrap();
+
+        // println!("is_prime: {:?}", is_prime.value().unwrap());
         // // call the miller_rabin_r1cs function
         // let result = super::miller_rabin_r1cs(
         //     cs.clone(),
