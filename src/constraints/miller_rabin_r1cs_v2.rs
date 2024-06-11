@@ -126,13 +126,11 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
     let is_even = n_bigint.is_even();
 
     let is_even_var = Boolean::new_witness(cs.clone(), || Ok(is_even))?;
+
     // enforce not equal to is_prime:
     is_prime.enforce_equal(&is_even_var.not())?;
     // if n is even, return false:
-    if (is_even_var.value()?) {
-        is_prime.enforce_equal(&Boolean::constant(false))?;
-        return Ok(false);
-    }
+
     // Now n is odd, we can write n-1 = 2^s * d
     let n_minos_one = n.clone() - ConstraintF::one();
     // enforce that n-1 = 2^s * d
@@ -273,7 +271,7 @@ mod tests {
     use ark_std::test_rng;
     use ark_std::Zero;
     #[test]
-    fn check_circut_creation() {
+    fn should_fail_circut_creation() {
         // create a constraint system
         let cs = ConstraintSystem::<Fr>::new_ref();
 
@@ -314,15 +312,63 @@ mod tests {
         // println!("y_vec = {:?}", circut.y_vec);
         println!("is_prime = {:?}", circut.is_prime);
 
-        // circut.is_prime = false;
-        // generate constraints:
+        // "cheating" by changing the value of is_prime to true:
+        circut.is_prime = true;
+
+        circut.generate_constraints(cs.clone()).unwrap();
+
+        // check if the circut is correct:
+        assert!(cs.is_satisfied().unwrap());
+    }
+
+    #[test]
+    fn correctness_constraints() {
+        // create a constraint system
+        let cs = ConstraintSystem::<Fr>::new_ref();
+
+        // create an empty circut and than call miller_rabin_witness_creation_as_fr:
+        let mut circut = PrimeCircutNotFpVar::<Fr> {
+            x: None,
+            num_of_rounds: 0,
+            n: Fr::zero(),
+            d: Fr::zero(),
+            two_to_s: Fr::zero(),
+            s: Fr::zero(),
+            k: 0,
+            a_to_power_d_mod_n_vec: Vec::<Fr>::new(),
+            x_to_power_of_2_mod_n_vec: Vec::<Fr>::new(),
+            y_vec: Vec::<Fr>::new(),
+            is_prime: false,
+        };
+        // now call the function miller_rabin_witness_creation_as_fr:
+        let n = 17.to_biguint().unwrap();
+        let k = 128;
+
+        miller_rabin_witness_creation_as_fr(n, k, cs.clone(), &mut circut).unwrap();
+        // print the circut values individually:
+        println!("n = {:?}", circut.n);
+        println!("d = {:?}", circut.d);
+        println!("two_to_s = {:?}", circut.two_to_s);
+        println!("s = {:?}", circut.s);
+        println!("k = {:?}", circut.k);
+        // print each vector nicely:
+        // println!(
+        //     "a_to_power_d_mod_n_vec = {:?}",
+        //     circut.a_to_power_d_mod_n_vec
+        // );
+        // println!(
+        //     "x_to_power_of_2_mod_n_vec = {:?}",
+        //     circut.x_to_power_of_2_mod_n_vec
+        // );
+        // println!("y_vec = {:?}", circut.y_vec);
+        println!("is_prime = {:?}", circut.is_prime);
+
         circut.generate_constraints(cs.clone()).unwrap();
 
         // check if the circut is correct:
         assert!(cs.is_satisfied().unwrap());
     }
 }
-
 // #[derive(Clone)]
 // pub struct PrimeCircutNew<ConstraintF: PrimeField> {
 //     pub x: Option<ConstraintF>, // public input - seed
