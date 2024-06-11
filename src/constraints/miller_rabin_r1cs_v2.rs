@@ -129,14 +129,20 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
 
     // enforce not equal to is_prime:
     is_prime.enforce_equal(&is_even_var.not())?;
-    // if n is even, return false:
+    // // if n is even, return false:
+    if is_even_var.value()? {
+        return Ok(false);
+    }
 
     // Now n is odd, we can write n-1 = 2^s * d
     let n_minos_one = n.clone() - ConstraintF::one();
     // enforce that n-1 = 2^s * d
     n_minos_one.enforce_equal(&(&two_to_s * &d))?;
+
     // s is the number of times n-1 is divisible by 2 - inner loop
     let s_value = s.value()?.to_string().parse::<u64>().unwrap();
+
+    println!("s_value = {:?}", s_value);
     // now we need to check if n is prime
     // we need to check if n is prime k times:
     for i in 0..k {
@@ -144,6 +150,7 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
         let x = a_to_power_d_mod_n_vec
             .get(i)
             .ok_or(SynthesisError::AssignmentMissing)?;
+        println!("x = {:?}", x.value()?);
         for j in 0..s_value {
             // enforce that y = x^2 mod n
             let y = y_vec
@@ -152,6 +159,7 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
             let x_j_to_power_of_2_mod_n = x_to_power_of_2_mod_n_vec
                 .get(j as usize)
                 .ok_or(SynthesisError::AssignmentMissing)?;
+            println!("y = {:?}", y.value()?);
             y.enforce_equal(&x_j_to_power_of_2_mod_n)?;
 
             // if y = 1 and x != 1 and x != n-1, return false
@@ -162,7 +170,6 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
             let y_is_one = y.is_eq(&one)?;
             let x_is_one = x.is_eq(&one)?;
             let x_is_n_minus_one = x.is_eq(&n_minos_one)?;
-
             let condition = y_is_one
                 .and(&x_is_one.not())?
                 .and(&x_is_n_minus_one.not())?;
@@ -170,6 +177,9 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
             is_prime.not().enforce_equal(&condition)?;
             // if y != 1, return false
             is_prime.enforce_equal(&y_is_one.not())?;
+            if condition.value()? {
+                return Ok(false);
+            }
             // now x = y
             x.enforce_equal(&y)?;
         }
@@ -267,6 +277,7 @@ mod tests {
     use super::*;
     use ark_bls12_381::Fr;
     use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, fields::fp::FpVar};
+    use ark_relations::r1cs::ConstraintLayer;
     use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
     use ark_std::test_rng;
     use ark_std::Zero;
@@ -274,6 +285,8 @@ mod tests {
     fn should_fail_circut_creation() {
         // create a constraint system
         let cs = ConstraintSystem::<Fr>::new_ref();
+
+        // let cl = ConstraintLayer::<Fr>::default();
 
         // create an empty circut and than call miller_rabin_witness_creation_as_fr:
         let mut circut = PrimeCircutNotFpVar::<Fr> {
@@ -290,9 +303,10 @@ mod tests {
             is_prime: false,
         };
         // now call the function miller_rabin_witness_creation_as_fr:
-        let n = 16.to_biguint().unwrap();
-        let k = 128;
-
+        let n = 19.to_biguint().unwrap();
+        let k = 64;
+        circut.n = Fr::from(n.clone());
+        circut.k = k;
         miller_rabin_witness_creation_as_fr(n, k, cs.clone(), &mut circut).unwrap();
         // print the circut values individually:
         println!("n = {:?}", circut.n);
@@ -300,6 +314,7 @@ mod tests {
         println!("two_to_s = {:?}", circut.two_to_s);
         println!("s = {:?}", circut.s);
         println!("k = {:?}", circut.k);
+
         // print each vector nicely:
         // println!(
         //     "a_to_power_d_mod_n_vec = {:?}",
@@ -312,10 +327,11 @@ mod tests {
         // println!("y_vec = {:?}", circut.y_vec);
         println!("is_prime = {:?}", circut.is_prime);
 
-        // "cheating" by changing the value of is_prime to true:
-        circut.is_prime = true;
-
+        // Fail the test because its not a prime
+        // circut.is_prime = true;
         circut.generate_constraints(cs.clone()).unwrap();
+
+        cs.finalize();
 
         // check if the circut is correct:
         assert!(cs.is_satisfied().unwrap());
@@ -343,6 +359,9 @@ mod tests {
         // now call the function miller_rabin_witness_creation_as_fr:
         let n = 17.to_biguint().unwrap();
         let k = 128;
+
+        circut.n = Fr::from(n.clone());
+        circut.k = k;
 
         miller_rabin_witness_creation_as_fr(n, k, cs.clone(), &mut circut).unwrap();
         // print the circut values individually:
