@@ -124,12 +124,13 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
     // if n is even, return false
     let n_bigint = n.value()?.into_bigint();
     let is_even = n_bigint.is_even();
-    let res = CondSelectGadget::conditionally_select(
-        &Boolean::new_witness(ark_relations::ns!(cs, "is_even"), || Ok(is_even))?,
-        &Boolean::constant(true),
-        &Boolean::constant(false),
-    )?;
-    if res.value()? {
+
+    let is_even_var = Boolean::new_witness(cs.clone(), || Ok(is_even))?;
+    // enforce not equal to is_prime:
+    is_prime.enforce_equal(&is_even_var.not())?;
+    // if n is even, return false:
+    if (is_even_var.value()?) {
+        is_prime.enforce_equal(&Boolean::constant(false))?;
         return Ok(false);
     }
     // Now n is odd, we can write n-1 = 2^s * d
@@ -176,6 +177,7 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
         }
     }
     // // if we didn't find a prime, return false
+    is_prime.enforce_equal(&Boolean::constant(true))?;
     Ok(true)
 }
 
@@ -290,9 +292,34 @@ mod tests {
             is_prime: false,
         };
         // now call the function miller_rabin_witness_creation_as_fr:
-        let n = 17.to_biguint().unwrap();
+        let n = 16.to_biguint().unwrap();
         let k = 128;
+
         miller_rabin_witness_creation_as_fr(n, k, cs.clone(), &mut circut).unwrap();
+        // print the circut values individually:
+        println!("n = {:?}", circut.n);
+        println!("d = {:?}", circut.d);
+        println!("two_to_s = {:?}", circut.two_to_s);
+        println!("s = {:?}", circut.s);
+        println!("k = {:?}", circut.k);
+        // print each vector nicely:
+        // println!(
+        //     "a_to_power_d_mod_n_vec = {:?}",
+        //     circut.a_to_power_d_mod_n_vec
+        // );
+        // println!(
+        //     "x_to_power_of_2_mod_n_vec = {:?}",
+        //     circut.x_to_power_of_2_mod_n_vec
+        // );
+        // println!("y_vec = {:?}", circut.y_vec);
+        println!("is_prime = {:?}", circut.is_prime);
+
+        // circut.is_prime = false;
+        // generate constraints:
+        circut.generate_constraints(cs.clone()).unwrap();
+
+        // check if the circut is correct:
+        assert!(cs.is_satisfied().unwrap());
     }
 }
 
