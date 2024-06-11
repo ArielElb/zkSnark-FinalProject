@@ -78,7 +78,6 @@ pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool {
     return true;
 }
 
-// complete the code:
 pub fn miller_rabin3<ConstraintF: PrimeField>(
     n: BigUint,
     k: usize,
