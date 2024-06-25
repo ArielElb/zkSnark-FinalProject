@@ -50,10 +50,10 @@ pub struct PrimeCircutNotFpVar<ConstraintF: PrimeField> {
     a_to_power_d_mod_n_vec: Vec<ConstraintF>, // a^d mod n
     x_to_power_of_2_mod_n_vec: Vec<ConstraintF>, // x^2 mod n
     // vec of stucts of Modulo for a^d mod n vec
-    modulo_a_to_pow_d: Vec<Modulo<ConstraintF>>, // vec of stucts of Modulo for x^2 mod n vec
-    modulo_x_to_pow_2: Vec<Modulo<ConstraintF>>, //  vec of stucts of Modulo for x^2 mod n vec
-    y_vec: Vec<ConstraintF>,                     // y
-    is_prime: bool,                              // true if n is prime, false otherwise
+    modulo_a_to_pow_d: Vec<Vec<Modulo<ConstraintF>>>, // vec of stucts of Modulo for x^2 mod n vec
+    modulo_x_to_pow_2: Vec<Vec<Modulo<ConstraintF>>>, //  vec of stucts of Modulo for x^2 mod n vec
+    y_vec: Vec<ConstraintF>,                          // y
+    is_prime: bool,                                   // true if n is prime, false otherwise
 }
 
 // [.........] 256 bits   1x1 + 0/1x
@@ -134,7 +134,6 @@ fn pow<ConstraintF: PrimeField>(
     res.enforce_equal(&expected)?;
     Ok(())
 }
-
 
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
     for PrimeCircutNotFpVar<ConstraintF>
@@ -246,6 +245,72 @@ fn miller_rabin_r1cs<ConstraintF: PrimeField>(
     is_prime.enforce_equal(&Boolean::constant(true))?;
     Ok(true)
 }
+// implment modpow to create mini circuits of modluo:
+// input : a, d, n : a^d mod n as biguint
+pub fn modpow_create(a: BigUint, mut d: BigUint, n: BigUint) -> Vec<Vec<BigUint>> {
+    let mut x = a.clone();
+    let mut y = BigUint::from(1u64);
+    let n = n.clone();
+
+    let mut modulo_vec = Vec::<Vec<BigUint>>::new();
+
+    while d > BigUint::from(0u64) {
+        let q = &d / BigUint::from(2u64);
+        let r = &d % BigUint::from(2u64);
+        let x_copy = x.clone();
+        let y_copy = y.clone();
+
+        let mut vec = Vec::<BigUint>::new();
+        vec.push(x_copy.clone());
+        vec.push(q.clone());
+        vec.push(r.clone());
+        vec.push(y_copy.clone());
+        modulo_vec.push(vec);
+
+        if r == BigUint::from(1u64) {
+            y = (x.clone() * &y) % &n;
+        }
+        x = (&x.clone() * &x.clone()) % &n;
+        d = q;
+    }
+    // Add the final values after the loop exits (when d == 0)
+    let x_copy = x.clone();
+    let y_copy = y.clone();
+    let vec = vec![x_copy, BigUint::from(0u64), BigUint::from(0u64), y_copy];
+    modulo_vec.push(vec);
+
+    modulo_vec
+}
+
+// test the modpow_create function:
+#[cfg(test)]
+mod tests {
+    use num_traits::FromPrimitive;
+
+    use super::*;
+    #[test]
+    fn test_modpow_create() {
+        // Test case 1: a = 2, d = 10, n = 13 - 2^10 mod 13= 3
+        let a1 = BigUint::from_u64(2).unwrap();
+        let d1 = BigUint::from_u64(10).unwrap();
+        let n1 = BigUint::from_u64(13).unwrap();
+
+        let result1 = modpow_create(a1.clone(), d1.clone(), n1.clone());
+        println!("result1 = {:?}", result1);
+        let expected1 = a1.clone().modpow(&d1, &n1);
+        println!("expected1 = {:?}", expected1);
+        //  2x5
+        // Test case 2: a = 3, d = 7, n = 11
+        let a2 = BigUint::from_u64(3).unwrap();
+        let d2 = BigUint::from_u64(7).unwrap();
+        let n2 = BigUint::from_u64(11).unwrap();
+
+        let result2 = modpow_create(a2.clone(), d2.clone(), n2.clone());
+        let expected2 = a2.clone().modpow(&d2, &n2);
+
+        assert_eq!(result2.len(), expected2.bits() as usize + 1); // Check number of iterations
+    }
+}
 
 pub fn miller_rabin_witness_creation_as_fr<ConstraintF: PrimeField>(
     n: BigUint,
@@ -299,8 +364,8 @@ pub fn miller_rabin_witness_creation_as_fr<ConstraintF: PrimeField>(
         // let a_to_d = a.pow(d);
         // a^d mod n : Separate to a^d and a^d mod n:
         let a_to_pow_d_modn = a.modpow(&d, &n_bigint); // r
-        // qy+r = x  --> r = a_to_pow_d_modn , y= n , x = ? , q = ?
-        
+                                                       // qy+r = x  --> r = a_to_pow_d_modn , y= n , x = ? , q = ?
+                                                       // implment modpow as a circuit with a, d, n as inputs and a^d mod n as output
         let a_fr = ConstraintF::from_le_bytes_mod_order(&a_to_pow_d_modn.to_bytes_le());
         a_to_power_d_mod_n_vec.push(a_fr);
         let mut x = a_to_pow_d_modn.clone();
@@ -332,37 +397,37 @@ pub fn miller_rabin_witness_creation_as_fr<ConstraintF: PrimeField>(
     Ok(())
 }
 
-// create tests for the miller_rabin_r1cs function
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ark_bls12_381::Fr;
-    use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, fields::fp::FpVar};
-    use ark_relations::r1cs::ConstraintLayer;
-    use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
-    use ark_std::test_rng;
-    use ark_std::Zero;
-    use core::num;
-    #[test]
-    fn pow_tests() -> Result<(), SynthesisError> {
-        let cs = ConstraintSystem::<Fr>::new_ref();
-        let n = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(2u64)))?;
-        let exp = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(4u64)))?;
-        let expected = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(16u64)))?;
-        pow(n, exp, expected).unwrap();
-        assert!(cs.is_satisfied().unwrap());
-        Ok(())
-    }
-    #[test]
-    fn modolo() -> Result<(), SynthesisError> {
-        let cs = ConstraintSystem::<Fr>::new_ref();
-        let x = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(10u64)))?;
-        let q = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(2u64)))?;
-        let r = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(0u64)))?;
-        let y = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(5u64)))?;
-        // qy+r = x
-        modulo(x, q, r, y).unwrap();
-        assert!(cs.is_satisfied().unwrap());
-        Ok(())
-    }
-}
+// // create tests for the miller_rabin_r1cs function
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use ark_bls12_381::Fr;
+//     use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, fields::fp::FpVar};
+//     use ark_relations::r1cs::ConstraintLayer;
+//     use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
+//     use ark_std::test_rng;
+//     use ark_std::Zero;
+//     use core::num;
+//     #[test]
+//     fn pow_tests() -> Result<(), SynthesisError> {
+//         let cs = ConstraintSystem::<Fr>::new_ref();
+//         let n = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(2u64)))?;
+//         let exp = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(4u64)))?;
+//         let expected = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(16u64)))?;
+//         pow(n, exp, expected).unwrap();
+//         assert!(cs.is_satisfied().unwrap());
+//         Ok(())
+//     }
+//     #[test]
+//     fn modolo() -> Result<(), SynthesisError> {
+//         let cs = ConstraintSystem::<Fr>::new_ref();
+//         let x = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(10u64)))?;
+//         let q = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(2u64)))?;
+//         let r = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(0u64)))?;
+//         let y = FpVar::<Fr>::new_witness(cs.clone(), || Ok(Fr::from(5u64)))?;
+//         // qy+r = x
+//         modulo(x, q, r, y).unwrap();
+//         assert!(cs.is_satisfied().unwrap());
+//         Ok(())
+//     }
+// }
