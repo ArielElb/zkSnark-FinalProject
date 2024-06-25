@@ -18,7 +18,7 @@ const HomePage = () => {
         <h1 className={styles.message}>Please Select the option you want to verify</h1>
         <div className={styles.buttonContainer}>
           {options.map((option, index) => (
-            <Link key={index} href={{ pathname: "/verify", query: { option } }}>
+            <Link key={index} href={{ pathname: "/inputPrime", query: {name: option } }}>
               <button className={styles.optionButton}>{option}</button>
             </Link>
           ))}
