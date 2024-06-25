@@ -72,6 +72,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             })?;
 
             let is_prime_var = ark_r1cs_std::boolean::Boolean::new_witness(cs.clone(), || {
+                
                 let hash_bigint = hash.value()?.into_bigint();
                 Ok(miller_rabin_test2(hash_bigint.into(), 128))
             })?;
