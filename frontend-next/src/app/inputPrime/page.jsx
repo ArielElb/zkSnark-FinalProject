@@ -1,15 +1,17 @@
 // src/app/verify/page.jsx
 "use client";
+import Link from "next/link";
+
 import { useState } from "react";
 import axios from "axios";
+import { useRouter } from 'next/router';
 
 import styles from "../../styles/verify.module.css"; // תיקון נתיב לקובץ ה-CSS
 
-const InputPrimePage = ({}) => {
+const InputPrimePage = ({searchParams}) => {
   const [number, setNumber] = useState("");
-  const [rounds, setRounds] = useState("");
-  const [result, setResult] = useState(null);
-  
+  const [rounds, setRounds] = useState(""); 
+
   const handleSubmit = async (e) => {
     e.prevent.prevent();
     try {
@@ -27,8 +29,7 @@ const InputPrimePage = ({}) => {
   return (
     <div className={styles.background}>
     <div className={styles.container}>
-      <h1 className={styles.title}>PROVE prime number</h1>
-      <header className={styles.header}>
+      <h1 className={styles.title}>Prove {searchParams.msg} and... {number}</h1>
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
             <input
@@ -48,28 +49,13 @@ const InputPrimePage = ({}) => {
               onChange={(e) => setRounds(e.target.value)}
               className={styles.input}
               placeholder="Get Number of Rounds"
+
             />
           </div>
-          <button type='submit' className={styles.button}>Submit</button>
+          <Link href={{pathname: "../verifyPrime" , query: {number: number, rounds:rounds },}}>
+             <button  type='submit' className={styles.button}>Get result</button>
+          </Link>
         </form>
-      </header>
-      {result && (
-        <div className={styles.result}>
-          <h2>Result</h2>
-          {result.error ? (
-            <p>{result.error}</p>
-          ) : (
-            <>
-              <p>Proof: {result.proof}</p>
-              <p>Public Input: {result.public_input.join(", ")}</p>
-              <p>Number of Constraints: {result.num_constraints}</p>
-              <p>Number of Variables: {result.num_variables}</p>
-              <p>Proving Time: {result.proving_time} seconds</p>
-              <p>Verifying Time: {result.verifying_time} seconds</p>
-            </>
-          )}
-        </div>
-      )}
     </div>
     </div>
   );
