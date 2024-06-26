@@ -11,11 +11,21 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Install dependencies
       run: cargo build --verbose
 
+    - name: Run tests in hasher.rs
+      run: cargo test --test matrix_mul/hashing/hasher.rs --verbose
+
+    - name: Run tests in constraints.rs
+      run: cargo test --test matrix_mul/hashing/constraints.rs --verbose
