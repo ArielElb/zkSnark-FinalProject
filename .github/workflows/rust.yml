@@ -25,4 +25,4 @@ jobs:
       run: cargo build --verbose
 
     - name: Run tests in hasher.rs
-      run: cargo test --test --verbose
+      run: cargo test
