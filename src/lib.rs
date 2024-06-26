@@ -1,8 +1,5 @@
 pub mod backend;
-pub mod check_hash;
 pub mod constraints;
+pub mod matrix_mul;
 pub mod miller_rabin;
 pub mod shagadget;
-pub mod tests;
-
-pub mod matrix_mul;

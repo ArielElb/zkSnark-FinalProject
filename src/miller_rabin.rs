@@ -1,4 +1,3 @@
-use actix_web::http::header::X_DNS_PREFETCH_CONTROL;
 use ark_bls12_381::Fr;
 use ark_bls12_381::FrConfig;
 use ark_ff::biginteger;

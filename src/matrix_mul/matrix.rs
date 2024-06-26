@@ -90,7 +90,6 @@ impl<const N: usize, ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
         // 2. matrix_b: FpVar2D
         // 3. output new_variable for the result of the multiplication
         // 4. Ensure that the result of the multiplication is equal to the hash of the matrix C
-
         // use self.matrix_a and self.matrix_b to create the witness variables:
         let matrix_a_var: FpVar2D<N, ConstraintF> =
             FpVar2D::new_witness(cs.clone(), || Ok(self.matrix_a)).unwrap();
@@ -117,17 +116,6 @@ impl<const N: usize, ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
         );
         // ensure that the hash of the matrix_c_var is equal to the hash_of_c
         hash.enforce_equal(&hash_public_input).unwrap();
-        // print the value of the matrix_c_var using for loop
-        // for i in 0..N {
-        //     for j in 0..N {
-        //         println!(
-        //             "matrix_c_var[{}][{}]: {:?}",
-        //             i,
-        //             j,
-        //             matrix_c_var.0[i][j].value().unwrap()
-        //         );
-        //     }
-        // }
 
         Ok(())
     }
@@ -139,8 +127,6 @@ mod tests {
     use super::*;
     use ark_bls12_381::{Bls12_381, Config, Fr as Fp};
     use ark_ec::bls12::Bls12;
-
-    use ark_ec::pairing::Pairing;
     use ark_groth16::prepare_verifying_key;
     use ark_groth16::{Groth16, Proof};
     use ark_relations::r1cs::{ConstraintLayer, ConstraintSystem, TracingMode};
@@ -204,8 +190,7 @@ mod tests {
         assert!(cs.is_satisfied().unwrap());
     }
     #[test]
-    fn groth16_correctness() {
-        let rng = &mut test_rng();
+    fn groth16_correctness_and_soundness() {
         let cs = ConstraintSystem::<Fp>::new_ref();
         let matrix_a = [[1, 2], [3, 4]];
         let matrix_b = [[4, 3], [2, 1]];

@@ -18,7 +18,8 @@ use std::ops::ShrAssign;
 pub fn hasher<const N: usize, ConstraintF: PrimeField + Absorb>(
     c: &FpVar2D<N, ConstraintF>,
 ) -> Result<Vec<Fr>, SynthesisError> {
-    let sponge_param = poseidon_parameters_for_test();
+    let sponge_param: ark_crypto_primitives::sponge::poseidon::PoseidonConfig<_> =
+        poseidon_parameters_for_test();
     let mut sponge: PoseidonSponge<Fr> = PoseidonSponge::<Fr>::new(&sponge_param);
     let flattened_matrix = flatten_fpvar(c).unwrap();
     sponge.absorb(&flattened_matrix);
@@ -86,59 +87,47 @@ mod tests {
         println!("Hash2: {:?}", hash2);
         assert_eq!(hash.value().unwrap(), hash2);
     }
+    #[test]
+    fn test_hashing_full_matrix() {
+        let cs = ConstraintSystem::<F>::new_ref();
+        let c = [[2, 2, 2], [2, 2, 2], [2, 2, 2]];
+        let c_var = FpVar2D::new_witness(cs.clone(), || Ok(c)).unwrap();
+        let hash = hasher_var(cs.clone(), &c_var).unwrap();
+        assert!(!hash.is_empty());
+    }
+    #[test]
+    fn test_hashing_different_matrices() {
+        let cs = ConstraintSystem::<F>::new_ref();
+        let c1 = [[2, 2], [2, 2]];
+        let c2 = [[2, 3], [2, 2]];
+        let c_var1 = FpVar2D::new_witness(cs.clone(), || Ok(c1)).unwrap();
+        let c_var2 = FpVar2D::new_witness(cs.clone(), || Ok(c2)).unwrap();
+        let hash1 = hasher_var(cs.clone(), &c_var1).unwrap();
+        let hash2 = hasher_var(cs.clone(), &c_var2).unwrap();
+        assert_ne!(hash1.value().unwrap(), hash2.value().unwrap());
+    }
+    #[test]
+    fn test_hashing_one_changed_element() {
+        let cs = ConstraintSystem::<F>::new_ref();
+        let c1 = [[2, 2], [2, 2]];
+        let mut c2 = c1.clone();
+        c2[1][1] = 3; // Change one element
+        let c_var1 = FpVar2D::new_witness(cs.clone(), || Ok(c1)).unwrap();
+        let c_var2 = FpVar2D::new_witness(cs.clone(), || Ok(c2)).unwrap();
+        let hash1 = hasher_var(cs.clone(), &c_var1).unwrap();
+        let hash2 = hasher_var(cs.clone(), &c_var2).unwrap();
+        assert_ne!(hash1.value().unwrap(), hash2.value().unwrap());
+    }
+    #[test]
+    fn test_hash_field_elements() {
+        let cs = ConstraintSystem::<F>::new_ref();
+        let c = [[2, 2], [2, 2]];
+        let c_var = FpVar2D::new_witness(cs.clone(), || Ok(c)).unwrap();
+        let hash = hasher(&c_var).unwrap();
+        assert!(!hash.is_empty());
+    }
 }
 
-// #[test]
-// fn mod_gen_hash_test() {
-//     use ark_bls12_381::Fq as F;
-//     use ark_r1cs_std::alloc::AllocVar;
-//     use ark_relations::r1cs::ConstraintSystem;
-
-//     let adj_matrix = [
-//         [false, true, true, false],   //               [0]
-//         [false, false, true, false],  //               / \
-//         [false, false, false, true],  //             [1]->[2] -> 3
-//         [false, false, false, false], //
-//     ];
-
-//     let cs = ConstraintSystem::<F>::new_ref();
-//     let adj_matrix_var = Boolean2DArray::new_witness(cs.clone(), || Ok(adj_matrix)).unwrap();
-
-//     let hash1 = hasher(&adj_matrix_var).unwrap();
-//     let hash2 = hasher(&adj_matrix_var).unwrap();
-
-//     // Check if hashes are consistent for the same input
-//     assert_eq!(hash1, hash2);
-
-//     // Modify the adjacency matrix
-//     let adj_matrix_modified = [
-//         [true, true, false, false],   //              [0]
-//         [false, false, true, false],  //              /  \
-//         [false, false, false, true],  //             [1]->[2] -> 3
-//         [false, false, false, false], //
-//     ];
-//     let adj_matrix_var_modified =
-//         Boolean2DArray::new_witness(cs.clone(), || Ok(adj_matrix_modified)).unwrap();
-//     let hash_modified = hasher(&adj_matrix_var_modified).unwrap();
-
-//     // Check if hash changes with different input
-//     assert_ne!(hash1, hash_modified);
-// }
-
-// #[test]
-// fn test_hashing_empty_matrix() {
-//     use ark_bls12_381::Fq as F;
-//     use ark_r1cs_std::alloc::AllocVar;
-//     use ark_relations::r1cs::ConstraintSystem;
-
-//     let adj_matrix = [[false; 4]; 4];
-
-//     let cs = ConstraintSystem::<F>::new_ref();
-//     let adj_matrix_var = Boolean2DArray::new_witness(cs.clone(), || Ok(adj_matrix)).unwrap();
-//     let hash = hasher(&adj_matrix_var).unwrap();
-
-//     // Ensure hash is not empty or null
-//     assert!(!hash.is_empty());
 // }
 
 // #[test]
