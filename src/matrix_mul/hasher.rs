@@ -87,8 +87,6 @@ mod tests {
         println!("Hash2: {:?}", hash2);
         assert_eq!(hash.value().unwrap(), hash2);
     }
-}
-
 
     #[test]
     fn test_hashing_full_matrix() {
