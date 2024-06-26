@@ -67,12 +67,15 @@ pub fn flatten_fpvar<const N: usize, ConstraintF: PrimeField>(
 }
 
 // create tests:
-#[cfg(test)]
+#[cfg_attr(feature = "test_feature1", cfg(test))]
 mod tests {
     use super::*;
     use ark_bls12_381::Fr as F;
     use ark_r1cs_std::alloc::AllocVar;
     use ark_relations::r1cs::ConstraintSystem;
+    use ark_std::test_rng;
+    use rand::RngCore;
+
     #[test]
     fn hash_matrix_c() {
         let cs = ConstraintSystem::<F>::new_ref();

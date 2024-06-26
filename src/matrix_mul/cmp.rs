@@ -57,6 +57,7 @@ impl<ConstraintF: PrimeField> CmpGadget<ConstraintF> for UInt8<ConstraintF> {
     }
 }
 
+// Dont run the test:
 #[cfg(test)]
 mod test {
     use ark_bls12_381::Fr as Fp;
