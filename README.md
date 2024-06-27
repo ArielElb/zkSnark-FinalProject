@@ -24,8 +24,9 @@ Zero-Knowledge Proofs (ZKProofs) allow one party to prove to another that they k
 ## Features
 
 - **Miller-Rabin Primality Test with ZKProof**: Implemented using the SP1 framework.
-- **Matrix Multiplication ZKProof**: Using `arkworks.rs`, we prove that given witness matrices \(A\) and \(B\), and a public input hash of \(A * B\), the computation is correctly executed and hashed.
+- **Matrix Multiplication ZKProof**: Using `arkworks.rs`, we prove that given witness matrices \(A\) and \(B\), and a public input hash of \(A \times B\), the computation is correctly executed and hashed.
 - **Next.js Web Front-End**: An intuitive web interface for users to interact with the ZKProofs.
+- **Cryptographic Primitives**: We use the Poseidon sponge hash function for matrix multiplication and SHA-256 for the primality test.
 
 ## Installation
 
