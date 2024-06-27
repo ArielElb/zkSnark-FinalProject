@@ -9,7 +9,7 @@ use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::{boolean::Boolean, fields::fp::FpVar};
 use ark_relations::r1cs::ConstraintSystemRef;
 use ark_relations::r1cs::SynthesisError;
-=use num_bigint::{BigUint, RandBigInt, ToBigUint};
+use num_bigint::{BigUint, RandBigInt, ToBigUint};
 use num_integer::Integer;
 use std::borrow::Borrow;
 use std::ops::Div;

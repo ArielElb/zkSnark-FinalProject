@@ -222,4 +222,39 @@ mod tests {
             !Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[false_hash], &proof).unwrap()
         );
     }
+    #[test]
+    fn big_matrix_20x20() {
+        let cs = ConstraintSystem::<Fp>::new_ref();
+        let mut matrix_a = [[0u64; 20]; 20];
+        let mut matrix_b = [[0u64; 20]; 20];
+        for i in 0..20 {
+            for j in 0..20 {
+                matrix_a[i][j] = i as u64;
+                matrix_b[i][j] = j as u64;
+            }
+        }
+        let matrix_c = matrix_mul(
+            cs.clone(),
+            FpVar2D::new_witness(cs.clone(), || Ok(matrix_a)).unwrap(),
+            FpVar2D::new_witness(cs.clone(), || Ok(matrix_b)).unwrap(),
+        );
+        let hash = hasher(&matrix_c).unwrap();
+        let hash_value = hash[0];
+        let circuit = MatrixCircuit {
+            matrix_a,
+            matrix_b,
+            hash_of_c: hash_value,
+        };
+        // generate the proof
+        let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
+        let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
+        let pvk = prepare_verifying_key::<Bls12_381>(&vk);
+        let proof: Proof<Bls12<Config>> =
+            Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
+
+        // test some verification checks
+        assert!(
+            Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[hash_value], &proof).unwrap()
+        );
+    }
 }
