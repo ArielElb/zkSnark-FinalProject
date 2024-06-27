@@ -24,7 +24,7 @@ pub fn main() {
     let mut n = sp1_zkvm::io::read::<u32>();
     let num_of_rounds = sp1_zkvm::io::read::<u32>();
 
-    if num_of_rounds > 200 {
+    if num_of_rounds > 1000 {
         panic!(
             "This program is not designed to handle more than 50 rounds. You requested {} rounds.",
             num_of_rounds
@@ -44,7 +44,8 @@ pub fn main() {
         hashed = hash(n) | mask;
         println!("hashed: {}", hashed);
         println!("cycle-tracker-start: hashing ");
-        is_primebool = probabilistic_miller_rabin(hashed);
+        // is_primebool = probabilistic_miller_rabin(hashed, 20);
+        is_primebool = is_prime1(hashed);
         n += 1;
     }
 
@@ -54,11 +55,34 @@ pub fn main() {
     // Commit to the public values of the program.
     sp1_zkvm::io::commit_slice(&bytes);
 }
+// Returns if divisible via immediate checks than 6k ± 1.
+// Source: https://en.wikipedia.org/wiki/Primality_test#Rust
+// #[sp1_derive::cycle_tracker]
+fn is_prime1(n: u32) -> bool {
+    if n <= 1 {
+        return false;
+    }
+    if n <= 3 {
+        return true;
+    }
+    if n % 2 == 0 || n % 3 == 0 {
+        return false;
+    }
+    let mut i = 5;
+    // Check if n is divisible by 6k ± 1 up to sqrt(n)
+    while i * i <= n {
+        if n % i == 0 || n % (i + 2) == 0 {
+            return false;
+        }
+        i += 6;
+    }
 
+    true
+}
 // implement probabilistic primality test using Miller-Rabin algorithm.
 // Source: https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
 #[sp1_derive::cycle_tracker]
-fn probabilistic_miller_rabin(n: u32) -> bool {
+fn probabilistic_miller_rabin(n: u32, k: u32) -> bool {
     if n <= 1 {
         return false;
     }
@@ -75,7 +99,7 @@ fn probabilistic_miller_rabin(n: u32) -> bool {
         s += 1;
     }
     let mut rng = rand::thread_rng();
-    for _ in 0..20 {
+    for _ in 0..k {
         let a = rng.gen_range(2..n - 1);
         let mut x = a.pow(d) % n;
         if x == 1 || x == n - 1 {

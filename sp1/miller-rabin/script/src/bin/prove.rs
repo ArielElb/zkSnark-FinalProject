@@ -3,7 +3,7 @@
 //!
 //! You can run this script using the following command:
 //! ```shell
-//! RUST_LOG=info cargo run --package miller-rabin-script  --bin prove --release -- --n 123 --num-of-rounds 10
+//! RUST_LOG=info cargo run --package miller-rabin-script  --bin prove --release -- --n 12345 --num-of-rounds 20
 //! ```
 
 use alloy_sol_types::{sol, SolType};
