@@ -1,0 +1,80 @@
+/* src/styles/verify.module.css */
+.background {
+    background-image: url("../styles/prime.jpg"); /* נתיב לקובץ התמונה בתיקיית public */
+    background-size: contain; /* Ensure the image covers the entire container */
+    background-position: center; /* Center the background image */
+    height: 100vh; /* Set the height of the container to fill the viewport */
+    display: flex; /* Enable flexbox layout */
+    justify-content: center; /* Center children horizontally */
+    align-items: center; /* Center children vertically */
+  }
+  
+.container {
+    font-family: Arial, sans-serif;
+    margin: 0 auto;
+    padding: 20px;
+    max-width: 600px;
+    text-align: center;
+  }
+  
+  .title {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: white; /* Text color */
+}
+  
+  .header {
+    margin-bottom: 20px;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .inputGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+  
+  .label {
+    margin-bottom: 5px;
+  }
+  
+  .input {
+    padding: 8px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .button:hover {
+    background-color: #0056b3;
+  }
+  
+  .result {
+    margin-top: 20px;
+  }
+  
+  .result h2 {
+    margin-bottom: 10px;
+  }
+  
+  .result p {
+    margin: 5px 0;
+  }
+  

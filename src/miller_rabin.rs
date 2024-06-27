@@ -4,11 +4,12 @@ use ark_ff::biginteger;
 use ark_ff::BigInteger;
 use ark_ff::MontBackend;
 use ark_ff::PrimeField;
+
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::{boolean::Boolean, fields::fp::FpVar};
 use ark_relations::r1cs::ConstraintSystemRef;
 use ark_relations::r1cs::SynthesisError;
-use num_bigint::{BigUint, RandBigInt, ToBigUint};
+=use num_bigint::{BigUint, RandBigInt, ToBigUint};
 use num_integer::Integer;
 use std::borrow::Borrow;
 use std::ops::Div;
@@ -48,9 +49,6 @@ pub fn miller_rabin_test2(n: BigUint, _k: usize) -> bool {
 
     let mut d = n_bigint.clone() - one.clone();
 
-    // n-1 = 2^s * d
-    // I want to create witness 2^s and d such as n-1 = 2^s * d
-    // I will start by finding s:
     while d.is_even() {
         d = d.div(2.to_biguint().unwrap());
         s = s + 1;
