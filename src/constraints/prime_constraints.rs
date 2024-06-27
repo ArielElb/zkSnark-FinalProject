@@ -30,10 +30,19 @@ pub struct OutputData {
     pub found_prime: bool,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct PrimeCircut<ConstraintF: PrimeField> {
-    pub x: Option<ConstraintF>,
-    pub num_of_rounds: u64,
+    pub x: Option<ConstraintF>, // public input - seed
+    pub num_of_rounds: u64,     // public input - number of rounds
+                                // n: FpVar<ConstraintF>,
+                                // d: FpVar<ConstraintF>,
+                                // two_to_s: FpVar<ConstraintF>,
+                                // s: FpVar<ConstraintF>,
+                                // k: usize,
+                                // a_to_power_d_mod_n_vec: Vec<FpVar<ConstraintF>>,
+                                // x_to_power_of_2_mod_n_vec: Vec<FpVar<ConstraintF>>,
+                                // y_vec: Vec<FpVar<ConstraintF>>,
+                                // is_prime: Boolean<ConstraintF>,
 }
 
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut<ConstraintF> {
@@ -63,8 +72,8 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             })?;
 
             let is_prime_var = ark_r1cs_std::boolean::Boolean::new_witness(cs.clone(), || {
+                
                 let hash_bigint = hash.value()?.into_bigint();
-
                 Ok(miller_rabin_test2(hash_bigint.into(), 128))
             })?;
 
@@ -76,7 +85,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut
             )?;
             curr_var += ConstraintF::one();
         }
-
         found_prime.enforce_equal(&ark_r1cs_std::boolean::Boolean::constant(true))?;
 
         Ok(())

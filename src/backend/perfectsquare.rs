@@ -22,8 +22,7 @@ pub struct PerfectSquareCircuit {
 
 impl ConstraintSynthesizer<Fr> for PerfectSquareCircuit {
     fn generate_constraints(self, cs: ConstraintSystemRef<Fr>) -> Result<(), SynthesisError> {
-        let x = FpVar::new_witness(ark_relations::ns!(cs, "x"), 
-        || {
+        let x = FpVar::new_witness(ark_relations::ns!(cs, "x"), || {
             self.x.ok_or(SynthesisError::AssignmentMissing)
         })?;
         let n = FpVar::new_input(ark_relations::ns!(cs, "n"), || {
