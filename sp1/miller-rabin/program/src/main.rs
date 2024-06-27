@@ -24,7 +24,7 @@ pub fn main() {
     let mut n = sp1_zkvm::io::read::<u32>();
     let num_of_rounds = sp1_zkvm::io::read::<u32>();
 
-    if num_of_rounds > 50 {
+    if num_of_rounds > 200 {
         panic!(
             "This program is not designed to handle more than 50 rounds. You requested {} rounds.",
             num_of_rounds
@@ -35,7 +35,7 @@ pub fn main() {
     let mut hashed: u32 = 0;
     let mask: u32 = 1;
     // do a for loop : hash(x),check if prime, if prime return true o.w continue to hash(x+1):
-    for i in 0..30 {
+    for i in 0..num_of_rounds {
         if is_primebool {
             break;
         }
