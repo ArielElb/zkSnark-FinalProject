@@ -1,6 +1,5 @@
 use ark_bls12_381::Fr;
 use ark_bls12_381::FrConfig;
-use ark_ff::biginteger;
 use ark_ff::BigInteger;
 use ark_ff::MontBackend;
 use ark_ff::PrimeField;

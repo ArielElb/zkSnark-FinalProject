@@ -1,0 +1,16 @@
+[workspace]
+[package]
+version = "0.1.0"
+name = "miller-rabin-program"
+edition = "2021"
+
+
+[dependencies]
+alloy-sol-types = "0.7.6"
+digest = "0.10.7"
+sha2 = "0.10.8"  
+rand = "0.8.5"
+sp1-derive = { git = "https://github.com/succinctlabs/sp1.git" }
+sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.8-testnet" }
+[patch.crates-io]
+sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-v0.10.8" }
