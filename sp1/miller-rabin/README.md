@@ -18,9 +18,10 @@ Generate the proof for your program using the standard prover.
 
 ```
 cd script
-RUST_LOG=info cargo run --bin prove --release
+RUST_LOG=info cargo run --package miller-rabin-script  --bin prove --release -- --n 12345 --num-of-rounds 20
 ```
 
+# We wont do it in our project ... too much ram ):
 ## EVM-Compatible Proof Generation & Verification
 
 > [!WARNING]
