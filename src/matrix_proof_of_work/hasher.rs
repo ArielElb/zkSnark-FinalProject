@@ -1,4 +1,4 @@
-use crate::matrix_mul::alloc::{FpVar2D, FpVarArray};
+use crate::matrix_proof_of_work::alloc::{FpVar2D, FpVarArray};
 use ark_bls12_381::fr::Fr;
 use ark_crypto_primitives::sponge::constraints::CryptographicSpongeVar as CryptographicSpongeVarTrait;
 use ark_crypto_primitives::sponge::poseidon::constraints::PoseidonSpongeVar;
@@ -7,7 +7,7 @@ use ark_crypto_primitives::sponge::{
     poseidon::PoseidonSponge, CryptographicSponge, FieldBasedCryptographicSponge,
 };
 
-pub use crate::matrix_mul::hashing::hashing_utils::poseidon_parameters_for_test;
+pub use crate::matrix_proof_of_work::hashing::hashing_utils::poseidon_parameters_for_test;
 // use ark_crypto_primitives::{absorb, absorb_gadget};
 use ark_ff::PrimeField;
 use ark_r1cs_std::ToBytesGadget;
