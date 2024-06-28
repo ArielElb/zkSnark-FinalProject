@@ -1,4 +1,4 @@
-use crate::constraints::miller_rabin::miller_rabin_test2;
+use crate::arkworks::constraints::miller_rabin::miller_rabin_test2;
 use ark_bls12_381::Fr;
 
 use ark_crypto_primitives::crh::sha256::Sha256;

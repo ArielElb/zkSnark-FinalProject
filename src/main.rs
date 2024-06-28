@@ -1,9 +1,8 @@
 use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::{web, App, HttpServer};
-use backend::linear_equations::prove_linear_equations;
-use backend::prime_snark::prime_snark_compute;
-use prime_snarks::backend;
+use prime_snarks::arkworks::backend::linear_equations::prove_linear_equations;
+use prime_snarks::arkworks::backend::prime_snark::prime_snark_compute;
 
 fn configure_services(cfg: &mut web::ServiceConfig) {
     cfg.service(

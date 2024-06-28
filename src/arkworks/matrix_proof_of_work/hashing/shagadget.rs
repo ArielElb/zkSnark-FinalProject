@@ -49,7 +49,6 @@ mod tests {
     fn crh() {
         let mut rng = ark_std::test_rng();
         let cs = ConstraintSystem::<BlsFr>::new_ref();
-
         // CRH parameters are nothing
         let unit = ();
         let unit_var = UnitVar::default();
