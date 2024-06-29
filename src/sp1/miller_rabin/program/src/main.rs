@@ -7,7 +7,6 @@
 // inside the zkVM.
 #![no_main]
 sp1_zkvm::entrypoint!(main);
-
 use alloy_sol_types::{sol, SolType};
 use rand::Rng;
 use sha2::{Digest, Sha256};

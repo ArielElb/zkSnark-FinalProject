@@ -3,6 +3,7 @@ use actix_files::Files;
 use actix_web::{web, App, HttpServer};
 use prime_snarks::arkworks::backend::linear_equations::prove_linear_equations;
 use prime_snarks::arkworks::backend::prime_snark::prime_snark_compute;
+use prime_snarks::sp1::miller_rabin::script::src::main::generate_proof;
 
 fn configure_services(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -11,11 +12,11 @@ fn configure_services(cfg: &mut web::ServiceConfig) {
             .route(
                 "/prove_linear_equations",
                 web::post().to(prove_linear_equations),
-            ),
+            )
+            .route("/generate_proof", web::post().to(generate_proof)),
     );
 }
 
-// for final deployment to production
 fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(Files::new("/", "./build").index_file("index.html"));
 }
