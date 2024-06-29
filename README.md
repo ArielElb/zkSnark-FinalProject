@@ -1,31 +1,120 @@
-## Main idea:
+# README
 
-- In cryptography there are many settings in which we use prime numbers.
-- Those prime numbers need to be agreed upon.
-- We don’t want the client to compute the prime number.
-- We don’t want the server to have full control on the choice of the prime number.
+## ZKProof Implementation for Miller-Rabin and Matrix Multiplication
 
-## The Protocol:
+Welcome to our project repository, where we implement zero-knowledge proofs (ZKProofs) for the Miller-Rabin primality test and matrix multiplication using the SP1 framework and `arkworks.rs`. This repository also includes a web front-end built with Next.js to interact with our ZKProof implementations.
 
-- The client samples a random number 𝑥∈ℱ .
-- The server knows 𝑥 and the client and server agree on some hash function ℎ.
-- Now the server wants to do the complex computation and check if  ℎ(𝑥+𝑎)  is a prime number using Miller-Rabin algorithm.
-- We want to return the smallest 𝑎 such that ℎ(𝑥+𝑎) is prime number.
-- Ideally, we want 𝑎=0 such that ℎ(𝑥) is prime number But ℎ(𝑥)  is not necessarily a prime number.
-So, we will calculate h(x),ℎ(𝑥+1),ℎ(𝑥+2),…..,ℎ(𝑥+𝑎−1),ℎ(𝑥+𝑎).
+### Table of Contents
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Miller-Rabin ZKProof](#miller-rabin-zkproof)
+  - [Matrix Multiplication ZKProof](#matrix-multiplication-zkproof)
+- [Web Front-End](#web-front-end)
+- [Contributing](#contributing)
+- [License](#license)
 
-- The server wants to provide a succinct proof to the client such that:
-   -h(x),ℎ(𝑥+1),ℎ(𝑥+2),…..,ℎ(𝑥+𝑎−1) are not prime numbers
-   -ℎ(𝑥+𝑎) is prime number.
+## Introduction
 
--The client wants to verify this proof in a short time and will be convinced that:
-  -h(x),ℎ(𝑥+1),ℎ(𝑥+2),…..,ℎ(𝑥+𝑎−1) are not prime numbers
-  -ℎ(𝑥+𝑎) is prime number.
-- By the Prime Number theorem  we get that It wont take long for the prover to find a prime number.
+Zero-Knowledge Proofs (ZKProofs) allow one party to prove to another that they know a value without revealing the value itself. This project leverages the SP1 framework and `arkworks.rs` to create ZKProofs for two specific problems:
+1. **Miller-Rabin Primality Test**: A probabilistic test to determine if a number is a prime.
+2. **Matrix Multiplication Verification**: Proving the correctness of the multiplication of two matrices and their resultant hash using zkSNARKs.
 
-## Tech:
+## Features
 
-arkworks is a Rust ecosystem for zkSNARK programming. 
-Libraries in the arkworks ecosystem provide efficient implementations of all components required to implement zkSNARK applications, from generic finite fields to R1CS constraints for common functionalities.
-R1CS is a NP-complete language that will help us represent our calculation.
+- **Miller-Rabin Primality Test with ZKProof**: Implemented using the SP1 framework.
+- **Matrix Multiplication ZKProof**: Using `arkworks.rs`, we prove that given witness matrices \(A\) and \(B\), and a public input hash of \(A \times B\), the computation is correctly executed and hashed.
+- **Next.js Web Front-End**: An intuitive web interface for users to interact with the ZKProofs.
+- **Cryptographic Primitives**: We use the Poseidon sponge hash function for matrix multiplication and SHA-256 for the primality test.
 
+## Installation
+
+### Prerequisites
+
+- Rust (for the ZKProof implementations)
+- Node.js and npm (for the Next.js front-end)
+
+### Steps
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/zkproof-matrix-multiplication.git
+   cd zkproof-matrix-multiplication
+   ```
+
+2. **Set up the Rust environment**:
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   source $HOME/.cargo/env
+   ```
+
+3. **Build the Rust project**:
+   ```bash
+   cargo build --release
+   ```
+
+4. **Set up the Next.js front-end**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+## Usage
+
+### Miller-Rabin ZKProof
+
+1. **Navigate to the Miller-Rabin ZKProof directory**:
+   ```bash
+   cd miller-rabin
+   ```
+
+2. **Run the proof generation**:
+   ```bash
+   cargo run --release
+   ```
+
+### Matrix Multiplication ZKProof
+
+1. **Navigate to the Matrix Multiplication ZKProof directory**:
+   ```bash
+   cd matrix-multiplication
+   ```
+
+2. **Run the proof generation**:
+   ```bash
+   cargo run --release
+   ```
+
+## Web Front-End
+
+The web front-end is built using Next.js and provides an interface for users to input data, generate ZKProofs, and verify them.
+
+1. **Start the Next.js development server**:
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+2. **Access the web interface**:
+   Open your web browser and navigate to `http://localhost:3000`.
+
+## Contributing
+
+Contributions are welcome! Please follow these steps to contribute:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-xyz`).
+3. Make your changes.
+4. Commit your changes (`git commit -am 'Add some feature'`).
+5. Push to the branch (`git push origin feature-xyz`).
+6. Create a new Pull Request.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+Thank you for your interest in our project! If you have any questions or feedback, please open an issue or contact us directly.
