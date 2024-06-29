@@ -1,4 +1,4 @@
-use crate::constraints::linear_equations_constraints::{
+use crate::arkworks::constraints::linear_equations_constraints::{
     InputData, LinearEquationCircuit, OutputData,
 };
 use actix_web::{web, HttpResponse, Responder};

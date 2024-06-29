@@ -1,4 +1,4 @@
-use crate::constraints::prime_constraints::{InputData, OutputData, PrimeCircut};
+use crate::arkworks::constraints::prime_constraints::{InputData, OutputData, PrimeCircut};
 use actix_web::{web, HttpResponse, Responder};
 use ark_bls12_381::{Bls12_381, Fr as BlsFr};
 use ark_groth16::Groth16;

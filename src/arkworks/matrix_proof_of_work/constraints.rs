@@ -1,6 +1,6 @@
-use crate::matrix_mul::alloc::{FpVar2D, FpVarArray};
-use crate::matrix_mul::cmp::CmpGadget;
-use crate::matrix_mul::hasher::{hasher, hasher_var};
+use crate::matrix_proof_of_work::alloc::{FpVar2D, FpVarArray};
+use crate::matrix_proof_of_work::cmp::CmpGadget;
+use crate::matrix_proof_of_work::hasher::{hasher, hasher_var};
 use ark_bls12_381::Fr;
 use ark_ff::{Fp, PrimeField, Zero};
 use ark_r1cs_std::fields::fp::FpVar;
