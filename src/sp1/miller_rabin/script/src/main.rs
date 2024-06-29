@@ -77,10 +77,10 @@ pub async fn generate_proof(args: web::Json<ProvePayload>) -> impl Responder {
     HttpResponse::Ok().json(response)
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| App::new().route("/generate_proof", web::post().to(generate_proof)))
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await
-}
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+//     HttpServer::new(|| App::new().route("/generate_proof", web::post().to(generate_proof)))
+//         .bind("127.0.0.1:8080")?
+//         .run()
+//         .await
+// }

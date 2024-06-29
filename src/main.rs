@@ -13,7 +13,7 @@ fn configure_services(cfg: &mut web::ServiceConfig) {
                 "/prove_linear_equations",
                 web::post().to(prove_linear_equations),
             )
-            .route("/generate_proof", web::post().to(generate_proof)),
+            .route("/prime_sp1", web::post().to(generate_proof)),
     );
 }
 
