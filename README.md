@@ -9,8 +9,6 @@ Welcome to our project repository, where we implement zero-knowledge proofs (ZKP
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Miller-Rabin ZKProof](#miller-rabin-zkproof)
-  - [Matrix Multiplication ZKProof](#matrix-multiplication-zkproof)
 - [Web Front-End](#web-front-end)
 - [Contributing](#contributing)
 - [License](#license)
@@ -63,26 +61,8 @@ Zero-Knowledge Proofs (ZKProofs) allow one party to prove to another that they k
 
 ## Usage
 
-### Miller-Rabin ZKProof
+# Start the backend server:
 
-1. **Navigate to the Miller-Rabin ZKProof directory**:
-   ```bash
-   cd miller-rabin
-   ```
-
-2. **Run the proof generation**:
-   ```bash
-   cargo run --release
-   ```
-
-### Matrix Multiplication ZKProof
-
-1. **Navigate to the Matrix Multiplication ZKProof directory**:
-   ```bash
-   cd matrix-multiplication
-   ```
-
-2. **Run the proof generation**:
    ```bash
    cargo run --release
    ```
