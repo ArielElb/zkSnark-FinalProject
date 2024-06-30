@@ -4,8 +4,6 @@ version = "0.1.0"
 name = "miller-rabin-script"
 edition = "2021"
 
-
-
 [dependencies]
 sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.8-testnet" }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }

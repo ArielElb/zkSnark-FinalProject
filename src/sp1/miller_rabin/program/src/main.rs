@@ -23,7 +23,7 @@ pub fn main() {
     let mut n = sp1_zkvm::io::read::<u32>();
     let num_of_rounds = sp1_zkvm::io::read::<u32>();
 
-    if num_of_rounds > 1000 {
+    if num_of_rounds > 50 {
         panic!(
             "This program is not designed to handle more than 50 rounds. You requested {} rounds.",
             num_of_rounds
