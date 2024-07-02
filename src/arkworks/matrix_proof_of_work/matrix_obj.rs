@@ -1,5 +1,5 @@
 use rand::Rng;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json;
 
 #[derive(Debug, Serialize, Deserialize)]
