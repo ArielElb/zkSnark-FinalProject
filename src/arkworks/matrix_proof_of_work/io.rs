@@ -75,3 +75,14 @@ pub fn decode_pvk<E: Pairing>(pvk_str: &str) -> Result<PreparedVerifyingKey<E>, 
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     Ok(pvk)
 }
+
+pub fn encode_hash(hash: &Vec<u8>) -> String {
+    // encode the hash to base64:
+    let hash_str = BASE64_STANDARD.encode(hash);
+    hash_str
+}
+pub fn decode_hash(hash_str: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+    // decode the hash from base64:
+    let hash_bytes = BASE64_STANDARD.decode(hash_str.as_bytes()).unwrap();
+    Ok(hash_bytes)
+}

@@ -6,8 +6,12 @@ use crate::arkworks::matrix_proof_of_work::alloc::{FpVar2DVec, FpVarVec};
 use crate::arkworks::matrix_proof_of_work::constraints::matrix_mul;
 use crate::arkworks::matrix_proof_of_work::constraints::MatrixCircuit;
 use crate::arkworks::matrix_proof_of_work::hasher::{hasher, hasher_var};
-use crate::arkworks::matrix_proof_of_work::io::{encode_proof, write_proof_to_file};
-use crate::arkworks::matrix_proof_of_work::io::{encode_pvk, read_proof};
+use crate::arkworks::matrix_proof_of_work::io::{
+    decode_hash, decode_proof, decode_pvk, encode_hash, encode_proof, encode_pvk, read_proof,
+    write_proof_to_file,
+};
+use ark_ff::fields::models::fp::Fp;
+
 use actix_web::{web, HttpResponse, Responder};
 use ark_bls12_381::{Bls12_381, Config, Fr as F};
 use ark_ec::bls12::Bls12;
@@ -24,6 +28,7 @@ use ark_snark::{CircuitSpecificSetupSNARK, SNARK};
 use ark_std::end_timer;
 use ark_std::test_rng;
 use rand::{RngCore, SeedableRng};
+use std::string::String;
 
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -136,6 +141,47 @@ pub async fn generate_proof(data: web::Json<ProveInput>) -> impl Responder {
         num_variables: cs.num_instance_variables(),
         proof: proof_str,
         pvk: pvk_str,
+    };
+    // return the response data
+    HttpResponse::Ok().json(response_data)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyInput {
+    pvk: String,
+    proof: String,
+    hash: String,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyOutPut {
+    verifying_time: f64,
+    valid: bool,
+}
+
+pub async fn verify_proof(data: web::Json<VerifyInput>) -> impl Responder {
+    let hash = data.hash.clone();
+    let pvk = data.pvk.clone();
+    let proof = data.proof.clone();
+
+    // decode the proof and vk from base64:
+    let pvk = decode_pvk::<Bls12_381>(&pvk).unwrap();
+
+    let proof = decode_proof::<Bls12_381>(&proof).unwrap();
+
+    let hash_value = decode_hash(&hash).unwrap();
+
+    // convert the hash value to Fp:
+    let hash_value = Fp::from_le_bytes_mod_order(&hash_value);
+
+    let verfiying_time = std::time::Instant::now();
+    let is_valid =
+        Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[hash_value], &proof).unwrap();
+    let verifying_time = verfiying_time.elapsed().as_secs_f64();
+
+    // create a response data:
+    let response_data = VerifyOutPut {
+        verifying_time,
+        valid: is_valid,
     };
     // return the response data
     HttpResponse::Ok().json(response_data)
