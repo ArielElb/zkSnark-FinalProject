@@ -2,9 +2,10 @@ use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::{web, App, HttpServer};
 use prime_snarks::arkworks::backend::linear_equations::prove_linear_equations;
-use prime_snarks::arkworks::backend::matrix_proof::prove_matrix;
-use prime_snarks::arkworks::backend::matrix_proof::verify_proof;
+use prime_snarks::arkworks::backend::matrix_proof::{prove_matrix,verify_proof};
+use prime_snarks::arkworks::backend::Fibbonaci_handler::{fibbonaci_snark_proof,fibbonaci_snark_verify};
 use prime_snarks::sp1::miller_rabin::script::src::main::generate_proof;
+
 
 fn configure_services(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -15,7 +16,9 @@ fn configure_services(cfg: &mut web::ServiceConfig) {
             )
             .route("/prime_sp1", web::post().to(generate_proof))
             .route("/matrix_prove/verify", web::post().to(verify_proof))
-            .route("/matrix_prove/prove", web::post().to(prove_matrix)),
+            .route("/matrix_prove/prove", web::post().to(prove_matrix))
+            .route("/fibbonaci/verify", web::post().to(fibbonaci_snark_verify))
+            .route("/fibbonaci/prove", web::post().to(fibbonaci_snark_proof)),
     );
 }
 
