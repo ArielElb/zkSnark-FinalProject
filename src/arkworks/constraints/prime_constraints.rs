@@ -10,6 +10,7 @@ use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_r1cs_std::R1CSVar;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
+use clap::builder::Str;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -26,20 +27,30 @@ pub struct InputDataFib {
 
 #[derive(Deserialize)]
 pub struct InputDataFibVer {
-    pub x: u64,
-    pub num_of_rounds: u64,
+    pub proof: String,
+    pub pvk: String,
+    pub a: u64,
+    pub b: u64,
 }
 
 
 #[derive(Serialize)]
 pub struct OutputData {
     pub proof: String,
-    //pub public_input: Vec<String>,
+    pub public_input: Vec<String>,
     pub num_constraints: usize,
     pub num_variables: usize,
     pub proving_time: f64,
     pub verifying_time: f64,
     pub found_prime: bool,
+}
+#[derive(Serialize)]
+pub struct OutputDataFib {
+    pub proof: String,
+    pub vk: String,
+    pub num_constraints: usize,
+    pub num_variables: usize,
+    pub proving_time: f64,
 }
 
 

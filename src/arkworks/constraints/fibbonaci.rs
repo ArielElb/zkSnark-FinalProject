@@ -25,7 +25,7 @@ lazy_static! {
 struct FibonacciCircuit<F: PrimeField> {
     pub a: Option<F>,
     pub b: Option<F>,
-    pub num_of_steps: usize,
+    pub numb_of_steps: usize,
     pub result: Option<F>,
 }
 fn fibonacci_steps(a: u64, b: u64, steps: u32) -> u64 {
@@ -43,13 +43,13 @@ fn fibonacci_steps(a: u64, b: u64, steps: u32) -> u64 {
 impl<F: PrimeField> ConstraintSynthesizer<F> for FibonacciCircuit<F> {
     fn generate_constraints(mut self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
         let mut fi_minus_one =
-            FpVar::<F>::new_witness(cs.clone(), || self.a.ok_or(SynthesisError::AssignmentMissing))?;
+            FpVar::<F>::new_input(cs.clone(), || self.a.ok_or(SynthesisError::AssignmentMissing))?;
         let mut fi_minus_two =
-            FpVar::<F>::new_witness(cs.clone(), || self.b.ok_or(SynthesisError::AssignmentMissing))?;
+            FpVar::<F>::new_input(cs.clone(), || self.b.ok_or(SynthesisError::AssignmentMissing))?;
         let saved_result = FpVar::<F>::new_witness(cs.clone(), || self.result.ok_or(SynthesisError::AssignmentMissing))?;
 
         // initialize fi as public input
-        let mut fi = FpVar::<F>::new_input(cs.clone(), || Ok(F::zero()))?;
+        let mut fi = FpVar::<F>::new_witness(cs.clone(), || Ok(F::zero()))?;
         // do the loop only when verifying the circuit
         for _i in 0..self.num_of_steps-1 {
             fi = fi_minus_one.clone() + &fi_minus_two;
