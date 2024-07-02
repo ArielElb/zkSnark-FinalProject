@@ -1,36 +1,70 @@
-use crate::arkworks::constraints::prime_constraints::{InputDataFib, InputDataFibVer,OutputDataFib};
+use crate::arkworks::constraints::fibbonaci::FibonacciCircuit;
 use crate::arkworks::constraints::prime_constraints::{InputData, OutputData, PrimeCircut};
+use crate::arkworks::matrix_proof_of_work::io::{
+    decode_proof, decode_pvk, encode_proof, encode_pvk,
+};
 use actix_web::{web, HttpResponse, Responder};
 use ark_bls12_381::{Bls12_381, Fr as BlsFr};
-use ark_groth16::{Groth16, PreparedVerifyingKey};
+use ark_groth16::{prepare_verifying_key, Groth16, PreparedVerifyingKey};
 use ark_relations::r1cs::ConstraintSynthesizer;
 use ark_relations::r1cs::ConstraintSystem;
 use ark_snark::SNARK;
 use ark_std::rand::SeedableRng;
 use rand::rngs::StdRng;
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize)]
+pub struct InputDataFib {
+    pub a: u64,
+    pub b: u64,
+    pub result: u64,
+    pub num_of_rounds: usize,
+}
+
+#[derive(Deserialize)]
+pub struct InputDataFibVer {
+    pub proof: String,
+    pub pvk: String,
+    pub a: u64,
+    pub b: u64,
+}
+
+#[derive(Serialize)]
+pub struct OutputDataFib {
+    pub proof: String,
+    pub vk: String,
+
+    pub proving_time: f64,
+}
+
+#[derive(Serialize)]
+pub struct OutputVerifyData {
+    pub verifying_time: f64,
+    pub is_res: bool,
+}
 
 pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Responder {
-    let mut rng = StdRng::seed_from_u64(42);
-    let circuit = FibonacciCircuit{
-        a: Some(data.a),
-        b: Some(data.b),
-        num_of_steps: data.num_of_steps,
-        result: Some(data.result),
+    let cs = ConstraintSystem::<BlsFr>::new_ref();
 
+    let mut rng = StdRng::seed_from_u64(42);
+    let circuit = FibonacciCircuit::<BlsFr> {
+        a: Some(BlsFr::from(data.a)),
+        b: Some(BlsFr::from(data.b)),
+        num_of_steps: data.num_of_rounds,
+        result: Some(BlsFr::from(data.result)),
     };
-//   pub numb_of_steps: usize,
-//pub result: Option<F>,
-    let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit, &mut rng).unwrap();
+
+    //   pub numb_of_steps: usize,
+    //pub result: Option<F>,
+    let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit.clone(), &mut rng).unwrap();
     let pvk = prepare_verifying_key::<Bls12_381>(&vk);
     let start = ark_std::time::Instant::now();
-    let proof = Groth16::<Bls12_381>::prove(&pk, circuit2.clone(), &mut rng).unwrap();
+    let proof = Groth16::<Bls12_381>::prove(&pk, circuit.clone(), &mut rng).unwrap();
     let proving_time = start.elapsed().as_secs_f64();
 
     let result = OutputDataFib {
-        proof: encode_proof<Bls12_381>(proof),
-        vk, encode_pvk<Bls12_381>(pvk),
-        num_constraints: cs_too.num_constraints(),
-        num_variables: cs_too.num_instance_variables(),
+        proof: encode_proof::<Bls12_381>(&proof),
+        vk: encode_pvk::<Bls12_381>(&pvk),
         proving_time,
     };
 
@@ -39,17 +73,21 @@ pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Respon
 
 pub async fn fibbonaci_snark_verify(data: web::Json<InputDataFibVer>) -> impl Responder {
     let mut rng = StdRng::seed_from_u64(42);
-    let pvk = decode_pvk<Bls12_381>(data.pvk);
-    let proof = decode_proof<Bls12_381>(data.proof);
+    let pvk = decode_pvk::<Bls12_381>(&data.pvk).unwrap();
+    let proof = decode_proof::<Bls12_381>(&data.proof).unwrap();
     let start = ark_std::time::Instant::now();
-    let _ = Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[Some(data.a),Some(data.b)], &proof).unwrap();
+    let result = Groth16::<Bls12_381>::verify_with_processed_vk(
+        &pvk,
+        &[BlsFr::from(data.a), BlsFr::from(data.b)],
+        &proof,
+    )
+    .unwrap();
+
     let verifying_time = start.elapsed().as_secs_f64();
-    let result = OutputVerifyData {
-        num_constraints: cs_too.num_constraints(),
-        num_variables: cs_too.num_instance_variables(),
+    let data = OutputVerifyData {
         verifying_time,
-        found_prime,
+        is_res: result,
     };
 
-    HttpResponse::Ok().json(result)
+    HttpResponse::Ok().json(data)
 }

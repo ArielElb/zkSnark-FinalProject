@@ -21,7 +21,9 @@ pub struct InputData {
 
 #[derive(Deserialize)]
 pub struct InputDataFib {
-    pub x: u64,
+    pub a: u64,
+    pub b: u64,
+    pub result: u64,
     pub num_of_rounds: u64,
 }
 
@@ -32,7 +34,6 @@ pub struct InputDataFibVer {
     pub a: u64,
     pub b: u64,
 }
-
 
 #[derive(Serialize)]
 pub struct OutputData {
@@ -52,8 +53,6 @@ pub struct OutputDataFib {
     pub num_variables: usize,
     pub proving_time: f64,
 }
-
-
 
 #[derive(Serialize)]
 pub struct OutputVerifyData {
