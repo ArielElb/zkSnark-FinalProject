@@ -1,0 +1,70 @@
+/* src/styles/result.module.css */
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    height: 100vh;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    text-align: left;
+  }
+  
+  .leftContainer {
+    flex: 1;
+    margin-right: 20px;
+  }
+  
+  .rightContainer {
+    background-image: url("../styles/lock.jpg"); /* Path to the image file in the public folder */
+    background-size: cover; /* Ensure the image covers the container */
+    background-position: center; /* Center the background image within the container */
+    background-repeat: no-repeat; /* Ensure the background image does not repeat */
+    flex: 1;
+    height: calc(100vh - 40px); /* Adjust the height to span most of the vertical space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+  
+  .title {
+    font-size: 32px;
+    margin-bottom: 10px;
+    color: #333;
+    text-align: left;
+    width: 100%;
+  }
+  
+  .explanation {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #555;
+  }
+  
+  .loadingText {
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .resultContainer {
+    text-align: left;
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .resultText {
+    font-size: 20px;
+    margin: 10px 0;
+  }
+  
+  .errorText {
+    font-size: 20px;
+    color: red;
+  }
+  
+  .chart {
+    width: 100%;
+    height: 90%; /* Make the chart take most of the container's height */
+  }
+  

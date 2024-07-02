@@ -2,33 +2,21 @@
 "use client";
 import { useState } from "react";
 import axios from "axios";
+import Link from "next/link";
 
 import styles from "../../styles/verify.module.css"; // תיקון נתיב לקובץ ה-CSS
 
-const InputPrimePage = ({}) => {
+const InputPrimePage = () => {
   const [number, setNumber] = useState("");
   const [rounds, setRounds] = useState("");
-  const [result, setResult] = useState(null);
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
   
-  const handleSubmit = async (e) => {
-    e.prevent.prevent();
-    try {
-      const response = await axios.post("http://localhost:8080/api/prime_snark", {
-        x: parseInt(number),
-        num_of_rounds: parseInt(rounds),
-      });
-      setResult(response.data);
-    } catch (error) {
-      console.error("Error submitting the form", error);
-      setResult({ error: "Failed to compute. Please try again." });
-    }
-  };
-
   return (
     <div className={styles.background}>
     <div className={styles.container}>
       <h1 className={styles.title}>Prove Fibonachi Number</h1>
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form className={styles.form}>
           <div className={styles.inputGroup}>
             <input
               id="number"
@@ -53,8 +41,8 @@ const InputPrimePage = ({}) => {
             <input
               id="a"
               type='number'
-              value={rounds}
-              onChange={(e) => setRounds(e.target.value)}
+              value={a}
+              onChange={(e) => setA(e.target.value)}
               className={styles.input}
               placeholder="Get first number of fibonachi"
             />
@@ -63,13 +51,15 @@ const InputPrimePage = ({}) => {
             <input
               id="rounds"
               type='b'
-              value={rounds}
-              onChange={(e) => setRounds(e.target.value)}
+              value={b}
+              onChange={(e) => setB(e.target.value)}
               className={styles.input}
               placeholder="Get second number of fibonachi"
             />
           </div>
-          <button type='submit' className={styles.button}>Get result</button>
+          <Link href={{pathname: "../verifyPrime" , query: {number: number, rounds:rounds, a: a, b: b },}}>
+             <button  type='submit' className={styles.button}>Get result</button>
+          </Link>
         </form>
     </div>
     </div>

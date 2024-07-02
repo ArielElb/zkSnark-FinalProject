@@ -1,0 +1,27 @@
+/* styles/Navbar.module.css */
+
+.header {
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    position: absolute;
+    top: 0;
+}
+
+.navLinks {
+    display: flex;
+    align-items: center;
+}
+
+.navLink {
+    margin: 0 1rem;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.navLink:hover {
+    color: #ff3e00; /* Change color on hover as per your design */
+}

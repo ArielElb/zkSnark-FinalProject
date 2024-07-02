@@ -1,49 +1,87 @@
-.backgroundContainer {
-  background-image: url("../styles/zkSnark.png"); /* Replace with the correct path to your image */
-  background-size: contain; /* Ensure the image covers the entire container */
-  background-position: center; /* Center the background image */
-  height: 100vh; /* Set the height of the container to fill the viewport */
-  display: flex; /* Enable flexbox layout */
-  justify-content: center; /* Center children horizontally */
-  align-items: center; /* Center children vertically */
-}
+/* src/styles/Home.module.css */
 
 .container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  position: relative;
+    min-height: 100vh;
+    padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: url('../styles/stars.jpg') no-repeat center center fixed;
+    background-size: cover;
 }
 
-.message {
-  font-size: 6vh;
-  color: white; /* Text color */
-  margin-top: 20px; /* Add missing unit */
+.header {
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    position: absolute;
+    top: 0;
 }
 
-.buttonContainer {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 50px;
-  justify-items: center;
-  margin-top: 40px; /* Top margin */
-  margin-bottom: 50px; /* Bottom margin */
+.navLinks a {
+    margin: 0 0.5rem;
+    text-decoration: none;
+    color: white;
 }
 
-.optionButton {
-  padding: 20px 40px;
-  font-size: 20px;
-  cursor: pointer;
-  width: 100%;
-  box-sizing: border-box;
-  background-color: white;
-  color: black;
-  border: 2px solid #e7e7e7;
-  border-radius: 45%; /* This makes the button round */
+.navLinks .buyNow {
+    background-color: #00ff00;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    color: black;
+    text-decoration: none;
 }
-.optionButton:hover {
-  background-color: #e7e7e7;
+
+.main {
+    text-align: center;
+    margin-top: 10vh; /* To avoid overlap with the header */
+    width: 100%;
+}
+
+.title {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #ff3e00;
+    margin: 20px 0;
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.explanation {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #ffffff;
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #000;
+    border-radius: 10px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    position: absolute;
+    top: 10rem; /* Adjust this to control the distance between title and text */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.downloadButton {
+    background-color: #0070f3;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    position: absolute;
+    top: 30rem; /* Adjust this to control the distance between text and button */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.downloadButton:hover {
+    background-color: #005bb5;
 }
