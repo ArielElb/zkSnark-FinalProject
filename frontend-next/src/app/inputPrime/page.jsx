@@ -29,7 +29,7 @@ const InputPrimePage = ({searchParams}) => {
   return (
     <div className={styles.background}>
     <div className={styles.container}>
-      <h1 className={styles.title}>Prove {searchParams.msg} and... {number}</h1>
+      <h1 className={styles.title}>Prove {searchParams.msg}</h1>
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
             <input
