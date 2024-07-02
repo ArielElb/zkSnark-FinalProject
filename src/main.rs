@@ -2,6 +2,8 @@ use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::{web, App, HttpServer};
 use prime_snarks::arkworks::backend::linear_equations::prove_linear_equations;
+use prime_snarks::arkworks::backend::matrix_proof::prove_matrix;
+use prime_snarks::arkworks::backend::matrix_proof::verify_proof;
 use prime_snarks::sp1::miller_rabin::script::src::main::generate_proof;
 
 fn configure_services(cfg: &mut web::ServiceConfig) {
@@ -11,7 +13,9 @@ fn configure_services(cfg: &mut web::ServiceConfig) {
                 "/prove_linear_equations",
                 web::post().to(prove_linear_equations),
             )
-            .route("/prime_sp1", web::post().to(generate_proof)),
+            .route("/prime_sp1", web::post().to(generate_proof))
+            .route("/matrix_prove/verify", web::post().to(verify_proof))
+            .route("/matrix_prove/prove", web::post().to(prove_matrix)),
     );
 }
 

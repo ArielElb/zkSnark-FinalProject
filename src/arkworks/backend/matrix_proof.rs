@@ -82,6 +82,7 @@ pub struct ProveInput {
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProveOutPut {
+    hash: String,
     setup_time: f64,
     proving_time: f64,
     num_constraints: usize,
@@ -91,7 +92,7 @@ pub struct ProveOutPut {
 }
 
 // function to genrate a proof using groth16, getting 2 matrices A and B
-pub async fn generate_proof(data: web::Json<ProveInput>) -> impl Responder {
+pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
     let cs = ConstraintSystem::<F>::new_ref();
     // exctract the matrix from the data
     let data = data.into_inner();
@@ -109,6 +110,10 @@ pub async fn generate_proof(data: web::Json<ProveInput>) -> impl Responder {
     // hash the matrix using hasher:
     let hash = hasher(&matrix_c).unwrap();
     let hash_value = hash[0];
+    // convert the hash value to bytes:
+    let hash_bytes: Vec<u8> = hash_value.into_bigint().to_bytes_le();
+    // encode the hash value to base64:
+    let encoded_hash = encode_hash(&hash_bytes);
 
     // use groth16 to generate the proof:
 
@@ -135,6 +140,7 @@ pub async fn generate_proof(data: web::Json<ProveInput>) -> impl Responder {
 
     // create a response data:
     let response_data = ProveOutPut {
+        hash: encoded_hash,
         setup_time,
         proving_time,
         num_constraints: cs.num_constraints(),
@@ -186,3 +192,20 @@ pub async fn verify_proof(data: web::Json<VerifyInput>) -> impl Responder {
     // return the response data
     HttpResponse::Ok().json(response_data)
 }
+
+// // create tests"
+// #[cfg(test)]
+// mod tests {
+
+//     use super::*;
+
+//     // create tests for matrix hash:
+//     #[actix_rt::test]
+//     async fn test_hash_matrix() {
+//         let data = InputData {
+//             size: 3,
+//             matrix: vec![vec![30, 24, 18], vec![84, 69, 54], vec![138, 114, 90]],
+//         };
+//         let response = hash_matrix(web::Json(data)).await;
+//     }
+// }
