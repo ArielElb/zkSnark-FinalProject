@@ -18,15 +18,38 @@ pub struct InputData {
     pub num_of_rounds: u64,
 }
 
+#[derive(Deserialize)]
+pub struct InputDataFib {
+    pub x: u64,
+    pub num_of_rounds: u64,
+}
+
+#[derive(Deserialize)]
+pub struct InputDataFibVer {
+    pub x: u64,
+    pub num_of_rounds: u64,
+}
+
+
 #[derive(Serialize)]
 pub struct OutputData {
     pub proof: String,
-    pub public_input: Vec<String>,
+    //pub public_input: Vec<String>,
     pub num_constraints: usize,
     pub num_variables: usize,
     pub proving_time: f64,
     pub verifying_time: f64,
     pub found_prime: bool,
+}
+
+
+
+#[derive(Serialize)]
+pub struct OutputVerifyData {
+    pub num_constraints: usize,
+    pub num_variables: usize,
+    pub verifying_time: f64,
+    pub is_res: bool,
 }
 
 #[derive(Clone)]
