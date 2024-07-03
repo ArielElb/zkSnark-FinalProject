@@ -1,5 +1,4 @@
 use crate::arkworks::constraints::fibbonaci::FibonacciCircuit;
-use crate::arkworks::constraints::prime_constraints::{InputData, OutputData, PrimeCircut};
 use crate::arkworks::matrix_proof_of_work::io::{
     decode_proof, decode_pvk, encode_proof, encode_pvk,
 };
@@ -44,8 +43,6 @@ pub struct OutputVerifyData {
 }
 
 pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Responder {
-    let cs = ConstraintSystem::<BlsFr>::new_ref();
-
     let mut rng = StdRng::seed_from_u64(42);
     let circuit = FibonacciCircuit::<BlsFr> {
         a: Some(BlsFr::from(data.a)),
@@ -60,6 +57,7 @@ pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Respon
     let pvk = prepare_verifying_key::<Bls12_381>(&vk);
     let start = ark_std::time::Instant::now();
     let proof = Groth16::<Bls12_381>::prove(&pk, circuit.clone(), &mut rng).unwrap();
+
     let proving_time = start.elapsed().as_secs_f64();
 
     let result = OutputDataFib {
@@ -72,7 +70,6 @@ pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Respon
 }
 
 pub async fn fibbonaci_snark_verify(data: web::Json<InputDataFibVer>) -> impl Responder {
-    let mut rng = StdRng::seed_from_u64(42);
     let pvk = decode_pvk::<Bls12_381>(&data.pvk).unwrap();
     let proof = decode_proof::<Bls12_381>(&data.proof).unwrap();
     let start = ark_std::time::Instant::now();

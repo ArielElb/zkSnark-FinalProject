@@ -1,11 +1,12 @@
 use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::{web, App, HttpServer};
+use prime_snarks::arkworks::backend::fibbonaci_handler::{
+    fibbonaci_snark_proof, fibbonaci_snark_verify,
+};
 use prime_snarks::arkworks::backend::linear_equations::prove_linear_equations;
-use prime_snarks::arkworks::backend::matrix_proof::{prove_matrix,verify_proof};
-use prime_snarks::arkworks::backend::Fibbonaci_handler::{fibbonaci_snark_proof,fibbonaci_snark_verify};
+use prime_snarks::arkworks::backend::matrix_proof::{prove_matrix, verify_proof};
 use prime_snarks::sp1::miller_rabin::script::src::main::generate_proof;
-
 
 fn configure_services(cfg: &mut web::ServiceConfig) {
     cfg.service(

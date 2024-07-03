@@ -38,6 +38,7 @@ fn fibonacci_steps(a: u64, b: u64, steps: u32) -> u64 {
 
     x
 }
+
 impl<F: PrimeField> ConstraintSynthesizer<F> for FibonacciCircuit<F> {
     fn generate_constraints(mut self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
         let mut fi_minus_one = FpVar::<F>::new_input(cs.clone(), || {

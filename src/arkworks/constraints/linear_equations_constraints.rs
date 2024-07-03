@@ -35,25 +35,6 @@ pub struct InputData {
     pub b: Vec<u64>,
 }
 
-// pub fn generate_constraints(
-//     &self,
-//     cs: ConstraintSystemRef<ConstraintF>,
-// ) -> Result<(), SynthesisError> {
-//     for i in 0..self.len_b {
-//         let mut sum =
-//             FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(ConstraintF::zero()))?;
-//         for j in 0..self.len_a {
-//             let a_var = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.a[i][j]))?;
-//             let x_var = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.x[j]))?;
-//             let product = a_var * &x_var;
-//             sum += &product;
-//         }
-//         let b_var = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.b[i]))?;
-//         sum.enforce_equal(&b_var)?;
-//     }
-//     Ok(())
-// }
-
 // Implement ConstraintSynthesizer trait for LinearEquationCircuit
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
     for LinearEquationCircuit<ConstraintF>
