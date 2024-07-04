@@ -36,6 +36,7 @@ sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.8-testn
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 clap = { version = "4.0", features = ["derive", "env"] }
 alloy-sol-types = "0.7.2"
+sp1-derive = { git = "https://github.com/succinctlabs/sp1.git" }
 
 base64 = "0.22.1"
 
