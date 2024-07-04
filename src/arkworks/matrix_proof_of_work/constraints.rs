@@ -1,16 +1,10 @@
-use crate::arkworks::matrix_proof_of_work::cmp::CmpGadget;
 use crate::arkworks::matrix_proof_of_work::hasher::{hasher, hasher_var};
 use crate::arkworks::matrix_proof_of_work::io::{read_proof, write_proof_to_file};
 use ark_bls12_381::Fr;
-use ark_ff::{Fp, PrimeField, Zero};
+use ark_ff::PrimeField;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_r1cs_std::fields::FieldVar;
-use ark_r1cs_std::prelude::AllocationMode;
-use ark_r1cs_std::R1CSVar;
-use ark_r1cs_std::{
-    prelude::{AllocVar, Boolean, EqGadget},
-    uint8::UInt8,
-};
+use ark_r1cs_std::prelude::{AllocVar, EqGadget};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign};
 
@@ -111,6 +105,7 @@ mod tests {
     use ark_ec::bls12::Bls12;
     use ark_groth16::prepare_verifying_key;
     use ark_groth16::{Groth16, Proof};
+    use ark_r1cs_std::R1CSVar;
     use ark_relations::r1cs::{ConstraintLayer, ConstraintSystem, TracingMode};
     use ark_snark::{CircuitSpecificSetupSNARK, SNARK};
     use ark_std::test_rng;
@@ -193,7 +188,7 @@ mod tests {
         // generate the proof
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
         let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
-        let pvk = prepare_verifying_key::<Bls12_381>(&vk);
+        let pvk = Groth16::<Bls12_381>::process_vk(&vk).unwrap();
         let proof: Proof<Bls12<Config>> =
             Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
         // test IO
@@ -234,7 +229,44 @@ mod tests {
         // generate the proof
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
         let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
-        let pvk = prepare_verifying_key::<Bls12_381>(&vk);
+        let pvk = Groth16::<Bls12_381>::process_vk(&vk).unwrap();
+        let proof: Proof<Bls12<Config>> =
+            Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
+
+        // test some verification checks
+        assert!(
+            Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[hash_value], &proof).unwrap()
+        );
+    }
+    #[test]
+    fn big_matrix_10x10() {
+        let cs = ConstraintSystem::<Fp>::new_ref();
+        // generate random matrix of size 10x10
+        let rng = &mut test_rng();
+        let mut matrix_a = vec![vec![0u64; 10]; 10];
+        let mut matrix_b = vec![vec![0u64; 10]; 10];
+        for i in 0..10 {
+            for j in 0..10 {
+                matrix_a[i][j] = rng.next_u64();
+                matrix_b[i][j] = rng.next_u64();
+            }
+        }
+        let matrix_c = matrix_mul(
+            cs.clone(),
+            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap(),
+            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap(),
+        );
+        let hash = hasher(&matrix_c).unwrap();
+        let hash_value = hash[0];
+        let circuit = MatrixCircuit {
+            matrix_a,
+            matrix_b,
+            hash_of_c: hash_value,
+        };
+        // generate the proof
+        let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
+        let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
+        let pvk = Groth16::<Bls12_381>::process_vk(&vk).unwrap();
         let proof: Proof<Bls12<Config>> =
             Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
 

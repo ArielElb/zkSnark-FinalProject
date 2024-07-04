@@ -2,7 +2,7 @@ use std::vec;
 
 // create a sync function that will get two matrices A  oand B of size n x n of u64
 // and return the result of A * B
-use crate::arkworks::matrix_proof_of_work::alloc::{FpVar2DVec, FpVarVec};
+use crate::arkworks::matrix_proof_of_work::alloc::FpVar2DVec;
 use crate::arkworks::matrix_proof_of_work::constraints::matrix_mul;
 use crate::arkworks::matrix_proof_of_work::constraints::MatrixCircuit;
 use crate::arkworks::matrix_proof_of_work::hasher::{hasher, hasher_var};
@@ -192,20 +192,3 @@ pub async fn verify_proof(data: web::Json<VerifyInput>) -> impl Responder {
     // return the response data
     HttpResponse::Ok().json(response_data)
 }
-
-// // create tests"
-// #[cfg(test)]
-// mod tests {
-
-//     use super::*;
-
-//     // create tests for matrix hash:
-//     #[actix_rt::test]
-//     async fn test_hash_matrix() {
-//         let data = InputData {
-//             size: 3,
-//             matrix: vec![vec![30, 24, 18], vec![84, 69, 54], vec![138, 114, 90]],
-//         };
-//         let response = hash_matrix(web::Json(data)).await;
-//     }
-// }

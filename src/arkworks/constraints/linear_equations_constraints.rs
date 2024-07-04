@@ -1,13 +1,10 @@
-use ark_bls12_381::{Bls12_381, Fr};
-use ark_ff::{Field, PrimeField};
+use ark_ff::PrimeField;
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::fields::fp::FpVar;
 // import zero
-use ark_ff::Zero;
 
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
-use ark_snark::{CircuitSpecificSetupSNARK, SNARK};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone)]
@@ -34,25 +31,6 @@ pub struct InputData {
     pub a: Vec<Vec<u64>>,
     pub b: Vec<u64>,
 }
-
-// pub fn generate_constraints(
-//     &self,
-//     cs: ConstraintSystemRef<ConstraintF>,
-// ) -> Result<(), SynthesisError> {
-//     for i in 0..self.len_b {
-//         let mut sum =
-//             FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(ConstraintF::zero()))?;
-//         for j in 0..self.len_a {
-//             let a_var = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.a[i][j]))?;
-//             let x_var = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.x[j]))?;
-//             let product = a_var * &x_var;
-//             sum += &product;
-//         }
-//         let b_var = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.b[i]))?;
-//         sum.enforce_equal(&b_var)?;
-//     }
-//     Ok(())
-// }
 
 // Implement ConstraintSynthesizer trait for LinearEquationCircuit
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>

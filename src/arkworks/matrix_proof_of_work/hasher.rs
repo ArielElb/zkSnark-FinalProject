@@ -1,4 +1,4 @@
-use crate::arkworks::matrix_proof_of_work::alloc::{FpVar2DVec, FpVarVec};
+use crate::arkworks::matrix_proof_of_work::alloc::FpVar2DVec;
 pub use crate::arkworks::matrix_proof_of_work::hashing::hashing_utils::poseidon_parameters_for_test;
 use ark_bls12_381::fr::Fr;
 use ark_crypto_primitives::sponge::constraints::CryptographicSpongeVar as CryptographicSpongeVarTrait;
@@ -7,11 +7,9 @@ use ark_crypto_primitives::sponge::Absorb;
 use ark_crypto_primitives::sponge::{
     poseidon::PoseidonSponge, CryptographicSponge, FieldBasedCryptographicSponge,
 };
-use ark_ff::BigInteger;
 // use ark_crypto_primitives::{absorb, absorb_gadget};
 use ark_ff::PrimeField;
-use ark_r1cs_std::ToBytesGadget;
-use ark_r1cs_std::{boolean::Boolean, fields::fp::FpVar, R1CSVar};
+use ark_r1cs_std::{fields::fp::FpVar, R1CSVar};
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 use std::ops::ShrAssign;
 // // calculates the hash
@@ -73,12 +71,12 @@ pub fn flatten_fpvar<ConstraintF: PrimeField>(
 mod tests {
     use super::*;
     use ark_bls12_381::Fr as F;
+    use ark_ff::BigInteger;
     use ark_r1cs_std::alloc::AllocVar;
     use ark_relations::r1cs::ConstraintSystem;
     use ark_std::test_rng;
     use core::hash;
     use rand::RngCore;
-    
     #[test]
     fn hash_matrix_c() {
         let cs = ConstraintSystem::<F>::new_ref();
