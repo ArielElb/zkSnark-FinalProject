@@ -1,77 +1,96 @@
-// pages/index.js
+// src/app/verify/page.jsx
 "use client";
-
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import { Line } from "react-chartjs-2";
+import { Chart as ChartJS, LineElement, PointElement, LinearScale, Title, CategoryScale } from 'chart.js';
+import styles from "../../styles/result.module.css";
 
-export default function Home() {
-  const [x, setX] = useState("");
-  const [numOfRounds, setNumOfRounds] = useState("");
+ChartJS.register(LineElement, PointElement, LinearScale, Title, CategoryScale);
+
+const VerifyPrimePage = ({ searchParams }) => {
   const [result, setResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  if(searchParams.a) {
+    useEffect(() => {
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      const response = await axios.post("http://localhost:8080/api/prime_snark", {
-        x: parseInt(x),
-        num_of_rounds: parseInt(numOfRounds),
-      });
-      setResult(response.data);
-    } catch (error) {
-      console.error("Error submitting the form", error);
-      setResult({ error: "Failed to compute. Please try again." });
-    }
-  };
+    const handleSubmit = async () => {
+      try {
+        const response = await axios.post("http://127.0.0.1:8080/api/fibbonaci/prove", {
+          a: parseInt(searchParams.a),
+          b: parseInt(searchParams.b),
+          result: parseInt(searchParams.number),
+          num_of_rounds: parseInt(searchParams.rounds),
+        });  
+        console.log(response);
+        console.log(response.data);
+        setResult(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error submitting the form", error);
+        setResult({ error: "Failed to compute. Please try again." });
+        setIsLoading(false);
+      }
+    };
+    
+
+       handleSubmit(); 
+      }, [searchParams.number, searchParams.rounds]);
+
+    } else {
+    console.log("yaaaaaa");
+    useEffect(() => {
+      const handleSubmit = async () => {
+        try {
+          const response = await axios.post("http://localhost:8080/api/prime_sp1", {
+            n: parseInt(searchParams.number),
+            num_of_rounds: parseInt(searchParams.rounds),
+            evm: false
+          });  
+          console.log(response);
+          console.log(response.data);
+          setResult(response.data);
+          setIsLoading(false);
+        } catch (error) {
+          console.error("Error submitting the form", error);
+          setResult({ error: "Failed to compute. Please try again." });
+          setIsLoading(false);
+        }
+      };
+  
+      handleSubmit();
+    }, [searchParams.number, searchParams.rounds]);
+  }
+ 
 
   return (
-    <div>
-      <h1>Prime Circuit</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Enter x:
-          <input
-            type='number'
-            value={x}
-            onChange={(e) => setX(e.target.value)}
-            required
-          />
-        </label>
-        <br />
-        <br />
-        <label>
-          Enter number of rounds:
-          <input
-            type='number'
-            value={numOfRounds}
-            onChange={(e) => setNumOfRounds(e.target.value)}
-            required
-          />
-        </label>
-        <br />
-        <br />
-        <button type='submit'>Submit</button>
-      </form>
-      {result && (
-        <div>
-          <h2>Result</h2>
-          {result.error ? (
-            <p>{result.error}</p>
-          ) : (
-            <>
-              <p>Proof: {result.proof}</p>
-              <p>Public Input: {result.public_input.join(", ")}</p>
-              <p>Number of Constraints: {result.num_constraints}</p>
-              <p>Number of Variables: {result.num_variables}</p>
-              <p>Proving Time: {result.proving_time} seconds</p>
-              <p>Verifying Time: {result.verifying_time} seconds</p>
-            </>
-          )}
-        </div>
-      )}
+    <div className={styles.container}>
+      <div className={styles.leftContainer}>
+        <h1 className={styles.title}>Prime Number Verification Results</h1>
+        <p className={styles.explanation}>
+          Below are the results of your prime number verification request:
+        </p>
+        {isLoading ? (
+          <p className={styles.loadingText}>Calculating...</p>
+        ) : (
+          <div className={styles.resultContainer}>
+            {result.error ? (
+              <p className={styles.errorText}>{result.error}</p>
+            ) : (
+              <>
+                <p className={styles.resultText}>n: {result.n}</p>
+                <p className={styles.resultText}>num of rounds: {result.num_of_rounds}</p>
+                <p className={styles.resultText}>is prime:  {result.is_prime}</p>
+                <p className={styles.resultText}>prime: {result.prime}</p>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+      <div className={styles.rightContainer}>
+      </div>
     </div>
   );
-}
+};
 
-/*
- 
-*/
+export default VerifyPrimePage;
