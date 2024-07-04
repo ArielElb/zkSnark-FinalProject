@@ -14,7 +14,8 @@ use sha2::{Digest, Sha256};
 type PublicValuesTuple = sol! {
     tuple(uint32, uint32, uint32,bool)
 };
-
+// The main function of the program.
+#[sp1_derive::cycle_tracker]
 pub fn main() {
     // Read an input to the program.
     //
