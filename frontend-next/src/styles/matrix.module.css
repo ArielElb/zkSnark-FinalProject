@@ -1,0 +1,119 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f0f4f8;
+  color: #333;
+}
+
+.title {
+  margin-bottom: 20px;
+  color: #0070f3;
+}
+
+.label {
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.select {
+  margin-left: 10px;
+  padding: 5px;
+  font-size: 16px;
+}
+
+.matrices {
+  display: flex;
+  gap: 20px;
+}
+
+.matrix {
+  display: grid;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+}
+
+.cell {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.cell:focus {
+  border-color: #0070f3;
+  outline: none;
+}
+
+.saveButton {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: white;
+  background-color: #0070f3;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.saveButton:hover {
+  background-color: #005bb5;
+}
+
+.savedMatrix {
+  margin-top: 20px;
+}
+
+.savedCell {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: inline-block;
+  line-height: 40px;
+  margin-right: 5px;
+}
+
+.optionButtons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.optionButtons button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 4px;
+}
+
+.optionButtons .activeButton {
+  background-color: #0070f3;
+  color: white;
+  border-color: #0070f3;
+}
+
+.option2Container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inputBox {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}

@@ -6,7 +6,7 @@ const OptionsPage = () => {
   const names = [
     "Prime number",
     "Fibonacci",
-    "Factorization",
+    "Matrix multiplication",
     "Perfect square",
     "quadratic_equation",
     "Linear Equations",
@@ -14,7 +14,7 @@ const OptionsPage = () => {
   const options = [
     "../inputPrime",
     "../inputFibonachi",
-    "../third",
+    "../inputMatrix",
     "../fourth",
     "../fifth",
     "../sixth",

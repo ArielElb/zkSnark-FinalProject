@@ -12,8 +12,32 @@ const VerifyPrimePage = ({ searchParams }) => {
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   if(searchParams.a) {
-      console.log(searchParams.a);
-  } else {
+    useEffect(() => {
+
+    const handleSubmit = async () => {
+      try {
+        const response = await axios.post("http://127.0.0.1:8080/api/fibbonaci/prove", {
+          a: parseInt(searchParams.a),
+          b: parseInt(searchParams.b),
+          result: parseInt(searchParams.number),
+          num_of_rounds: parseInt(searchParams.rounds),
+        });  
+        console.log(response);
+        console.log(response.data);
+        setResult(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error submitting the form", error);
+        setResult({ error: "Failed to compute. Please try again." });
+        setIsLoading(false);
+      }
+    };
+    
+
+       handleSubmit(); 
+      }, [searchParams.number, searchParams.rounds]);
+
+    } else {
     console.log("yaaaaaa");
     useEffect(() => {
       const handleSubmit = async () => {
