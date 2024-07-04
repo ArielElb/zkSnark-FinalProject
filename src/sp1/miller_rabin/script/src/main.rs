@@ -30,7 +30,6 @@ pub const MILLER_ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succin
 pub struct ProvePayload {
     n: u32,
     num_of_rounds: u32,
-    evm: bool,
 }
 
 #[derive(Serialize, Deserialize)]

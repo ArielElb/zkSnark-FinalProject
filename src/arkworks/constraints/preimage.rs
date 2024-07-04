@@ -1,4 +1,3 @@
-use ark_bls12_381::Fr;
 use ark_crypto_primitives::crh::sha256::constraints::{DigestVar, Sha256Gadget, UnitVar};
 use ark_crypto_primitives::crh::sha256::Sha256;
 use ark_crypto_primitives::crh::CRHSchemeGadget;
@@ -8,14 +7,11 @@ use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::boolean::Boolean;
 use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::fields::fp::FpVar;
-use ark_r1cs_std::fields::FieldVar;
-use ark_r1cs_std::select::CondSelectGadget;
+
 use ark_r1cs_std::uint8::UInt8;
 use ark_r1cs_std::{R1CSVar, ToBytesGadget};
 use ark_relations::ns;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, Namespace, SynthesisError};
-use ark_std::test_rng;
-use serde::de::value;
 
 #[derive(Clone)]
 pub struct PreImage<ConstraintF: PrimeField> {
@@ -76,16 +72,13 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PreImage<Co
     }
 }
 
-
-
 // Tests:
 #[cfg(test)]
 mod test {
     use super::*;
-    use ark_ff::{BigInt, BigInteger256, BigInteger64};
+    use ark_bls12_381::Fr;
+    use ark_ff::BigInt;
     use ark_relations::r1cs::ConstraintSystem;
-    use ark_std::test_rng;
-    use sha2::{Digest, Sha256 as Sha2_256};
 
     #[test]
     fn correctness_preimage() {

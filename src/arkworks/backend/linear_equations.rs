@@ -219,13 +219,11 @@ pub async fn prime_snark_compute(data: web::Json<InputData>) -> impl Responder {
 */
 #[cfg(test)]
 mod tests {
-    use ark_relations::r1cs::ConstraintSystem;
 
     use super::*;
 
     #[test]
     fn test_linear_equation_circuit() {
-        let cs = ConstraintSystem::<Fr>::new_ref();
         // Define the matrix A
         let a: Vec<Vec<Fr>> = vec![
             vec![Fr::from(2u32), Fr::from(1u32)],

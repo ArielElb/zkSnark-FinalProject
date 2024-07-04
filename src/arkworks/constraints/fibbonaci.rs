@@ -1,19 +1,10 @@
-use ark_bls12_381::{Bls12_381, Fr};
 use ark_ff::PrimeField;
-use ark_groth16::Groth16;
 use ark_r1cs_std::fields::fp::FpVar;
-use ark_r1cs_std::prelude::{AllocVar, EqGadget, R1CSVar};
+use ark_r1cs_std::prelude::{AllocVar, EqGadget};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
-use ark_snark::SNARK;
-use ark_std::str::FromStr;
 // use lazy_static::lazy_static;
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-use std::any::type_name;
-use std::env;
-use std::mem;
-use std::sync::Mutex;
-use std::time::Instant;
+
+
 //static mut GLOBAL_STRING: &str = "Your global string here";
 // lazy_static! {
 //     static ref GLOBAL_STRING: Mutex<String> = Mutex::new(String::new());

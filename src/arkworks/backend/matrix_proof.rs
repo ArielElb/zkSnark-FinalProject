@@ -2,7 +2,7 @@ use std::vec;
 
 // create a sync function that will get two matrices A  oand B of size n x n of u64
 // and return the result of A * B
-use crate::arkworks::matrix_proof_of_work::alloc::{FpVar2DVec, FpVarVec};
+use crate::arkworks::matrix_proof_of_work::alloc::FpVar2DVec;
 use crate::arkworks::matrix_proof_of_work::constraints::matrix_mul;
 use crate::arkworks::matrix_proof_of_work::constraints::MatrixCircuit;
 use crate::arkworks::matrix_proof_of_work::hasher::{hasher, hasher_var};

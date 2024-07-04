@@ -4,9 +4,8 @@ use crate::arkworks::matrix_proof_of_work::io::{
 };
 use actix_web::{web, HttpResponse, Responder};
 use ark_bls12_381::{Bls12_381, Fr as BlsFr};
-use ark_groth16::{prepare_verifying_key, Groth16, PreparedVerifyingKey};
-use ark_relations::r1cs::ConstraintSynthesizer;
-use ark_relations::r1cs::ConstraintSystem;
+use ark_groth16::{prepare_verifying_key, Groth16};
+
 use ark_snark::SNARK;
 use ark_std::rand::SeedableRng;
 use rand::rngs::StdRng;

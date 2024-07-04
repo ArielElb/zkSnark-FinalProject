@@ -1,13 +1,10 @@
-use ark_bls12_381::{Bls12_381, Fr};
-use ark_ff::{Field, PrimeField};
+use ark_ff::PrimeField;
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::fields::fp::FpVar;
 // import zero
-use ark_ff::Zero;
 
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
-use ark_snark::{CircuitSpecificSetupSNARK, SNARK};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone)]
