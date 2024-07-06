@@ -37,7 +37,7 @@ const InputPrimePage = ({searchParams}) => {
 
             />
           </div>
-          <Link href={{pathname: "../verifyPrime" , query: {number: number, rounds:rounds },}}>
+          <Link href={{pathname: "../verifyPrime" , query: {number: number, rounds:rounds, type: 0 },}}>
              <button  type='submit' className={styles.button}>Get result</button>
           </Link>
         </form>

@@ -10,6 +10,10 @@ const VerifyPrimePage = ({ searchParams }) => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isVerifying,setIsVerifying] = useState(true);
+    if(searchParams.type==0) {//it is prime
+
+    } else {
+
     if(searchParams.type==1) { //it is fibonacci
     useEffect(() => {
     const handleSubmit = async () => {
@@ -113,6 +117,8 @@ const VerifyPrimePage = ({ searchParams }) => {
           }, [searchParams.number, searchParams.rounds]);
     }
   }
+}
+
       
 
  
