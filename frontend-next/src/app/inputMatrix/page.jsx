@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import styles from "../../styles/matrix.module.css";
+import Link from "next/link";
 
 const InputMatrixPage = () => {
   const [size, setSize] = useState(2);
@@ -28,10 +29,16 @@ const InputMatrixPage = () => {
   };
 
   const handleSaveMatrix = () => {
-    setSavedMatrix1(matrix1);
-    setSavedMatrix2(matrix2);
-    console.log('Matrix 1 saved:', matrix1);
-    console.log('Matrix 2 saved:', matrix2);
+  
+   const parsedMatrix1 = matrix1.map(row => row.map(cell => parseInt(cell)));
+   const parsedMatrix2 = matrix2.map(row => row.map(cell => parseInt(cell)));
+   setSavedMatrix1(parsedMatrix1);
+   setSavedMatrix2(parsedMatrix2);
+   localStorage.setItem('size', size);
+   localStorage.setItem('matrix_1', JSON.stringify(parsedMatrix1));
+   localStorage.setItem('matrix_2', JSON.stringify(parsedMatrix2));
+   console.log('Matrix 1 saved:', parsedMatrix1);
+   console.log('Matrix 2 saved:', parsedMatrix2);
   };
 
   const renderMatrixInput = (matrix, setMatrix) => (
@@ -117,7 +124,9 @@ const InputMatrixPage = () => {
         <div className={styles.option2Container}>
           <h1 className={styles.title}>Option 2 Page</h1>
           <input type="text" className={styles.inputBox} />
+          <Link href={{pathname: "../verifyPrime" , query: {matrix_1: savedMatrix1, matrix_2:savedMatrix2,type:2 },}}>
           <button className={styles.saveButton}>Submit</button>
+          </Link>
         </div>
       )}
     </div>
