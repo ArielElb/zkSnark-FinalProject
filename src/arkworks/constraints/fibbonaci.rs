@@ -4,7 +4,6 @@ use ark_r1cs_std::prelude::{AllocVar, EqGadget};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 // use lazy_static::lazy_static;
 
-
 //static mut GLOBAL_STRING: &str = "Your global string here";
 // lazy_static! {
 //     static ref GLOBAL_STRING: Mutex<String> = Mutex::new(String::new());
@@ -31,7 +30,7 @@ fn fibonacci_steps(a: u64, b: u64, steps: u32) -> u64 {
 }
 
 impl<F: PrimeField> ConstraintSynthesizer<F> for FibonacciCircuit<F> {
-    fn generate_constraints(mut self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
+    fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
         let mut fi_minus_one = FpVar::<F>::new_input(cs.clone(), || {
             self.a.ok_or(SynthesisError::AssignmentMissing)
         })?;
