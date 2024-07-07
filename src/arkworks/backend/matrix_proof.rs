@@ -123,6 +123,7 @@ pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
     let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
     let setup_time = std::time::Instant::now();
     let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
+
     let setup_time = setup_time.elapsed().as_secs_f64();
 
     // convert the proof and vk to string:
@@ -132,6 +133,7 @@ pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
     // open timer:
     let proving_time = std::time::Instant::now();
     let proof: Proof<Bls12<Config>> = Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
+
     // end timer:
     let proving_time = proving_time.elapsed().as_secs_f64();
 
