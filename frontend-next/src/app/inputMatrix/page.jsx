@@ -1,7 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import styles from "../../styles/matrix.module.css";
+import Link from "next/link";
+
 import axios from "axios";
+
 
 const InputMatrixPage = () => {
   const [size, setSize] = useState(2);
@@ -135,6 +138,7 @@ const InputMatrixPage = () => {
       .finally(() => {
         setIsLoadingVerify(false);
       });
+
   };
 
   const renderMatrixInput = (matrix, setMatrix) => (
@@ -218,6 +222,7 @@ const InputMatrixPage = () => {
 
       {currentOption === "verify" && (
         <div className={styles.option2Container}>
+
           <h1 className={styles.title}>Verify Proof</h1>
           <label className={styles.label}>
             Enter Hash:

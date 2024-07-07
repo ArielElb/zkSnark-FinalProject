@@ -1,27 +1,27 @@
-/* styles/Navbar.module.css */
-
-.header {
-    width: 100%;
+/* components/Navbar.module.css */
+.nav {
+    background-color: #333;
     padding: 1rem;
+  }
+  
+  .navList {
     display: flex;
-    justify-content: flex-end;
-    position: absolute;
-    top: 0;
-}
-
-.navLinks {
-    display: flex;
-    align-items: center;
-}
-
-.navLink {
-    margin: 0 1rem;
-    text-decoration: none;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .navItem {
+    margin-right: 1rem;
+  }
+  
+  .navItem a {
     color: white;
+    text-decoration: none;
     font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.navLink:hover {
-    color: #ff3e00; /* Change color on hover as per your design */
-}
+  }
+  
+  .navItem a:hover {
+    text-decoration: underline;
+  }
+  
