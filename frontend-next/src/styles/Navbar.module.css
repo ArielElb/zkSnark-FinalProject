@@ -1,27 +1,26 @@
 /* components/Navbar.module.css */
 .nav {
-    background-color: #333;
-    padding: 1rem;
-  }
-  
-  .navList {
-    display: flex;
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .navItem {
-    margin-right: 1rem;
-  }
-  
-  .navItem a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  
-  .navItem a:hover {
-    text-decoration: underline;
-  }
-  
+  background-color: #333;
+  padding: 1rem;
+}
+
+.navList {
+  display: flex;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  margin-right: 1rem;
+}
+
+.navItem a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.navItem a:hover {
+  text-decoration: underline;
+}

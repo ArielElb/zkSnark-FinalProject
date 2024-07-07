@@ -5,7 +5,6 @@ import Link from "next/link";
 
 import axios from "axios";
 
-
 const InputMatrixPage = () => {
   const [size, setSize] = useState(2);
   const [matrix1, setMatrix1] = useState(generateRandomMatrix(2));
@@ -138,7 +137,6 @@ const InputMatrixPage = () => {
       .finally(() => {
         setIsLoadingVerify(false);
       });
-
   };
 
   const renderMatrixInput = (matrix, setMatrix) => (
@@ -222,7 +220,6 @@ const InputMatrixPage = () => {
 
       {currentOption === "verify" && (
         <div className={styles.option2Container}>
-
           <h1 className={styles.title}>Verify Proof</h1>
           <label className={styles.label}>
             Enter Hash:
