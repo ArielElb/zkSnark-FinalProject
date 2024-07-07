@@ -1,37 +1,140 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "../../styles/matrix.module.css";
+import axios from "axios";
 
 const InputMatrixPage = () => {
   const [size, setSize] = useState(2);
-  const [matrix1, setMatrix1] = useState(Array(2).fill('').map(() => Array(2).fill('')));
-  const [matrix2, setMatrix2] = useState(Array(2).fill('').map(() => Array(2).fill('')));
-  const [savedMatrix1, setSavedMatrix1] = useState(null);
-  const [savedMatrix2, setSavedMatrix2] = useState(null);
-  const [currentOption, setCurrentOption] = useState("option1");
+  const [matrix1, setMatrix1] = useState(generateRandomMatrix(2));
+  const [matrix2, setMatrix2] = useState(generateRandomMatrix(2));
+  const [savedMatrix1, setSavedMatrix1] = useState(matrix1);
+  const [savedMatrix2, setSavedMatrix2] = useState(matrix2);
+  const [currentOption, setCurrentOption] = useState("prove");
+  const [hashInput, setHashInput] = useState("");
+  const [hash, setHash] = useState("");
+  const [verifyResult, setVerifyResult] = useState("");
+  const [verifyingTime, setVerifyingTime] = useState("");
+  const [isLoadingProof, setIsLoadingProof] = useState(false);
+  const [isLoadingVerify, setIsLoadingVerify] = useState(false);
+  const [setupTime, setSetupTime] = useState(null);
+  const [provingTime, setProvingTime] = useState(null);
+  const [numConstraints, setNumConstraints] = useState(null);
+  const [numVariables, setNumVariables] = useState(null);
+
+  useEffect(() => {
+    setSavedMatrix1(matrix1);
+  }, [matrix1]);
+
+  useEffect(() => {
+    setSavedMatrix2(matrix2);
+  }, [matrix2]);
+
+  // Function to generate random matrix of given size
+  function generateRandomMatrix(size) {
+    return Array(size)
+      .fill("")
+      .map(
+        () =>
+          Array(size)
+            .fill("")
+            .map(() => Math.floor(Math.random() * 10)) // Adjust range as needed
+      );
+  }
 
   const handleSizeChange = (e) => {
     const newSize = parseInt(e.target.value);
     setSize(newSize);
-    setMatrix1(Array(newSize).fill('').map(() => Array(newSize).fill('')));
-    setMatrix2(Array(newSize).fill('').map(() => Array(newSize).fill('')));
+    setMatrix1(generateRandomMatrix(newSize));
+    setMatrix2(generateRandomMatrix(newSize));
   };
 
   const handleInputChange = (matrix, setMatrix, i, j, e) => {
     const value = e.target.value;
     if (!isNaN(value)) {
       const newMatrix = matrix.map((row, rowIndex) =>
-        rowIndex === i ? row.map((cell, cellIndex) => (cellIndex === j ? value : cell)) : row
+        rowIndex === i
+          ? row.map((cell, cellIndex) => (cellIndex === j ? value : cell))
+          : row
       );
       setMatrix(newMatrix);
     }
   };
+  const handleProve = () => {
+    // Reset previous stats
+    setSetupTime(null);
+    setProvingTime(null);
+    setNumConstraints(null);
+    setNumVariables(null);
 
-  const handleSaveMatrix = () => {
-    setSavedMatrix1(matrix1);
-    setSavedMatrix2(matrix2);
-    console.log('Matrix 1 saved:', matrix1);
-    console.log('Matrix 2 saved:', matrix2);
+    const convertToNumbers = (matrix) =>
+      matrix.map((row) => row.map((cell) => parseFloat(cell)));
+
+    const requestData = {
+      size,
+      matrix_a: convertToNumbers(savedMatrix1),
+      matrix_b: convertToNumbers(savedMatrix2),
+    };
+
+    setIsLoadingProof(true);
+    axios
+      .post("http://127.0.0.1:8080/api/matrix_prove/prove", requestData)
+      .then((response) => {
+        console.log("Matrix prove response:", response.data);
+        const {
+          proof,
+          pvk,
+          hash,
+          setup_time,
+          proving_time,
+          num_constraints,
+          num_variables,
+        } = response.data;
+        localStorage.setItem("proof", JSON.stringify(proof));
+        localStorage.setItem("pvk", JSON.stringify(pvk));
+        setHash(hash);
+        setSetupTime(setup_time);
+        setProvingTime(proving_time);
+        setNumConstraints(num_constraints);
+        setNumVariables(num_variables);
+      })
+      .catch((error) => {
+        console.error("Error proving matrices:", error);
+      })
+      .finally(() => {
+        setIsLoadingProof(false);
+      });
+  };
+  const handleVerify = () => {
+    const pvk = JSON.parse(localStorage.getItem("pvk"));
+    const proof = JSON.parse(localStorage.getItem("proof"));
+
+    const requestData = {
+      pvk,
+      proof,
+      hash: hashInput,
+    };
+
+    setIsLoadingVerify(true);
+    axios
+      .post("http://127.0.0.1:8080/api/matrix_prove/verify", requestData)
+      .then((response) => {
+        console.log("Matrix verify response:", response.data);
+        const { valid, verifying_time } = response.data;
+        if (valid) {
+          setVerifyResult("Verification successful!");
+        } else {
+          setVerifyResult("Verification failed.");
+        }
+        setVerifyingTime(verifying_time);
+      })
+      .catch((error) => {
+        console.error("Error verifying matrices:", error);
+        setVerifyResult("Verification failed.");
+        setVerifyingTime("");
+      })
+      .finally(() => {
+        setIsLoadingVerify(false);
+      });
   };
 
   const renderMatrixInput = (matrix, setMatrix) => (
@@ -41,7 +144,7 @@ const InputMatrixPage = () => {
           {row.map((cell, j) => (
             <input
               key={j}
-              type="text"
+              type='text'
               value={cell}
               onChange={(e) => handleInputChange(matrix, setMatrix, i, j, e)}
               className={styles.cell}
@@ -52,22 +155,41 @@ const InputMatrixPage = () => {
     </div>
   );
 
+  const AdditionalInfo = () => (
+    <div className={styles.additionalInfo}>
+      {setupTime !== null && <p>Setup Time: {setupTime.toFixed(6)} seconds</p>}
+      {provingTime !== null && <p>Proving Time: {provingTime.toFixed(6)} seconds</p>}
+      {numConstraints !== null && <p>Number of Constraints: {numConstraints}</p>}
+      {numVariables !== null && <p>Number of Variables: {numVariables}</p>}
+    </div>
+  );
+
   return (
     <div className={styles.container}>
       <div className={styles.optionButtons}>
-        <button onClick={() => setCurrentOption("option1")} className={currentOption === "option1" ? styles.activeButton : ''}>Option 1</button>
-        <button onClick={() => setCurrentOption("option2")} className={currentOption === "option2" ? styles.activeButton : ''}>Option 2</button>
+        <button
+          onClick={() => setCurrentOption("prove")}
+          className={currentOption === "prove" ? styles.activeButton : ""}
+        >
+          Prove
+        </button>
+        <button
+          onClick={() => setCurrentOption("verify")}
+          className={currentOption === "verify" ? styles.activeButton : ""}
+        >
+          Verify
+        </button>
       </div>
 
-      {currentOption === "option1" && (
+      {currentOption === "prove" && (
         <>
           <h1 className={styles.title}>Matrix Input</h1>
           <label className={styles.label}>
-            Select matrix size (2-8):
+            Select matrix size (2-40):
             <select value={size} onChange={handleSizeChange} className={styles.select}>
-              {[2, 3, 4, 5, 6, 7, 8].map((s) => (
-                <option key={s} value={s}>
-                  {s}
+              {[...Array(39).keys()].map((s) => (
+                <option key={s + 2} value={s + 2}>
+                  {s + 2}
                 </option>
               ))}
             </select>
@@ -76,48 +198,51 @@ const InputMatrixPage = () => {
             {renderMatrixInput(matrix1, setMatrix1)}
             {renderMatrixInput(matrix2, setMatrix2)}
           </div>
-          <button onClick={handleSaveMatrix} className={styles.saveButton}>
-            Save Matrix
+          <button onClick={handleProve} className={styles.saveButton}>
+            Prove
           </button>
-          {savedMatrix1 && savedMatrix2 && (
-            <div className={styles.savedMatrix}>
-              <h2>Saved Matrices:</h2>
-              <div className={styles.matrices}>
-                <div>
-                  <h3>Matrix 1:</h3>
-                  {savedMatrix1.map((row, i) => (
-                    <div key={i} className={styles.row}>
-                      {row.map((cell, j) => (
-                        <span key={j} className={styles.savedCell}>
-                          {cell}
-                        </span>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <h3>Matrix 2:</h3>
-                  {savedMatrix2.map((row, i) => (
-                    <div key={i} className={styles.row}>
-                      {row.map((cell, j) => (
-                        <span key={j} className={styles.savedCell}>
-                          {cell}
-                        </span>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
+          {isLoadingProof && (
+            <div className={styles.loading}>
+              <p>Loading proof...</p>
             </div>
           )}
+          {hash && !isLoadingProof && (
+            <div className={styles.hashContainer}>
+              <h2>Proof Hash:</h2>
+              <p>{hash}</p>
+            </div>
+          )}
+          <AdditionalInfo /> {/* Render additional information component */}
         </>
       )}
 
-      {currentOption === "option2" && (
+      {currentOption === "verify" && (
         <div className={styles.option2Container}>
-          <h1 className={styles.title}>Option 2 Page</h1>
-          <input type="text" className={styles.inputBox} />
-          <button className={styles.saveButton}>Submit</button>
+          <h1 className={styles.title}>Verify Proof</h1>
+          <label className={styles.label}>
+            Enter Hash:
+            <input
+              type='text'
+              value={hashInput}
+              onChange={(e) => setHashInput(e.target.value)}
+              className={styles.inputBox}
+            />
+          </label>
+          <button onClick={handleVerify} className={styles.saveButton}>
+            Verify
+          </button>
+          {isLoadingVerify && (
+            <div className={styles.loading}>
+              <p>Verifying...</p>
+            </div>
+          )}
+          {verifyResult && !isLoadingVerify && (
+            <div className={styles.verifyResult}>
+              <h2>Verification Result:</h2>
+              <p>{verifyResult}</p>
+              <p>Verifying Time: {verifyingTime}</p>
+            </div>
+          )}
         </div>
       )}
     </div>
