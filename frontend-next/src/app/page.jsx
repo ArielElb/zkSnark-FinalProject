@@ -6,11 +6,8 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className={styles.container}>
-      <Head>
-        <title>Nova Code Editor</title>
-      </Head>
       <main className={styles.main}>
-        <h1 className={styles.title}>home page</h1>
+        <h1 className={styles.title}>Home Page</h1>
         <div className={styles.explanation}>
           Zero-Knowledge Proofs (ZKProofs) allow one party to prove to another that they
           know a value without revealing the value itself. This project leverages the SP1

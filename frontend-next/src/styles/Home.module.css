@@ -1,87 +1,97 @@
 /* src/styles/Home.module.css */
 
 .container {
-    min-height: 100vh;
-    padding: 0 0.5rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: url('../styles/stars.jpg') no-repeat center center fixed;
-    background-size: cover;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-image: url("../public/black.jpg"); /* Set the background image */
+  background-size: cover; /* Ensure the image covers the entire container */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Prevent image from repeating */
+  color: white; /* Change text color to white */
+  padding: 20px; /* Add padding to center content */
+  box-sizing: border-box; /* Include padding in element's total width and height */
+  overflow-y: auto; /* Allow vertical scrolling */
 }
 
 .header {
-    width: 100%;
-    padding: 1rem;
-    display: flex;
-    justify-content: flex-end;
-    position: absolute;
-    top: 0;
+  width: 100%;
+  padding: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  position: absolute;
+  top: 0;
 }
 
 .navLinks a {
-    margin: 0 0.5rem;
-    text-decoration: none;
-    color: white;
+  margin: 0 0.5rem;
+  text-decoration: none;
+  color: white;
 }
 
 .navLinks .buyNow {
-    background-color: #00ff00;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    color: black;
-    text-decoration: none;
+  background-color: #00ff00;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  color: black;
+  text-decoration: none;
 }
 
 .main {
-    text-align: center;
-    margin-top: 10vh; /* To avoid overlap with the header */
-    width: 100%;
+  text-align: center;
+  margin-top: 10vh; /* To avoid overlap with the header */
+  width: 100%;
 }
 
 .title {
-    font-size: 4rem;
-    font-weight: bold;
-    color: #ff3e00;
-    margin: 20px 0;
-    position: absolute;
-    top: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
+  font-size: 4rem;
+  font-weight: bold;
+  color: #3c00ff;
+  margin: 20px 0;
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .explanation {
-    font-size: 1rem;
-    font-weight: 400;
-    color: #ffffff;
-    margin: 20px 0;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.8);
-    color: #000;
-    border-radius: 10px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    position: absolute;
-    top: 10rem; /* Adjust this to control the distance between title and text */
-    left: 50%;
-    transform: translateX(-50%);
+  font-size: 1rem;
+  font-weight: 400;
+  color: #ffffff;
+  margin: 20px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #000;
+  border-radius: 10px;
+  max-width: max-content;
+  max-height: max-content;
+  margin-left: auto;
+  margin-right: auto;
+  position: absolute;
+  top: 10rem; /* Adjust this to control the distance between title and text */
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .downloadButton {
-    background-color: #0070f3;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 5px;
-    text-decoration: none;
-    font-weight: bold;
-    position: absolute;
-    top: 30rem; /* Adjust this to control the distance between text and button */
-    left: 50%;
-    transform: translateX(-50%);
+  background-color: #0070f3;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  position: absolute;
+  top: 30rem; /* Adjust this to control the distance between text and button */
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .downloadButton:hover {
-    background-color: #005bb5;
+  background-color: #005bb5;
 }
