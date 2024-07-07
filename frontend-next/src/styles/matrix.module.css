@@ -8,16 +8,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-image: url("../public/black.jpg"); /* Set the background image /
-  background-size: cover; / Ensure the image covers the entire container /
-  background-position: center; / Center the image /
-  background-repeat: no-repeat; / Prevent image from repeating /
-  color: white; / Change text color to white /
-  padding: 20px; / Add padding to center content /
-  box-sizing: border-box; / Include padding in element's total width and height /
-  overflow-y: auto; / Allow vertical scrolling */
+  background-image: url("../public/black.jpg"); /* Set the background image */
+  background-size: cover; /* Ensure the image covers the entire container */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Prevent image from repeating */
+  color: white; /* Change text color to white */
+  padding: 20px; /* Add padding to center content */
+  box-sizing: border-box; /* Include padding in element's total width and height */
+  overflow-y: auto; /* Allow vertical scrolling */
 }
-
 .title {
   margin-bottom: 20px;
   color: #0070f3;
