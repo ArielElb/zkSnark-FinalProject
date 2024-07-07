@@ -1,26 +1,39 @@
 /* components/Navbar.module.css */
 .nav {
-  background-color: #333;
-  padding: 1rem;
-}
-
-.navList {
-  display: flex;
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
-
-.navItem {
-  margin-right: 1rem;
-}
-
-.navItem a {
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.navItem a:hover {
-  text-decoration: underline;
-}
+    background-color: #333 !important; /* Ensure background color is applied */
+    padding: 1rem;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+  
+  .navList {
+    display: flex;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .navItem {
+    margin-right: 1rem;
+  }
+  
+  .navItem a {
+    color: white !important; /* Ensure text color is applied */
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .navItem a:hover {
+    text-decoration: underline !important; /* Ensure underline on hover */
+  }
+  
+  /* styles/matrix.module.css */
+  .container {
+    margin-top: 60px; /* Adjust for the fixed navbar height */
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+  
