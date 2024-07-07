@@ -21,8 +21,7 @@ use ark_groth16::prepare_verifying_key;
 use ark_groth16::{Groth16, Proof};
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::{ToBitsGadget, ToBytesGadget};
-use ark_relations::r1cs::ConstraintSystem;
-use ark_relations::r1cs::ConstraintSystemRef;
+use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_snark::{CircuitSpecificSetupSNARK, SNARK};
 use ark_std::end_timer;
@@ -94,6 +93,7 @@ pub struct ProveOutPut {
 // function to genrate a proof using groth16, getting 2 matrices A and B
 pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
     let cs = ConstraintSystem::<F>::new_ref();
+
     // exctract the matrix from the data
     let data = data.into_inner();
     let matrix_a: Vec<Vec<u64>> = data.matrix_a;
@@ -123,6 +123,7 @@ pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
     let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
     let setup_time = std::time::Instant::now();
     let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
+
     let setup_time = setup_time.elapsed().as_secs_f64();
 
     // convert the proof and vk to string:
@@ -131,12 +132,18 @@ pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
     let pvk_str = encode_pvk::<Bls12_381>(&pvk);
     // open timer:
     let proving_time = std::time::Instant::now();
-    let proof: Proof<Bls12<Config>> = Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
+    let proof: Proof<Bls12<Config>> =
+        Groth16::<Bls12_381>::prove(&pk, circuit.clone(), &mut rng).unwrap();
+
+    // use the constraint system to get the number of constraints and variables:
+
     // end timer:
     let proving_time = proving_time.elapsed().as_secs_f64();
 
     // encode the proof to base64 and the vk to base64:
     let proof_str = encode_proof::<Bls12_381>(&proof);
+
+    circuit.generate_constraints(cs.clone()).unwrap();
 
     // create a response data:
     let response_data = ProveOutPut {
