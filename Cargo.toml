@@ -40,5 +40,9 @@ sp1-derive = { git = "https://github.com/succinctlabs/sp1.git" }
 
 base64 = "0.22.1"
 
+ark-marlin = { git ="https://github.com/TakodaS/marlin.git" , branch = "master" }
+ark-poly = { version = "^0.4.0", default-features = false }
+ark-poly-commit = { version = "^0.4.0", default-features = false }
+
 [build-dependencies]
 sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.8-testnet" }

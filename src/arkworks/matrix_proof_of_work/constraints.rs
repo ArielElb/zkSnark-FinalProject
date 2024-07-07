@@ -18,6 +18,14 @@ pub struct MatrixCircuit<F: PrimeField> {
     matrix_b: Vec<Vec<u64>>,
     hash_of_c: F,
 }
+#[derive(Clone, Debug)]
+pub struct MatrixCircuit2<F: PrimeField> {
+    matrix_a: Vec<Vec<u64>>,
+    matrix_b: Vec<Vec<u64>>,
+    hash_of_c: F,
+    num_constraints: usize,
+    num_variables: usize,
+}
 
 // implement new for MatrixCircuit:
 impl<F: PrimeField> MatrixCircuit<F> {
@@ -97,20 +105,48 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for MatrixCircuit<F> {
         Ok(())
     }
 }
+
+impl<F: PrimeField> ConstraintSynthesizer<F> for MatrixCircuit2<F> {
+    fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
+        let matrix_a_var: FpVar2DVec<F> =
+            FpVar2DVec::new_witness(cs.clone(), || Ok(self.matrix_a)).unwrap();
+        let matrix_b_var: FpVar2DVec<F> =
+            FpVar2DVec::new_witness(cs.clone(), || Ok(self.matrix_b)).unwrap();
+
+        let matrix_c_var = matrix_mul(cs.clone(), matrix_a_var, matrix_b_var);
+
+        let hash = &hasher_var::<F>(cs.clone(), &matrix_c_var).unwrap()[0];
+
+        let hash_public_input = FpVar::<F>::new_input(cs.clone(), || Ok(self.hash_of_c)).unwrap();
+
+        hash.enforce_equal(&hash_public_input).unwrap();
+
+        Ok(())
+    }
+}
 // create tests for the matrix multiplication:
 #[cfg(test)]
 mod tests {
     use super::*;
     use ark_bls12_381::{Bls12_381, Config, Fr as Fp};
+    use ark_crypto_primitives::sponge::CryptographicSponge;
     use ark_ec::bls12::Bls12;
     use ark_groth16::prepare_verifying_key;
     use ark_groth16::{Groth16, Proof};
+    use ark_marlin::{Marlin, SimplePoseidonRng};
+    use ark_poly::polynomial::univariate::DensePolynomial;
+    use ark_poly_commit::marlin_pc::MarlinKZG10;
     use ark_r1cs_std::R1CSVar;
     use ark_relations::r1cs::{ConstraintLayer, ConstraintSystem, TracingMode};
     use ark_snark::{CircuitSpecificSetupSNARK, SNARK};
+    use ark_std::ops::MulAssign;
     use ark_std::test_rng;
+    use itertools::Itertools;
     use rand::{RngCore, SeedableRng};
     use tracing_subscriber::layer::SubscriberExt;
+    type S = SimplePoseidonRng<Fr>;
+    type MultiPC = MarlinKZG10<Bls12_381, DensePolynomial<Fr>, S>;
+    type MarlinInst = Marlin<Fr, MultiPC, S>;
 
     #[test]
     //
@@ -274,5 +310,46 @@ mod tests {
         assert!(
             Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[hash_value], &proof).unwrap()
         );
+    }
+    #[test]
+    fn marlin_proof_system() {
+        let mut rng_seed = ark_std::test_rng();
+        let mut rng: SimplePoseidonRng<Fr> = SimplePoseidonRng::default();
+        rng.absorb(&rng_seed.next_u64());
+
+        let cs = ConstraintSystem::<Fp>::new_ref();
+        let matrix_a = vec![vec![1u64, 2], vec![3, 4]]; // witness
+        let matrix_b = vec![vec![4u64, 3], vec![2, 1]]; // witness
+                                                        // multiply the matrices
+        let matrix_c = matrix_mul(
+            cs.clone(),
+            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap(),
+            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap(),
+        );
+        // calculate the hash of the matrix - native
+        let hash = hasher(&matrix_c).unwrap();
+        let hash_value = hash[0];
+
+        let circuit = MatrixCircuit2 {
+            matrix_a,              // witness
+            matrix_b,              // witness
+            hash_of_c: hash_value, // public input
+            num_constraints: 1000,
+            num_variables: 250,
+        };
+        circuit.clone().generate_constraints(cs.clone()).unwrap();
+
+        let num_constraints = cs.num_constraints();
+        println!("Number of constraints: {}", num_constraints);
+
+        let universal_srs = MarlinInst::universal_setup(1000, 25, 300, &mut rng).unwrap();
+
+        let (index_pk, index_vk) = MarlinInst::index(&universal_srs, circuit.clone()).unwrap();
+        println!("Called index");
+
+        let proof = MarlinInst::prove(&index_pk, circuit, &mut rng).unwrap();
+        println!("Called prover");
+        assert!(MarlinInst::verify(&index_vk, &[hash_value], &proof, &mut rng).unwrap());
+        println!("Called verifier");
     }
 }
