@@ -57,7 +57,7 @@ const InputPrimePage = () => {
               placeholder="Get second number of fibonachi"
             />
           </div>
-          <Link href={{pathname: "../verifyPrime" , query: {number: number, rounds:rounds, a: a, b: b },}}>
+          <Link href={{pathname: "../verifyPrime" , query: {number: number, rounds:rounds, a: a, b: b , type: 1},}}>
              <button  type='submit' className={styles.button}>Get result</button>
           </Link>
         </form>
