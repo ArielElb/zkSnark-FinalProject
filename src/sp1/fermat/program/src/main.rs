@@ -1,54 +1,80 @@
-//! A simple program that takes a number `p` and a base `a` as input, and writes whether `p` passes
-//! the Fermat test for base `a`.
-
-// These two lines are necessary for the program to properly compile.
-//
-// Under the hood, we wrap your main function with some extra code so that it behaves properly
-// inside the zkVM.
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
-use alloy_sol_types::{sol, SolType};
-use sp1_zkvm::io::{commit_slice, read};
-
-/// The public values encoded as a tuple that can be easily deserialized inside Solidity.
 type PublicValuesTuple = sol! {
     tuple(uint32, bool)
 };
-
+use alloy_sol_types::sol;
+use alloy_sol_types::SolType;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
+use sha2::{Digest, Sha256};
 pub fn main() {
-    // Read inputs to the program.
-    //
-    // Behind the scenes, this compiles down to a custom system call which handles reading inputs
-    // from the prover.
-    let p = read::<u32>();
-    let a = read::<u32>();
-
-    // Check if p is 2 (the smallest prime number).
-    let is_prime = if p == 2 {
-        true
-    } else if p < 2 || p % 2 == 0 {
-        false
-    } else {
-        // Perform Fermat's little theorem test: a^(p-1) ≡ 1 (mod p)
-        let mut result = 1u32;
-        let mut base = a % p;
-        let mut exponent = p - 1;
-
-        while exponent > 0 {
-            if exponent % 2 == 1 {
-                result = (result * base) % p;
-            }
-            base = (base * base) % p;
-            exponent /= 2;
+    let seed = sp1_zkvm::io::read::<[u8; 8]>();
+    let num_of_rounds = sp1_zkvm::io::read::<u32>();
+    let mut n = sp1_zkvm::io::read::<u32>();
+    let mut is_primebool = false;
+    let mut hashed: u32 = 0;
+    let mask: u32 = 1;
+    // copy the seed to a new array of 32 bytes:
+    let mut seed_arr = [0u8; 32];
+    for i in 0..8 {
+        seed_arr[i] = seed[i];
+    }
+    for _ in 0..num_of_rounds {
+        if is_primebool {
+            break;
         }
+        hashed = hash(n) | mask;
 
-        result == 1
-    };
+        is_primebool = fermat_test(hashed, seed_arr, 20);
+        n += 1;
+    }
+    let bytes = PublicValuesTuple::abi_encode(&(hashed, is_primebool));
+    sp1_zkvm::io::commit_slice(&bytes);
+}
+fn hash(n: u32) -> u32 {
+    let mut hasher = Sha256::new();
+    hasher.update(n.to_be_bytes());
+    let result = hasher.finalize();
+    let mut res = [0u8; 4];
+    res.copy_from_slice(&result[..4]);
+    u32::from_be_bytes(res)
+}
 
-    // Encode the public values of the program.
-    let bytes = PublicValuesTuple::abi_encode(&(p, is_prime));
+fn fermat_test(n: u32, seed: [u8; 32], k: u32) -> bool {
+    if n == 1 || n == 4 {
+        return false;
+    }
+    if n <= 3 {
+        return true;
+    }
 
-    // Commit to the public values of the program.
-    commit_slice(&bytes);
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
+
+    for _ in 0..k {
+        let x = rng.gen_range(2..n - 2);
+
+        if mod_exp(x, n - 1, n) != 1 {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn mod_exp(base: u32, exponent: u32, modulus: u32) -> u32 {
+    let mut result = 1;
+    let mut base = base % modulus;
+    let mut exponent = exponent;
+
+    while exponent > 0 {
+        if exponent % 2 == 1 {
+            result = (result * base) % modulus;
+        }
+        exponent = exponent >> 1;
+        base = (base * base) % modulus;
+    }
+
+    result
 }

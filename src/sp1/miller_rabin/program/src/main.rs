@@ -30,7 +30,6 @@ pub fn main() {
             num_of_rounds
         );
     }
-
     let mut is_primebool = false;
     let mut hashed: u32 = 0;
     let mask: u32 = 1;
