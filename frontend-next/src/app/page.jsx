@@ -1,7 +1,6 @@
 // src/pages/index.jsx
 import Head from "next/head";
 import styles from "../styles/Home.module.css";
-import Link from "next/link";
 
 export default function Home() {
   return (
@@ -15,7 +14,6 @@ export default function Home() {
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <main className={styles.main}>
         <h1 className={styles.title}>Home Page</h1>
         <div className={styles.explanation}>
           <p>
@@ -118,7 +116,6 @@ export default function Home() {
             maintaining data privacy and integrity.
           </p>
         </div>
-      </main> 
     </div>
   );
 }
