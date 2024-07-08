@@ -17,7 +17,6 @@ const NUM_BITS:usize = 381;
 #[derive(Clone)]
 struct mod_vals {
     num: BigUint,
-    div: BigUint,
     q: BigUint,
     remainder: BigUint,
 
@@ -29,7 +28,11 @@ pub struct mod_witnesses<F: PrimeField> {
     remainder: F,
 
 }
-
+pub struct return_struct {
+    mod_vals: Vec<mod_vals>,
+    mod_pow_vals: Vec<mod_vals>,
+    result: BigUint,
+}
 struct ModExpCircuit<F: PrimeField> {
     base: F,
     exponent: F,
@@ -42,17 +45,13 @@ fn get_mod_vals(num: &BigUint, div: &BigUint) -> mod_vals {
     let remainder = num - div * &q;
     mod_vals {
         num: num.clone(),  // Still necessary to clone if ownership is needed outside
-        div: div.clone(),  // Could potentially pass ownership or use references
         q,
         remainder,
     }
 }
 
-fn square_biguint(num: &BigUint) -> BigUint {
-    num * num  // This uses BigUint's own multiplication algorithm which is optimized
-}
 
-pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->BigUint{
+pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->return_struct{
     let mut elem;
     let mut cur_pow = base.clone(); 
     let mut exp_val = exp.clone();
@@ -61,11 +60,11 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->Big
     let zero = BigUint::from(0u8);
     let def_val = mod_vals{
         num:zero.clone(),
-        div:zero.clone(),
         q:zero.clone(),
         remainder:zero.clone(),
     };
-    let mut v: Vec<mod_vals> =  vec![def_val; 382];
+    let mut v: Vec<mod_vals> =  vec![def_val.clone(); 382];
+    let mut mod_pow_vals: Vec<mod_vals> =  vec![def_val; 382];
     let mut bits: Vec<u8> =  vec![0u8; 382];
 
     let mut counter = 0;
@@ -78,18 +77,25 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->Big
 //
         res *= (elem - &one)*&cur_pow + &one;
         ////println!("res is: {}", res);
+        v[counter] = get_mod_vals(&res, &div);
         if res > div {
             res %= &div;
         }
-        v[counter] = get_mod_vals(&res, &div);
         exp_val >>= 1;
         cur_pow *= cur_pow.clone();
+        mod_pow_vals[counter] = get_mod_vals(&cur_pow, &div);
         cur_pow %= &div;
         //cur_pow=square_biguint(&cur_pow);
 
         counter += 1;
     }
-    return res;
+    let retstuct = return_struct{
+        mod_vals: v,
+        mod_pow_vals,
+        result: res,
+    };
+
+    return retstuct;
 }
 
 fn reduce_mod<F: PrimeField>(
