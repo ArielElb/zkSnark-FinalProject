@@ -22,7 +22,7 @@ struct mod_vals {
     remainder: BigUint,
 
 }
-struct mod_witnesses<F: PrimeField> {
+pub struct mod_witnesses<F: PrimeField> {
     num: F,
     div: F,
     q: F,
@@ -52,7 +52,7 @@ fn square_biguint(num: &BigUint) -> BigUint {
     num * num  // This uses BigUint's own multiplication algorithm which is optimized
 }
 
-fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->BigUint{
+pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->BigUint{
     let mut elem;
     let mut cur_pow = base.clone(); 
     let mut exp_val = exp.clone();
@@ -71,14 +71,14 @@ fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->BigUint
     let mut counter = 0;
     while exp_val>zero{
         elem = &exp_val & &one;
-        ////println!("elem is {}",elem);
+        //println!("elem is {}",elem);
         if elem == one{
             bits[counter] = 1;
         }
 //
-        res *= ((&cur_pow - &one)*elem + &one);
+        res *= (elem - &one)*&cur_pow + &one;
         ////println!("res is: {}", res);
-        if (res > div){
+        if res > div {
             res %= &div;
         }
         v[counter] = get_mod_vals(&res, &div);

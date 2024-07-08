@@ -4,3 +4,4 @@ pub mod miller_rabin_r1cs_v2;
 pub mod preimage;
 pub mod prime_constraints;
 mod modulo;
+mod modpow_circuit;
