@@ -12,8 +12,12 @@ const InputMatrixPage = () => {
   const [savedMatrix1, setSavedMatrix1] = useState(matrix1);
   const [savedMatrix2, setSavedMatrix2] = useState(matrix2);
   const [currentOption, setCurrentOption] = useState("prove");
-  const [hashInput, setHashInput] = useState("");
-  const [hash, setHash] = useState("");
+  const [hashes, setHashes] = useState({ hash_a: "", hash_b: "", hash_c: "" });
+  const [verifyHashes, setVerifyHashes] = useState({
+    hash_a: "",
+    hash_b: "",
+    hash_c: "",
+  });
   const [verifyResult, setVerifyResult] = useState("");
   const [verifyingTime, setVerifyingTime] = useState("");
   const [isLoadingProof, setIsLoadingProof] = useState(false);
@@ -61,6 +65,7 @@ const InputMatrixPage = () => {
       setMatrix(newMatrix);
     }
   };
+
   const handleProve = () => {
     // Reset previous stats
     setSetupTime(null);
@@ -85,7 +90,9 @@ const InputMatrixPage = () => {
         const {
           proof,
           pvk,
-          hash,
+          hash_a,
+          hash_b,
+          hash_c,
           setup_time,
           proving_time,
           num_constraints,
@@ -93,7 +100,7 @@ const InputMatrixPage = () => {
         } = response.data;
         localStorage.setItem("proof", JSON.stringify(proof));
         localStorage.setItem("pvk", JSON.stringify(pvk));
-        setHash(hash);
+        setHashes({ hash_a, hash_b, hash_c });
         setSetupTime(setup_time);
         setProvingTime(proving_time);
         setNumConstraints(num_constraints);
@@ -106,6 +113,7 @@ const InputMatrixPage = () => {
         setIsLoadingProof(false);
       });
   };
+
   const handleVerify = () => {
     const pvk = JSON.parse(localStorage.getItem("pvk"));
     const proof = JSON.parse(localStorage.getItem("proof"));
@@ -113,7 +121,9 @@ const InputMatrixPage = () => {
     const requestData = {
       pvk,
       proof,
-      hash: hashInput,
+      hash_a: verifyHashes.hash_a,
+      hash_b: verifyHashes.hash_b,
+      hash_c: verifyHashes.hash_c,
     };
 
     setIsLoadingVerify(true);
@@ -208,10 +218,12 @@ const InputMatrixPage = () => {
               <p>Loading proof...</p>
             </div>
           )}
-          {hash && !isLoadingProof && (
+          {hashes.hash_a && !isLoadingProof && (
             <div className={styles.hashContainer}>
-              <h2>Proof Hash:</h2>
-              <p>{hash}</p>
+              <h2>Proof Hashes:</h2>
+              <p>Hash A: {hashes.hash_a}</p>
+              <p>Hash B: {hashes.hash_b}</p>
+              <p>Hash C: {hashes.hash_c}</p>
             </div>
           )}
           <AdditionalInfo /> {/* Render additional information component */}
@@ -222,11 +234,35 @@ const InputMatrixPage = () => {
         <div className={styles.option2Container}>
           <h1 className={styles.title}>Verify Proof</h1>
           <label className={styles.label}>
-            Enter Hash:
+            Enter Hash A:
             <input
               type='text'
-              value={hashInput}
-              onChange={(e) => setHashInput(e.target.value)}
+              value={verifyHashes.hash_a}
+              onChange={(e) =>
+                setVerifyHashes({ ...verifyHashes, hash_a: e.target.value })
+              }
+              className={styles.inputBox}
+            />
+          </label>
+          <label className={styles.label}>
+            Enter Hash B:
+            <input
+              type='text'
+              value={verifyHashes.hash_b}
+              onChange={(e) =>
+                setVerifyHashes({ ...verifyHashes, hash_b: e.target.value })
+              }
+              className={styles.inputBox}
+            />
+          </label>
+          <label className={styles.label}>
+            Enter Hash C:
+            <input
+              type='text'
+              value={verifyHashes.hash_c}
+              onChange={(e) =>
+                setVerifyHashes({ ...verifyHashes, hash_c: e.target.value })
+              }
               className={styles.inputBox}
             />
           </label>
