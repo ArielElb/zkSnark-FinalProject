@@ -15,10 +15,10 @@ const NUM_REDUCTIONS: usize = 33; // Set an appropriate upper bound on the numbe
 const NUM_BITS:usize = 381;
 
 #[derive(Clone)]
-struct mod_vals {
-    num: BigUint,
-    q: BigUint,
-    remainder: BigUint,
+pub struct mod_vals {
+    pub num: BigUint,
+    pub q: BigUint,
+    pub remainder: BigUint,
 
 }
 pub struct mod_witnesses<F: PrimeField> {
@@ -29,9 +29,9 @@ pub struct mod_witnesses<F: PrimeField> {
 
 }
 pub struct return_struct {
-    mod_vals: Vec<mod_vals>,
-    mod_pow_vals: Vec<mod_vals>,
-    result: BigUint,
+    pub mod_vals: Vec<mod_vals>,
+    pub mod_pow_vals: Vec<mod_vals>,
+    pub result: BigUint,
 }
 struct ModExpCircuit<F: PrimeField> {
     base: F,
