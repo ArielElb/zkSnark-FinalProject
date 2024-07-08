@@ -2,4 +2,4 @@ pub mod linear_equations_constraints;
 // pub mod miller_rabin_r1cs;pub mod miller_rabin_r1cs;
 // pub mod miller_rabin_r1cs_v2;
 pub mod preimage;
-mod fibbonaci;
+pub mod fibbonaci;

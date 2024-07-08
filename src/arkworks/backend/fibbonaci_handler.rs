@@ -64,7 +64,12 @@ pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Respon
         vk: encode_pvk::<Bls12_381>(&pvk),
         proving_time,
     };
-
+    //let file_path = "fibbonaci_proof_time.csv";
+    //let mut file = OpenOptions::new()
+    //.append(true)
+    //.open(file_path)?;
+    //// Write the number to the file, followed by a newline
+    //writeln!(file, "{}", proving_time)?;
     HttpResponse::Ok().json(result)
 }
 
@@ -84,6 +89,11 @@ pub async fn fibbonaci_snark_verify(data: web::Json<InputDataFibVer>) -> impl Re
         verifying_time,
         is_res: result,
     };
-
+    //let file_path = "fibbonaci_verify_time.csv";
+    //let mut file = OpenOptions::new()
+    //.append(true)
+    //.open(file_path)?;
+    //// Write the number to the file, followed by a newline
+    //writeln!(file, "{}", proving_time)?;
     HttpResponse::Ok().json(data)
 }
