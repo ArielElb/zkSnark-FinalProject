@@ -8,7 +8,9 @@ use ark_r1cs_std::{
 };
 use ark_relations::r1cs::{Namespace, SynthesisError};
 use std::borrow::Borrow;
+#[derive(Clone)]
 pub struct FpVarVec<F: PrimeField>(pub Vec<FpVar<F>>);
+#[derive(Clone)]
 pub struct FpVar2DVec<F: PrimeField>(pub Vec<Vec<FpVar<F>>>);
 
 // allocates memory for Fpvar1D in our constrains system

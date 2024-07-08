@@ -14,9 +14,11 @@ use super::alloc::FpVarVec;
 // 2. The matrix is a Uint8 matrix
 
 pub struct MatrixCircuit<F: PrimeField> {
-    matrix_a: Vec<Vec<u64>>,
-    matrix_b: Vec<Vec<u64>>,
-    hash_of_c: F,
+    matrix_a: Vec<Vec<u64>>, // witness
+    matrix_b: Vec<Vec<u64>>, // witness
+    hash_of_a: F,            // public input
+    hash_of_b: F,            // public input
+    hash_of_c: F,            // public input
 }
 #[derive(Clone, Debug)]
 pub struct MatrixCircuit2<F: PrimeField> {
@@ -29,10 +31,18 @@ pub struct MatrixCircuit2<F: PrimeField> {
 
 // implement new for MatrixCircuit:
 impl<F: PrimeField> MatrixCircuit<F> {
-    pub fn new(matrix_a: Vec<Vec<u64>>, matrix_b: Vec<Vec<u64>>, hash_of_c: F) -> Self {
+    pub fn new(
+        matrix_a: Vec<Vec<u64>>,
+        matrix_b: Vec<Vec<u64>>,
+        hash_of_a: F,
+        hash_of_b: F,
+        hash_of_c: F,
+    ) -> Self {
         Self {
             matrix_a,
             matrix_b,
+            hash_of_a,
+            hash_of_b,
             hash_of_c,
         }
     }
@@ -43,6 +53,8 @@ impl<ConstraintF: PrimeField> Clone for MatrixCircuit<ConstraintF> {
         Self {
             matrix_a: self.matrix_a.clone(),
             matrix_b: self.matrix_b.clone(),
+            hash_of_a: self.hash_of_a.clone(),
+            hash_of_b: self.hash_of_b.clone(),
             hash_of_c: self.hash_of_c.clone(),
         }
     }
@@ -70,7 +82,6 @@ pub fn matrix_mul<F: PrimeField>(
 ) -> FpVar2DVec<F> {
     let n = matrix_a.0.len();
     let mut matrix_c = FpVar2DVec::new_witness(cs.clone(), || Ok(vec![vec![0u64; n]; n])).unwrap();
-
     for i in 0..n {
         for j in 0..n {
             let mut sum = FpVar::<F>::new_witness(cs.clone(), || Ok(F::zero())).unwrap();
@@ -89,18 +100,28 @@ pub fn matrix_mul<F: PrimeField>(
 
 impl<F: PrimeField> ConstraintSynthesizer<F> for MatrixCircuit<F> {
     fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
+        let hash_public_input_a = FpVar::<F>::new_input(cs.clone(), || Ok(self.hash_of_a)).unwrap();
+        let hash_public_input_b = FpVar::<F>::new_input(cs.clone(), || Ok(self.hash_of_b)).unwrap();
+
         let matrix_a_var: FpVar2DVec<F> =
             FpVar2DVec::new_witness(cs.clone(), || Ok(self.matrix_a)).unwrap();
         let matrix_b_var: FpVar2DVec<F> =
             FpVar2DVec::new_witness(cs.clone(), || Ok(self.matrix_b)).unwrap();
+        // hash matrix a:
+        let hash_a = &hasher_var::<F>(cs.clone(), &matrix_a_var).unwrap()[0];
+        // hash matrix b:
+        let hash_b = &hasher_var::<F>(cs.clone(), &matrix_b_var).unwrap()[0];
+        hash_a.enforce_equal(&hash_public_input_a).unwrap();
+        hash_b.enforce_equal(&hash_public_input_b).unwrap();
 
-        let matrix_c_var = matrix_mul(cs.clone(), matrix_a_var, matrix_b_var);
+        let matrix_c_var = matrix_mul(cs.clone(), matrix_a_var.clone(), matrix_b_var.clone());
 
-        let hash = &hasher_var::<F>(cs.clone(), &matrix_c_var).unwrap()[0];
+        // hash the matrix c
+        let hash_c = &hasher_var::<F>(cs.clone(), &matrix_c_var).unwrap()[0];
 
-        let hash_public_input = FpVar::<F>::new_input(cs.clone(), || Ok(self.hash_of_c)).unwrap();
+        let hash_public_input_c = FpVar::<F>::new_input(cs.clone(), || Ok(self.hash_of_c)).unwrap();
 
-        hash.enforce_equal(&hash_public_input).unwrap();
+        hash_c.enforce_equal(&hash_public_input_c).unwrap();
 
         Ok(())
     }
@@ -113,6 +134,8 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for MatrixCircuit2<F> {
         let matrix_b_var: FpVar2DVec<F> =
             FpVar2DVec::new_witness(cs.clone(), || Ok(self.matrix_b)).unwrap();
 
+        // let hash_public_input_a = FpVar::<F>::new_input(cs.clone(), || Ok(self.hash_of_a)).unwrap();
+        // let hash_public_input_b = FpVar::<F>::new_input(cs.clone(), || Ok(self.hash_of_b)).unwrap();
         let matrix_c_var = matrix_mul(cs.clone(), matrix_a_var, matrix_b_var);
 
         let hash = &hasher_var::<F>(cs.clone(), &matrix_c_var).unwrap()[0];
@@ -181,15 +204,16 @@ mod tests {
         // create matrix A:
         let matrix_a = vec![vec![1u64, 2], vec![3, 4]];
         let matrix_b = vec![vec![4u64, 3], vec![2, 1]];
+        let matrix_a_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap();
+        let matrix_b_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap();
         println!("matrix_a: {:?}", matrix_a);
         println!("matrix_b: {:?}", matrix_b);
 
-        let matrix_c = matrix_mul(
-            cs.clone(),
-            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap(),
-            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap(),
-        );
-
+        let matrix_c = matrix_mul(cs.clone(), matrix_a_var.clone(), matrix_b_var.clone());
+        // create hash_a :
+        let hash_a = hasher(&matrix_a_var).unwrap()[0];
+        // create hash_b :
+        let hash_b = hasher(&matrix_b_var).unwrap()[0];
         // create a new instance of the MatrixCircuit
         let hash = hasher(&matrix_c).unwrap();
         // take the first element of the hash
@@ -198,6 +222,8 @@ mod tests {
             matrix_a,
             matrix_b,
             hash_of_c: hash_value,
+            hash_of_a: hash_a,
+            hash_of_b: hash_b,
         };
         circuit.generate_constraints(cs.clone()).unwrap();
         assert!(cs.is_satisfied().unwrap());
@@ -208,19 +234,23 @@ mod tests {
         let matrix_a = vec![vec![1u64, 2], vec![3, 4]]; // witness
         let matrix_b = vec![vec![4u64, 3], vec![2, 1]]; // witness
                                                         // multiply the matrices
-        let matrix_c = matrix_mul(
-            cs.clone(),
-            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap(),
-            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap(),
-        );
-        // calculate the hash of the matrix - native
-        let hash = hasher(&matrix_c).unwrap();
-        let hash_value = hash[0];
+        let matrix_a_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap();
+        let matrix_b_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap();
+        let matrix_c = matrix_mul(cs.clone(), matrix_a_var.clone(), matrix_b_var.clone());
+        // create hash_a :
+        let hash_a = hasher(&matrix_a_var).unwrap()[0];
+        // create hash_b :
+        let hash_b = hasher(&matrix_b_var).unwrap()[0];
+        // create a new instance of the MatrixCircuit
+        let hash_c = hasher(&matrix_c).unwrap()[0];
         let circuit = MatrixCircuit {
-            matrix_a,              // witness
-            matrix_b,              // witness
-            hash_of_c: hash_value, // public input
+            matrix_a,
+            matrix_b,
+            hash_of_c: hash_c,
+            hash_of_a: hash_a,
+            hash_of_b: hash_b,
         };
+
         // generate the proof
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
         let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
@@ -233,9 +263,12 @@ mod tests {
         let read_proof: Proof<Bls12<Config>> = read_proof::<Bls12_381>(file_path).unwrap();
 
         // test some verification checks
-        assert!(
-            Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[hash_value], &proof).unwrap()
-        );
+        assert!(Groth16::<Bls12_381>::verify_with_processed_vk(
+            &pvk,
+            &[hash_a, hash_b, hash_c],
+            &proof
+        )
+        .unwrap());
     }
     #[test]
     fn big_matrix_20x20() {
@@ -250,18 +283,24 @@ mod tests {
                 matrix_b[i][j] = j as u64;
             }
         }
-        let matrix_c = matrix_mul(
-            cs.clone(),
-            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap(),
-            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap(),
-        );
-        let hash = hasher(&matrix_c).unwrap();
-        let hash_value = hash[0];
+        // multiply the matrices
+        let matrix_a_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap();
+        let matrix_b_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap();
+        let matrix_c = matrix_mul(cs.clone(), matrix_a_var.clone(), matrix_b_var.clone());
+        // create hash_a :
+        let hash_a = hasher(&matrix_a_var).unwrap()[0];
+        // create hash_b :
+        let hash_b = hasher(&matrix_b_var).unwrap()[0];
+        // create a new instance of the MatrixCircuit
+        let hash_c = hasher(&matrix_c).unwrap()[0];
         let circuit = MatrixCircuit {
             matrix_a,
             matrix_b,
-            hash_of_c: hash_value,
+            hash_of_c: hash_c,
+            hash_of_a: hash_a,
+            hash_of_b: hash_b,
         };
+
         // generate the proof
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
         let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
@@ -270,9 +309,12 @@ mod tests {
             Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
 
         // test some verification checks
-        assert!(
-            Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[hash_value], &proof).unwrap()
-        );
+        assert!(Groth16::<Bls12_381>::verify_with_processed_vk(
+            &pvk,
+            &[hash_a, hash_b, hash_c],
+            &proof
+        )
+        .unwrap());
     }
     #[test]
     fn big_matrix_10x10() {
@@ -287,18 +329,24 @@ mod tests {
                 matrix_b[i][j] = rng.next_u64();
             }
         }
-        let matrix_c = matrix_mul(
-            cs.clone(),
-            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap(),
-            FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap(),
-        );
-        let hash = hasher(&matrix_c).unwrap();
-        let hash_value = hash[0];
+        // multiply the matrices
+        let matrix_a_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap();
+        let matrix_b_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap();
+        let matrix_c = matrix_mul(cs.clone(), matrix_a_var.clone(), matrix_b_var.clone());
+        // create hash_a :
+        let hash_a = hasher(&matrix_a_var).unwrap()[0];
+        // create hash_b :
+        let hash_b = hasher(&matrix_b_var).unwrap()[0];
+        // create a new instance of the MatrixCircuit
+        let hash_c = hasher(&matrix_c).unwrap()[0];
         let circuit = MatrixCircuit {
             matrix_a,
             matrix_b,
-            hash_of_c: hash_value,
+            hash_of_c: hash_c,
+            hash_of_a: hash_a,
+            hash_of_b: hash_b,
         };
+
         // generate the proof
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
         let (pk, vk) = Groth16::<Bls12_381>::setup(circuit.clone(), &mut rng).unwrap();
@@ -307,9 +355,12 @@ mod tests {
             Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
 
         // test some verification checks
-        assert!(
-            Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[hash_value], &proof).unwrap()
-        );
+        assert!(Groth16::<Bls12_381>::verify_with_processed_vk(
+            &pvk,
+            &[hash_a, hash_b, hash_c],
+            &proof
+        )
+        .unwrap());
     }
     #[test]
     fn marlin_proof_system() {
