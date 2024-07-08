@@ -30,7 +30,7 @@ pub struct InputDataFibVer {
 #[derive(Serialize)]
 pub struct OutputDataFib {
     pub proof: String,
-    pub vk: String,
+    pub pvk: String,
 
     pub proving_time: f64,
 }
@@ -61,7 +61,7 @@ pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Respon
 
     let result = OutputDataFib {
         proof: encode_proof::<Bls12_381>(&proof),
-        vk: encode_pvk::<Bls12_381>(&pvk),
+        pvk: encode_pvk::<Bls12_381>(&pvk),
         proving_time,
     };
 
@@ -72,9 +72,10 @@ pub async fn fibbonaci_snark_verify(data: web::Json<InputDataFibVer>) -> impl Re
     let pvk = decode_pvk::<Bls12_381>(&data.pvk).unwrap();
     let proof = decode_proof::<Bls12_381>(&data.proof).unwrap();
     let start = ark_std::time::Instant::now();
+    // the one is for dummy input!
     let result = Groth16::<Bls12_381>::verify_with_processed_vk(
         &pvk,
-        &[BlsFr::from(data.a), BlsFr::from(data.b)],
+        &[BlsFr::from(data.a), BlsFr::from(data.b), BlsFr::from(1)],
         &proof,
     )
     .unwrap();
