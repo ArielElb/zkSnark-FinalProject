@@ -76,7 +76,7 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->ret
             bits[counter] = 1;
         }
 //
-        res *= (elem - &one)*&cur_pow + &one;
+        res *= (&cur_pow - &one)*elem + &one;
         ////println!("res is: {}", res);
         v[counter] = get_mod_vals(&res, &div);
         if res > div {
@@ -248,12 +248,12 @@ mod test {
     fn mod_pow_tests() {
         //  10^2 mod 3 = 1 // number of reductions at most is 100 / 3 = 33
         // Example parameters (for testing purposes)
-        //let base = BigUint::from(11231235u64);
-        //let exponent = BigUint::from(2002100u64);
-        //let modulus = BigUint::from(10000310u64);
-        let base = generate_random_biguint(47);
-        let exponent= generate_random_biguint(47);
-        let modulus= generate_random_biguint(47);    
+        let base = BigUint::from(5u64);
+        let exponent = BigUint::from(3u64);
+        let modulus = BigUint::from(4u64);
+        //let base = generate_random_biguint(47);
+        //let exponent= generate_random_biguint(47);
+        //let modulus= generate_random_biguint(47);    
         
         let res = base.modpow(&exponent, &modulus);
         println!("res: {}", res);

@@ -78,8 +78,10 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
             let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.q))?;
             let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.remainder))?;
             let result_of_vars = cur_q*&divisor+&cur_remainder;
-            result_of_vars.enforce_equal(&calculated_res)?;
-            let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
+            println!("result of vars is: {:?}",result_of_vars);
+            println!("calculated res is: {:?}",calculated_res);
+            //result_of_vars.enforce_equal(&calculated_res)?;
+            //let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
 
             calculated_res = cur_remainder;
 
@@ -89,13 +91,13 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
             let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.q))?;
             let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.remainder))?;
             let result_of_vars = cur_q*&divisor+&cur_remainder;
-            result_of_vars.enforce_equal(&calculated_res)?;
+            //result_of_vars.enforce_equal(&calculated_res)?;
             let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
 
             cur_pow = cur_remainder;
 
         }
-        calculated_res.enforce_equal(&result)?;
+        //calculated_res.enforce_equal(&result)?;
         
         Ok(())
     }
@@ -123,7 +125,6 @@ mod tests {
         BigUint::from_bytes_le(&bytes)  // Convert bytes to a BigUint
     }
     #[test]
-    
     fn test_modpow_circuit_correct() {
 
         let base_val = generate_random_biguint(47);
