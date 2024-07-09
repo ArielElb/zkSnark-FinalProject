@@ -1,0 +1,42 @@
+/* src/styles/Home.module.css */
+
+.container {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /*background-image: url("../styles/stars.jpg"); /* Set the background image */
+    background-image: url("../public/black.jpg"); /* Set the background image */
+    background-size: cover; /* Ensure the image covers the entire container */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Prevent image from repeating */
+    color: white; /* Change text color to white */
+    overflow-y: auto; /* Allow vertical scrolling */
+  }
+  
+  
+  .title {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #3c00ff;
+    margin: 20px 0;
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .explanation {
+    font-size: 1rem;
+    font-weight: 400;
+    margin: 20px 0px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #000;
+    border-radius: 10px;
+    position: absolute;
+    top: 10rem; /* Adjust this to control the distance between title and text */
+    width: 70%;
+  }

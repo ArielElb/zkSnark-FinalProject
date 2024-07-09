@@ -1,23 +1,14 @@
-// src/pages/index.jsx
-import Head from "next/head";
-import styles from "../styles/Home.module.css";
-import Link from "next/link";
+import Head from 'next/head';
+import styles from '../styles/Home.module.css';
 
 export default function Home() {
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Exploring Zero-Knowledge Proofs with SP1 and arkworks.rs</title>
-        <meta
-          name='description'
-          content='Learn about zkSNARKs and arkworks.rs in a Next.js project'
-        />
-        <link rel='icon' href='/favicon.ico' />
-      </Head>
+    <>
+      <div className={styles.container}>
+        <header className={styles.header}>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>Home Page</h1>
-        <div className={styles.explanation}>
+        <div className={styles.headerParagraph}>
+        <h1>Home Page</h1>
           <p>
             Zero-Knowledge Proofs (zkProofs) are cryptographic protocols that allow one
             party (the prover) to prove to another party (the verifier) that they know a
@@ -82,10 +73,14 @@ export default function Home() {
             its succinctness and efficiency in proving knowledge of a satisfying
             assignment to a given NP statement. It is widely used in applications
             requiring compact proofs and fast verification.
-          </p>
-
-          <h3>Frameworks:</h3>
-          <p>
+          </p>         
+        </div>
+        </header>
+        <main className={styles.main}>
+          <div className={styles.row}>
+            <div className={styles.card}>
+              <h2>Frameworks</h2>
+              <p>
             <a href='https://arkworks.rs/' target='_blank' rel='noopener noreferrer'>
               arkworks.rs
             </a>{" "}
@@ -117,8 +112,32 @@ export default function Home() {
             power and utility of zero-knowledge proofs in verifying computations while
             maintaining data privacy and integrity.
           </p>
-        </div>
-      </main> 
-    </div>
+            </div>
+            <div className={styles.card}>
+              <h2>Supabase Next.js App Router Example</h2>
+              <p>
+                Want to see a code example containing some common patterns with Next.js and Supabase? Check out this repo!
+              </p>
+            </div>
+          </div>
+          <div className={styles.row}>
+            <div className={styles.card}>
+              <h2>Supabase Auth Helpers Docs</h2>
+              <p>
+                This template has configured Supabase Auth to use cookies for you, but the docs are a great place to learn more.
+              </p>
+            </div>
+            <div className={styles.card}>
+              <h2>Next.js Front-end for zkProofs</h2>
+              <p>
+                The Next.js web front-end provides an intuitive interface for users to
+                interact with these zkProofs, demonstrating the practical application of
+                cryptographic protocols in a user-friendly environment.
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

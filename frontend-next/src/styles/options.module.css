@@ -1,54 +1,79 @@
-.backgroundContainer {
-  background-image: url("../styles/zkSnark.png"); /* Replace with the correct path to your image */
-  background-size: contain; /* Ensure the image covers the entire container */
-  background-position: center; /* Center the background image */
-  height: 100vh; /* Set the height of the container to fill the viewport */
-  display: flex; /* Enable flexbox layout */
-  justify-content: center; /* Center children horizontally */
-  align-items: center; /* Center children vertically */
-}
-
 .container {
   position: fixed;
-  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #2e2e2e;
+  color: #e0e0e0;
   left: 0;
   width: 100%;
+  top: 0;
   height: 100%;
+}
+
+.explanation {
+  margin-bottom: 20px;
+  text-align: center;
+  margin-top: -90px; /* מרווח שלילי להזזת הכותרת למעלה */
+}
+
+.explanation h1 {
+  font-size: 36px; /* הגדלת גודל הכותרת */
+  margin-bottom: 40px; /* הוספת מרווח מתחת לכותרת */
+}
+
+.modal {
+  background-color: #3c3c3c;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.title {
+  margin-bottom: 20px;
+}
+
+.options {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-around;
+}
+
+.option {
+  display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
-  position: relative;
-}
-
-.message {
-  font-size: 6vh;
-  color: white; /* Text color */
-  margin-top: 20px; /* Add missing unit */
-}
-
-.buttonContainer {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 50px;
-  justify-items: center;
-  margin-top: 40px; /* Top margin */
-  margin-bottom: 50px; /* Bottom margin */
-}
-
-.optionButton {
-  padding: 20px 40px;
-  font-size: 20px;
+  align-items: center;
   cursor: pointer;
-  width: 100%;
-  box-sizing: border-box;
-  background-color: white;
-  color: black;
-  border: 2px solid #e7e7e7;
-  border-radius: 45%; /* This makes the button round */
+  background-color: #4c4c4c;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  color: #e0e0e0;
+  font-size: 18px;
+  margin: 0 10px;
+  transition: background-color 0.3s;
 }
-.optionButton:hover {
-  background-color: #e7e7e7;
+
+.option:hover {
+  background-color: #606060;
+}
+
+.optionSelected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  background-color: #0099cc;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  color: #e0e0e0;
+  font-size: 18px;
+  margin: 0 10px;
+  transition: background-color 0.3s;
+}
+
+.optionSelected:hover {
+  background-color: #0077aa;
 }

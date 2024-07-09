@@ -10,6 +10,9 @@ const Navbar = () => {
           <Link href='/'>Home</Link>
         </li>
         <li className={styles.navItem}>
+          <Link href='../options'>Options</Link>
+        </li>
+        <li className={styles.navItem}>
           <Link href='../inputFibonachi/'>Fibonacci</Link>
         </li>
         <li className={styles.navItem}>
@@ -17,9 +20,6 @@ const Navbar = () => {
         </li>
         <li className={styles.navItem}>
           <Link href='../inputPrime/'>Prime</Link>
-        </li>
-        <li className={styles.navItem}>
-          <Link href='../options'>Options</Link>
         </li>
       </ul>
     </nav>
