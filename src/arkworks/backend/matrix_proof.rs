@@ -81,7 +81,10 @@ pub struct ProveInput {
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProveOutPut {
-    hash: String,
+    hash_a: String,
+
+    hash_b: String,
+    hash_c: String,
     setup_time: f64,
     proving_time: f64,
     num_constraints: usize,
@@ -102,23 +105,27 @@ pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
     let len: usize = data.size;
     // convert the vector to [[u64; n]; n]:
     // create Fp2Var2D from the matrix:
-    let matrix_c = matrix_mul(
-        cs.clone(),
-        FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap(),
-        FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap(),
-    );
+    let matrix_a_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_a.clone())).unwrap();
+    let matrix_b_var = FpVar2DVec::new_witness(cs.clone(), || Ok(matrix_b.clone())).unwrap();
+
+    let matrix_c = matrix_mul(cs.clone(), matrix_a_var.clone(), matrix_b_var.clone());
     // hash the matrix using hasher:
-    let hash = hasher(&matrix_c).unwrap();
-    let hash_value = hash[0];
+    let hash_c = hasher(&matrix_c).unwrap()[0];
+    //  hash a :
+    let hash_a = hasher(&matrix_a_var).unwrap()[0];
+    //  hash b :
+    let hash_b = hasher(&matrix_b_var).unwrap()[0];
     // convert the hash value to bytes:
-    let hash_bytes: Vec<u8> = hash_value.into_bigint().to_bytes_le();
+    let hash_bytes: Vec<u8> = hash_c.into_bigint().to_bytes_le();
     // encode the hash value to base64:
-    let encoded_hash = encode_hash(&hash_bytes);
+    let encoded_hash_c = encode_hash(&hash_bytes);
+    let encoded_hash_a = encode_hash(&hash_a.into_bigint().to_bytes_le());
+    let encoded_hash_b = encode_hash(&hash_b.into_bigint().to_bytes_le());
 
     // use groth16 to generate the proof:
 
     // create a circuit using new  function
-    let circuit = MatrixCircuit::new(matrix_a.clone(), matrix_b.clone(), hash_value);
+    let circuit = MatrixCircuit::new(matrix_a.clone(), matrix_b.clone(), hash_a, hash_b, hash_c);
     // generate the proof
     let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
     let setup_time = std::time::Instant::now();
@@ -147,7 +154,10 @@ pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
 
     // create a response data:
     let response_data = ProveOutPut {
-        hash: encoded_hash,
+        hash_a: encoded_hash_a,
+        hash_b: encoded_hash_b,
+        hash_c: encoded_hash_c,
+
         setup_time,
         proving_time,
         num_constraints: cs.num_constraints(),
@@ -163,7 +173,9 @@ pub async fn prove_matrix(data: web::Json<ProveInput>) -> impl Responder {
 pub struct VerifyInput {
     pvk: String,
     proof: String,
-    hash: String,
+    hash_a: String,
+    hash_b: String,
+    hash_c: String,
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VerifyOutPut {
@@ -172,7 +184,9 @@ pub struct VerifyOutPut {
 }
 
 pub async fn verify_proof(data: web::Json<VerifyInput>) -> impl Responder {
-    let hash = data.hash.clone();
+    let hash_c = data.hash_c.clone();
+    let hash_a = data.hash_a.clone();
+    let hash_b = data.hash_b.clone();
     let pvk = data.pvk.clone();
     let proof = data.proof.clone();
 
@@ -181,14 +195,18 @@ pub async fn verify_proof(data: web::Json<VerifyInput>) -> impl Responder {
 
     let proof = decode_proof::<Bls12_381>(&proof).unwrap();
 
-    let hash_value = decode_hash(&hash).unwrap();
-
     // convert the hash value to Fp:
-    let hash_value = Fp::from_le_bytes_mod_order(&hash_value);
+    let hash_value_c = Fp::from_le_bytes_mod_order(&decode_hash(&hash_c).unwrap());
+    let hash_value_a = Fp::from_le_bytes_mod_order(&decode_hash(&hash_a).unwrap());
+    let hash_value_b = Fp::from_le_bytes_mod_order(&decode_hash(&hash_b).unwrap());
 
     let verfiying_time = std::time::Instant::now();
-    let is_valid =
-        Groth16::<Bls12_381>::verify_with_processed_vk(&pvk, &[hash_value], &proof).unwrap();
+    let is_valid = Groth16::<Bls12_381>::verify_with_processed_vk(
+        &pvk,
+        &[hash_value_a, hash_value_b, hash_value_c],
+        &proof,
+    )
+    .unwrap();
     let verifying_time = verfiying_time.elapsed().as_secs_f64();
 
     // create a response data:
