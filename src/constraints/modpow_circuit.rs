@@ -11,7 +11,7 @@ use ark_r1cs_std::boolean::Boolean;
 use ark_r1cs_std::select::CondSelectGadget;
 use ark_r1cs_std::R1CSVar;
 use ark_r1cs_std::{ToBitsGadget};
-use num_bigint::BigUint;
+use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use std::str::FromStr;
 
 use super::modulo::mod_vals;
@@ -31,7 +31,7 @@ pub struct modpow_ver_circuit<ConstraintF: PrimeField> {
     divisor: ConstraintF,
     modulo_witnesses: Vec<mod_witnesses<ConstraintF>>,
     modulo_of_pow_witnesses: Vec<mod_witnesses<ConstraintF>>,
-    bits: Vec<FpVar<ConstraintF>>
+    bits: Vec<ConstraintF>
 }
 fn modVals_to_modWitness<ConstraintF:PrimeField>(modVal: mod_vals)->mod_witnesses<ConstraintF>{
     let witness = mod_witnesses{
@@ -40,6 +40,14 @@ fn modVals_to_modWitness<ConstraintF:PrimeField>(modVal: mod_vals)->mod_witnesse
         remainder: ConstraintF::from(modVal.remainder),
     };
     return witness;
+}
+fn vector_convertor<ConstraintF:PrimeField>(mod_vals: Vec<mod_vals>)->Vec<mod_witnesses<ConstraintF>>{
+    let vec_wits : Vec<mod_witnesses<ConstraintF>> = mod_vals.iter().map(|elem| modVals_to_modWitness(elem.clone())).collect();
+    return vec_wits;
+}
+fn bits_vector_convertor<ConstraintF:PrimeField>(bit_vec: Vec<u8>)->Vec<ConstraintF>{
+    let vec_wits : Vec<ConstraintF> = bit_vec.iter().map(|elem| ConstraintF::from(elem.to_biguint().unwrap())).collect();
+    return vec_wits;
 }
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
     for modpow_ver_circuit<ConstraintF>
@@ -60,7 +68,8 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
         let mod_witnesses = self.modulo_witnesses;
         let mod_of_pow_witnesses = self.modulo_of_pow_witnesses;
         for i in 0..NUM_BITS{
-            let elem = &bits[i];
+            let elem_val = &bits[i];
+            let elem = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(elem_val))?;
             calculated_res.mul_assign(elem * (&cur_pow-&one) + &one);
 
             //checks the correctness of mod
@@ -136,9 +145,9 @@ mod tests {
             exponent,
             result,
             divisor,
-            modulo_witnesses: vec![],
-            modulo_of_pow_witnesses: vec![],
-            bits: vec![]
+            modulo_witnesses: vector_convertor::<Fr>(mod_wits),
+            modulo_of_pow_witnesses: vector_convertor::<Fr>(mod_pow_wits),
+            bits: bits_vector_convertor::<Fr>(returnted_val.bits),
         };
 
         assert!(circuit.generate_constraints(cs.clone()).is_ok());

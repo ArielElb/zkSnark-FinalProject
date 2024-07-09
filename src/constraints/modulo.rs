@@ -32,6 +32,7 @@ pub struct return_struct {
     pub mod_vals: Vec<mod_vals>,
     pub mod_pow_vals: Vec<mod_vals>,
     pub result: BigUint,
+    pub bits: Vec<u8>,
 }
 struct ModExpCircuit<F: PrimeField> {
     base: F,
@@ -42,7 +43,7 @@ struct ModExpCircuit<F: PrimeField> {
 
 fn get_mod_vals(num: &BigUint, div: &BigUint) -> mod_vals {
     let q = num / div;
-    let remainder = num - div * &q;
+    let remainder = num % div;
     mod_vals {
         num: num.clone(),  // Still necessary to clone if ownership is needed outside
         q,
@@ -93,6 +94,7 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->ret
         mod_vals: v,
         mod_pow_vals,
         result: res,
+        bits,
     };
 
     return retstuct;
