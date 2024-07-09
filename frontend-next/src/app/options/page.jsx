@@ -1,34 +1,31 @@
 "use client";
 import Link from "next/link";
 import styles from "../../styles/options.module.css";
+import { useState, useEffect } from "react";
 
 const OptionsPage = () => {
-  const names = [
-    "Prime number",
-    "Fibonacci",
-    "Matrix multiplication",
-    "Perfect square",
-    "quadratic_equation",
-    "Linear Equations",
-  ];
-  const options = [
-    "../inputPrime",
-    "../inputFibonachi",
-    "../inputMatrix",
-    "../fourth",
-    "../fifth",
-    "../sixth",
-  ];
   return (
-    <div className={styles.backgroundContainer}>
-      <div className={styles.container}>
-        <h1 className={styles.message}>Please Select the option you want to verify</h1>
-        <div className={styles.buttonContainer}>
-          {names.map((name, index) => (
-            <Link key={index} href={{ pathname: options[index], query: {msg : name},}}>
-              <button className={styles.optionButton}>{name}</button>
-            </Link>
-          ))}
+    <div className={styles.container}>
+      <section className={styles.explanation}>
+        <h1>options to vetify</h1>
+        <p>
+          Prime number - will verify if the number you give is a prime number.<br />
+          Fibonacci number - will verify if the number you give is a Fibonacci number.<br />
+          Matrix multiplication - will verify a multiplication between 2 matrices.
+        </p>
+      </section>
+      <div className={styles.modal}>
+        <h2 className={styles.title}>Choose Option</h2>
+        <div className={styles.options}>
+          <Link href="../inputPrime" legacyBehavior>
+            <button className={styles.option}>Prime Number</button>
+          </Link>
+          <Link href="../inputFibonachi" legacyBehavior>
+            <button className={styles.option}>Fibonacci Number</button>
+          </Link>
+          <Link href="../inputMatrix" legacyBehavior>
+            <button className={styles.option}>Matrix Multiplication</button>
+          </Link>
         </div>
       </div>
     </div>
