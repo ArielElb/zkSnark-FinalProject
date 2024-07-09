@@ -23,7 +23,7 @@ pub const FERMAT_ELF: &[u8] = include_bytes!("../../../program/elf/riscv32im-suc
 struct ProveArgs {
     #[clap(long, default_value = "1212345")]
     n: u32,
-    #[clap(long, default_value = "150")]
+    #[clap(long, default_value = "10")]
     num_of_rounds: u32,
     #[clap(long, default_value = "123131")]
     seed: u64,
@@ -54,7 +54,6 @@ fn main() {
 
     println!("seed: {:?}", seed);
     // convert the seed to [u32 ; 8]
-
     // to be_bytes() returns a [u8; 8] array of the seed meaning that the seed is 8 bytes long
     let seed_arr = seed.to_be_bytes();
     // write the seed to stdin

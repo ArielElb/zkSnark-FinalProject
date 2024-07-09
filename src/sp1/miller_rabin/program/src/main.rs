@@ -8,7 +8,9 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 use alloy_sol_types::{sol, SolType};
+use rand::rngs::StdRng;
 use rand::Rng;
+use rand::SeedableRng;
 use sha2::{Digest, Sha256};
 /// The public values encoded as a tuple that can be easily deserialized inside Solidity.
 type PublicValuesTuple = sol! {
@@ -23,6 +25,12 @@ pub fn main() {
     // from the prover.
     let mut n = sp1_zkvm::io::read::<u32>();
     let num_of_rounds = sp1_zkvm::io::read::<u32>();
+    let seed = sp1_zkvm::io::read::<[u8; 8]>();
+    // convert the seed to [u32 ; 8]:
+    let mut seed_arr = [0u8; 32];
+    for i in 0..8 {
+        seed_arr[i] = seed[i];
+    }
 
     if num_of_rounds > 50 {
         panic!(
@@ -44,7 +52,7 @@ pub fn main() {
         println!("hashed: {}", hashed);
         println!("cycle-tracker-start: hashing ");
         // is_primebool = probabilistic_miller_rabin(hashed, 20);
-        is_primebool = is_prime1(hashed);
+        is_primebool = probabilistic_miller_rabin(hashed, 5, seed_arr);
         n += 1;
     }
 
@@ -81,7 +89,7 @@ fn is_prime1(n: u32) -> bool {
 // implement probabilistic primality test using Miller-Rabin algorithm.
 // Source: https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
 #[sp1_derive::cycle_tracker]
-fn probabilistic_miller_rabin(n: u32, k: u32) -> bool {
+fn probabilistic_miller_rabin(n: u32, k: u32, seed: [u8; 32]) -> bool {
     if n <= 1 {
         return false;
     }
@@ -97,9 +105,10 @@ fn probabilistic_miller_rabin(n: u32, k: u32) -> bool {
         d /= 2;
         s += 1;
     }
-    let mut rng = rand::thread_rng();
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
     for _ in 0..k {
         let a = rng.gen_range(2..n - 1);
+        println!("cycle-tracker-start: a: {}", a);
         let mut x = a.pow(d) % n;
         if x == 1 || x == n - 1 {
             continue;
