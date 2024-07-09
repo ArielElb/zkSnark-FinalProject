@@ -21,24 +21,12 @@ pub struct mod_vals {
     pub remainder: BigUint,
 
 }
-pub struct mod_witnesses<F: PrimeField> {
-    num: F,
-    div: F,
-    q: F,
-    remainder: F,
 
-}
 pub struct return_struct {
     pub mod_vals: Vec<mod_vals>,
     pub mod_pow_vals: Vec<mod_vals>,
     pub result: BigUint,
     pub bits: Vec<u8>,
-}
-struct ModExpCircuit<F: PrimeField> {
-    base: F,
-    exponent: F,
-    modulus: F,
-    res: F,
 }
 
 fn get_mod_vals(num: &BigUint, div: &BigUint) -> mod_vals {
@@ -112,63 +100,6 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->ret
     return retstuct;
 }
 
-fn reduce_mod<F: PrimeField>(
-    cs: ConstraintSystemRef<F>,
-    result: &FpVar<F>,
-    modulus: &FpVar<F>,
-) -> Result<FpVar<F>, SynthesisError> {
-    // Check if result >= modulus
-    let should_reduce = result.is_cmp_unchecked(modulus, std::cmp::Ordering::Greater, true)?;
-
-    // Subtract modulus from result if should_reduce is true
-    let reduced_result = result.clone() - modulus;
-
-    // Conditionally select between reduced_result and result based on should_reduce
-    let final_result = FpVar::conditionally_select(&should_reduce, &reduced_result, result)?;
-
-    Ok(final_result)
-}
-
-impl<F: PrimeField> ConstraintSynthesizer<F> for ModExpCircuit<F> {
-    fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
-        // Allocate the base, exponent, and modulus as public inputs
-        let base = FpVar::new_input(cs.clone(), || Ok(self.base))?;
-        let exponent = FpVar::new_input(cs.clone(), || Ok(self.exponent))?;
-        let modulus = FpVar::new_input(cs.clone(), || Ok(self.modulus))?;
-        let zero = FpVar::constant(F::zero());
-
-        // Initialize the result as 1
-        let mut result = FpVar::constant(F::one());
-
-        // Convert exponent to bits and perform modular exponentiation
-        let exponent_bits = exponent.to_bits_le()?;
-        for bit in exponent_bits.iter().rev() {
-            // Square the current result 
-            result = result.clone() * &result;
-
-            // Reduce result modulo the modulus a fixed number of times
-            for _ in 0..NUM_REDUCTIONS {
-                result = reduce_mod(cs.clone(), &result, &modulus)?;
-            }
-
-            // Multiply by base if the current bit is 1
-            result = bit.select(&(result.clone() * &base), &result)?;
-
-            // Reduce result modulo the modulus again a fixed number of times
-            for _ in 0..NUM_REDUCTIONS {
-                result = reduce_mod(cs.clone(), &result, &modulus)?;
-            }
-        }
-
-        // Enforce the final result as a public input
-        let final_result = FpVar::new_input(cs.clone(), || Ok(result.value().unwrap()))?;
-
-        // Enforce the final result to be equal to the expected result
-        final_result.enforce_equal(&FpVar::new_input(cs.clone(), || Ok(self.res))?)?;
-
-        Ok(())
-    }
-}
 
 #[cfg(test)]
 mod test {
