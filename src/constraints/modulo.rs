@@ -14,7 +14,7 @@ use std::str::FromStr;
 const NUM_REDUCTIONS: usize = 33; // Set an appropriate upper bound on the number of reductions
 const NUM_BITS:usize = 381;
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct mod_vals {
     pub num: BigUint,
     pub q: BigUint,
@@ -55,6 +55,7 @@ fn get_mod_vals(num: &BigUint, div: &BigUint) -> mod_vals {
 pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->return_struct{
     let mut elem;
     let mut cur_pow = base.clone(); 
+    let mut power = base.clone();
     let mut exp_val = exp.clone();
     let mut res = BigUint::from(1u8);
     let one =  BigUint::from(1u8);
@@ -67,7 +68,11 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->ret
     let mut v: Vec<mod_vals> =  vec![def_val.clone(); 382];
     let mut mod_pow_vals: Vec<mod_vals> =  vec![def_val; 382];
     let mut bits: Vec<u8> =  vec![0u8; 382];
-
+    for i in 0..382{
+        power=power.clone()*power;
+        mod_pow_vals[i]=get_mod_vals(&power, &div);
+        power%=&div;
+    }
     let mut counter = 0;
     while exp_val>zero{
         elem = &exp_val & &one;
@@ -84,11 +89,18 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp:BigUint)->ret
         }
         exp_val >>= 1;
         cur_pow *= cur_pow.clone();
-        mod_pow_vals[counter] = get_mod_vals(&cur_pow, &div);
+        //mod_pow_vals[counter] = get_mod_vals(&cur_pow, &div);
         cur_pow %= &div;
         //cur_pow=square_biguint(&cur_pow);
 
         counter += 1;
+    }
+    for i in 0..NUM_BITS-counter{
+        v[i+counter]=mod_vals{
+            num: res.clone(),
+            q: BigUint::from(0u64),
+            remainder: res.clone(),
+        }
     }
     let retstuct = return_struct{
         mod_vals: v,
@@ -260,9 +272,14 @@ mod test {
         // Convert big integers to field elements
         let mut average_dur = 0;
         
-        for i in 0..10{
+        for i in 0..1{
             let start = Instant::now();
             let res2 = mod_pow_generate_witnesses(base.clone(),modulus.clone(),exponent.clone());
+            let result = res2.result;
+            assert!(res == result);
+            println!("{}",result);
+            //println!("mods vals is: {:?}",res2.mod_vals);
+            println!("mod pow vals is: {:?}",res2.mod_pow_vals);
             let duration = start.elapsed();
             average_dur += duration.as_millis();
             println!("cur dur {:?}",duration);

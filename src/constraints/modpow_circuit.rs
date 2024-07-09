@@ -78,26 +78,27 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
             let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.q))?;
             let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.remainder))?;
             let result_of_vars = cur_q*&divisor+&cur_remainder;
-            println!("result of vars is: {:?}",result_of_vars);
-            println!("calculated res is: {:?}",calculated_res);
-            //result_of_vars.enforce_equal(&calculated_res)?;
-            //let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
+            println!("result of vars is: {:?}",result_of_vars.value().unwrap());
+            println!("calculated res is: {:?}",calculated_res.value().unwrap());
+            result_of_vars.enforce_equal(&calculated_res)?;
+            let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
 
             calculated_res = cur_remainder;
 
             cur_pow.mul_assign(cur_pow.clone());
             //checks the correctness of mod
             let current_witness = mod_of_pow_witnesses[i].clone();
-            let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.q))?;
-            let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.remainder))?;
+            let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(current_witness.q))?;
+            let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(current_witness.remainder))?;
             let result_of_vars = cur_q*&divisor+&cur_remainder;
-            //result_of_vars.enforce_equal(&calculated_res)?;
+            result_of_vars.enforce_equal(&cur_pow)?;
             let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
 
             cur_pow = cur_remainder;
 
         }
-        //calculated_res.enforce_equal(&result)?;
+        //println!("hey");
+        calculated_res.enforce_equal(&result)?;
         
         Ok(())
     }
@@ -127,9 +128,12 @@ mod tests {
     #[test]
     fn test_modpow_circuit_correct() {
 
-        let base_val = generate_random_biguint(47);
-        let exp= generate_random_biguint(47);
-        let modulus= generate_random_biguint(47);    
+        let base_val = generate_random_biguint(37);
+        let exp= generate_random_biguint(37);
+        let modulus= generate_random_biguint(37);
+        //let base_val = BigUint::from(5u64);
+        //let exp = BigUint::from(3u64);
+        //let modulus = BigUint::from(4u64);
         
         let res = base_val.modpow(&exp, &modulus);
         let returnted_val = mod_pow_generate_witnesses(base_val.clone(), modulus.clone(), exp.clone());
