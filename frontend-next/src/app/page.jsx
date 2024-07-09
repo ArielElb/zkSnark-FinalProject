@@ -8,6 +8,16 @@ export default function Home() {
         <header className={styles.header}>
           <div className={styles.headerParagraph}>
             <h1>Home Page</h1>
+            <h2>What is our project all about?</h2>
+            <p>
+              Our project is a Proof of Concept (PoC) for implementing zero-knowledge
+              proofs (zkProofs) using the SP1 framework and arkworks.rs. We are
+              demonstrating zkProofs for various computational tasks, including primality
+              tests, matrix multiplication, and Fibonacci sequence computation. Our
+              project leverages zkProofs to ensure the integrity and efficency of
+              computations while hold the Zero-Knowledge property.
+            </p>
+            <h3>What are zkProofs?</h3>
             <p>
               Zero-Knowledge Proofs (zkProofs) are cryptographic protocols that allow one
               party (the prover) to prove to another party (the verifier) that they know a
