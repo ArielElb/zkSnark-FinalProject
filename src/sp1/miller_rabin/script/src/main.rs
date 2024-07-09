@@ -2,6 +2,7 @@ use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use alloy_sol_types::{sol, SolType};
 use ark_serialize::SerializationError;
 use clap::Parser;
+use rand::SeedableRng;
 use serde::{ser::SerializeStructVariant, Deserialize, Serialize};
 use sp1_sdk::{
     utils, ProverClient, SP1CompressedProof, SP1PlonkBn254Proof, SP1Proof, SP1Stdin,
@@ -17,6 +18,8 @@ struct CmdArgs {
     n: u32,
     #[clap(long, default_value = "10")]
     num_of_rounds: u32,
+    #[clap(long, default_value = "123131")]
+    seed: u64,
 }
 
 /// The public values encoded as a tuple that can be easily deserialized inside Solidity.
@@ -32,6 +35,7 @@ pub const MILLER_ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succin
 pub struct ProvePayload {
     n: u32,
     num_of_rounds: u32,
+    seed: u64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -92,12 +96,15 @@ pub async fn prove(args: web::Json<ProvePayload>) -> impl Responder {
     let mut stdin = SP1Stdin::new();
     stdin.write(&args.n);
     stdin.write(&args.num_of_rounds);
+    let seed_bytes = args.seed.to_be_bytes();
+    println!("seed: {:?}", seed_bytes);
+    stdin.write(&seed_bytes);
 
     // open timer:
     let start = std::time::Instant::now();
 
     // let proof = client.prove(&pk, stdin).expect("failed to generate proof");
-    let mut proof = client.prove_compressed(&pk, stdin).unwrap();
+    let proof = client.prove(&pk, stdin).expect("failed to generate proof");
     // end timer:
     let proof_time = start.elapsed().as_secs_f64();
     let (n, num_of_rounds, prime, is_prime) =
@@ -134,16 +141,14 @@ struct VerifyResponse {
 }
 pub async fn verify(args: web::Json<VerifyPayload>) -> impl Responder {
     let client: ProverClient = ProverClient::new();
-    let desrilized_proof: SP1CompressedProof =
+    let desrilized_proof: SP1Proof =
         serde_json::from_str(&args.proof).expect("failed to deserialize proof");
     let desrilized_vkey: SP1VerifyingKey =
         serde_json::from_str(&args.vkey).expect("failed to deserialize verifying key");
     // open timer:
     let start = std::time::Instant::now();
     // let result = client.verify(&desrilized_proof, &desrilized_vkey).is_ok();
-    let result = client
-        .verify_compressed(&desrilized_proof, &desrilized_vkey)
-        .is_ok();
+    let result = client.verify(&desrilized_proof, &desrilized_vkey).is_ok();
     // end timer:
     let verifying_time = start.elapsed().as_secs_f64();
     // catch the expected error:
