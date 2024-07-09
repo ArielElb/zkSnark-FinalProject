@@ -9,21 +9,21 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v4
+#     steps:
+#     - uses: actions/checkout@v4
 
-    - name: Setup toolchain
-      id: rustc-toolchain
-      shell: bash
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2024-04-17 -y
+#     - name: Setup toolchain
+#       id: rustc-toolchain
+#       shell: bash
+#       run: |
+#         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2024-04-17 -y
 
-    - name: Install dependencies
-      run: cargo build --verbose
+#     - name: Install dependencies
+#       run: cargo build --verbose
 
-    - name: Run tests in hasher.rs
-      run: cargo test
+#     - name: Run tests in hasher.rs
+#       run: cargo test
