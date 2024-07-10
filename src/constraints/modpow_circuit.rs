@@ -20,7 +20,6 @@ const NUM_BITS:usize = 381;
 #[derive(Clone)]
 pub struct mod_witnesses<ConstraintF:PrimeField>{
     n: ConstraintF,
-    //div: FpVar<ConstraintF>,
     q: ConstraintF,
     remainder: ConstraintF
 }
@@ -60,34 +59,27 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
         let mut cur_pow = base.clone();
         let exp: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.exponent))?;
         let divisor: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.divisor))?;
-        //let mut exp_val = exp.clone();
         let bits = self.bits;
         let result: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.result))?;
         let one = &base * &base.inverse().unwrap();
-        let mut calculated_res = one.clone();//= FpVar::new_constant(cs, 1);
-        let mod_witnesses = self.modulo_witnesses;
-        let mod_of_pow_witnesses = self.modulo_of_pow_witnesses;
+        let mut calculated_res = one.clone();
         for i in 0..NUM_BITS{
             let elem_val = &bits[i];
             let elem = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(elem_val))?;
             calculated_res.mul_assign(elem * (&cur_pow-&one) + &one);
 
-            //checks the correctness of mod
-            //let current_witness = FpVar::<ConstraintF>::new_variable(&cs, || );
-            let constraintF_witness = mod_witnesses[i].clone();
-            let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.q))?;
-            let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.remainder))?;
+            let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.modulo_witnesses[i].q))?;
+            let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.modulo_witnesses[i].remainder))?;
             let result_of_vars = cur_q*&divisor+&cur_remainder;
+
             result_of_vars.enforce_equal(&calculated_res)?;
             let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
 
             calculated_res = cur_remainder;
 
             cur_pow.mul_assign(cur_pow.clone());
-            //checks the correctness of mod
-            let current_witness = mod_of_pow_witnesses[i].clone();
-            let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(current_witness.q))?;
-            let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(current_witness.remainder))?;
+            let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.modulo_of_pow_witnesses[i].q))?;
+            let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.modulo_of_pow_witnesses[i].remainder))?;
             let result_of_vars = cur_q*&divisor+&cur_remainder;
             result_of_vars.enforce_equal(&cur_pow)?;
             let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
@@ -95,7 +87,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
             cur_pow = cur_remainder;
 
         }
-        //println!("hey");
         calculated_res.enforce_equal(&result)?;
         
         Ok(())
