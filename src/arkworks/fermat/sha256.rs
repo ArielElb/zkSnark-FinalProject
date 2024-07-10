@@ -17,7 +17,7 @@ use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef, Namespace, SynthesisError,
 };
 use rand::RngCore;
-
+use sha2::{Digest, Sha256 as sha256_default};
 #[derive(Clone)]
 pub struct PreImage<ConstraintF: PrimeField> {
     pub x: Option<ConstraintF>,  // preimage - private input
@@ -70,6 +70,29 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PreImage<Co
     }
 }
 
+pub fn hash_return_digest_var<ConstraintF: PrimeField>(
+    cs: ConstraintSystemRef<ConstraintF>,
+    x: FpVar<ConstraintF>,
+) -> Result<DigestVar<ConstraintF>, SynthesisError> {
+    let unit_var = UnitVar::default();
+    let x_bytes = x.to_bytes()?;
+    let x_bytes_u8 = x_bytes
+        .iter()
+        .map(|byte| byte.value().unwrap())
+        .collect::<Vec<u8>>();
+    let computed_hash =
+        <Sha256Gadget<ConstraintF> as CRHSchemeGadget<Sha256, ConstraintF>>::evaluate(
+            &unit_var,
+            &to_byte_vars(ns!(cs, "input"), &x_bytes_u8),
+        )?;
+    Ok(computed_hash)
+}
+// compute the hash of a bytes of field element using non-gadget hash function
+pub fn hash_field_element(x: Vec<u8>) -> Vec<u8> {
+    let mut hasher = Sha256::new();
+    hasher.update(&x);
+    hasher.finalize().to_vec()
+}
 // hash and concate:
 fn calculate_many_updates() {
     let cs = ConstraintSystem::<Fr>::new_ref();
