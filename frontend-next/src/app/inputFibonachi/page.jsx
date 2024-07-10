@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import styles from "../../styles/verify.module.css"; // תיקון נתיב לקובץ ה-CSS
 
-const InputPrimePage = () => {
+const InputFibonacciPage = () => {
   const [number, setNumber] = useState("");
   const [rounds, setRounds] = useState("");
   const [a, setA] = useState("");
@@ -26,8 +26,8 @@ const InputPrimePage = () => {
       result: parseInt(number),
       num_of_rounds: parseInt(rounds),
     };
-    localStorage.setItem("first_number", parseInt(a));
-    localStorage.setItem("second_number", parseInt(b));
+    localStorage.setItem("first_number", JSON.stringify(parseInt(a)));
+    localStorage.setItem("second_number", JSON.stringify(parseInt(b)));
     setIsLoadingProof(true);
     axios
       .post("http://127.0.0.1:8080/api/fibbonaci/prove", requestData)
@@ -55,8 +55,8 @@ const InputPrimePage = () => {
     const requestData = {
      proof: proof,
      pvk : pvk,
-     a: localStorage.getItem("first_number"),
-     b: localStorage.getItem("second_number"),
+     a: JSON.parse(localStorage.getItem("first_number")),
+     b: JSON.parse(localStorage.getItem("second_number")),
     };
 
     setIsLoadingVerify(true);
@@ -73,7 +73,7 @@ const InputPrimePage = () => {
       })
       .catch((error) => {
         console.error("Error verifying matrices:", error);
-        setVerifyResult("Verification failed.");
+        setVerifyResult("Verification failed error.");
         setVerifyingTime("");
       })
       .finally(() => {
@@ -145,4 +145,4 @@ const InputPrimePage = () => {
   );
 };
 
-export default InputPrimePage;
+export default InputFibonacciPage;

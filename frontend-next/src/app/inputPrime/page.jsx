@@ -8,54 +8,6 @@ const InputPrimePage = () => {
   const [number, setNumber] = useState("");
   const [rounds, setRounds] = useState("");
 
-
-
-
-
-  const handleProve = () => {
-    // Reset previous stats
-    setSetupTime(null);
-    setProvingTime(null);
-    setNumConstraints(null);
-    setNumVariables(null);
-
-    const requestData = {
-      n: number,
-      num_of_rounds: rounds,
-      matrixseed: 123,
-    };
-
-    setIsLoadingProof(true);
-    axios
-      .post("http://127.0.0.1:8080/api/prime_sp1/prove", requestData)
-      .then((response) => {
-        const {
-          proof,
-          pvk,
-          hash_a,
-          hash_b,
-          hash_c,
-          setup_time,
-          proving_time,
-          num_constraints,
-          num_variables,
-        } = response.data;
-        localStorage.setItem("proof", JSON.stringify(proof));
-        localStorage.setItem("pvk", JSON.stringify(pvk));
-        setHashes({ hash_a, hash_b, hash_c });
-        setSetupTime(setup_time);
-        setProvingTime(proving_time);
-        setNumConstraints(num_constraints);
-        setNumVariables(num_variables);
-      })
-      .catch((error) => {
-        console.error("Error proving matrices:", error);
-      })
-      .finally(() => {
-        setIsLoadingProof(false);
-      });
-  };
-
   return (
     <div className={styles.container}>
       <div className={styles.optionButtons}>
