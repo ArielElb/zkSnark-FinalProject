@@ -5,3 +5,4 @@ pub mod preimage;
 pub mod prime_constraints;
 pub mod modulo;
 mod modpow_circuit;
+mod prime_circuit;
