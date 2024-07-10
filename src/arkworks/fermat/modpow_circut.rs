@@ -119,6 +119,28 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
         Ok(())
     }
 }
+fn structInitializer<ConstraintF:PrimeField>(base:BigUint, exp:BigUint, modulo:BigUint) -> modpow_ver_circuit<ConstraintF>{
+    let res = base.modpow(&exp, &modulo);
+        let returnted_val: return_struct =
+            mod_pow_generate_witnesses(base.clone(), modulo.clone(), exp.clone());
+        let base = ConstraintF::from(base);
+        let exponent = ConstraintF::from(exp);
+        let result = ConstraintF::from(res);
+        let divisor = ConstraintF::from(modulo);
+        //let cs = ConstraintSystem::<Fr>::new_ref();
+        let mod_wits = returnted_val.mod_vals;
+        let mod_pow_wits = returnted_val.mod_pow_vals;
+        let circuit = modpow_ver_circuit {
+            base,
+            exponent,
+            result,
+            divisor,
+            modulo_witnesses: vector_convertor::<ConstraintF>(mod_wits),
+            modulo_of_pow_witnesses: vector_convertor::<ConstraintF>(mod_pow_wits),
+            bits: bits_vector_convertor::<ConstraintF>(returnted_val.bits),
+        };
+        return circuit;
+}
 #[cfg(test)]
 mod tests {
     use super::*;
