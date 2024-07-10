@@ -78,8 +78,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
             let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.q))?;
             let cur_remainder: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(constraintF_witness.remainder))?;
             let result_of_vars = cur_q*&divisor+&cur_remainder;
-            println!("result of vars is: {:?}",result_of_vars.value().unwrap());
-            println!("calculated res is: {:?}",calculated_res.value().unwrap());
             result_of_vars.enforce_equal(&calculated_res)?;
             let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less , false)?;
 
