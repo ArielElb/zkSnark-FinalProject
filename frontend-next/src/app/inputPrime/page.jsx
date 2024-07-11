@@ -10,6 +10,9 @@ const InputPrimePage = () => {
 
   return (
     <div className={styles.container}>
+       <Link href={{pathname: '../information/' , query: {type:"Prime number"},}}>
+       <button className={styles.topRightButton}>More Information</button>
+       </Link>
       <div className={styles.optionButtons}>
         <button
           onClick={() => setCurrentOption("prove")}

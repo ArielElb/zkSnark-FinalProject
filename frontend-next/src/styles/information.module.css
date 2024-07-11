@@ -59,4 +59,19 @@
     height: auto;
     border-radius: 8px;
   }
+  .topRightButton {
+    position: fixed; /* מקבע את הכפתור כך שיהיה תמיד במקום הזה במסך */
+    top: 60px; /* מרחק של 10 פיקסלים מהחלק העליון של המסך */
+    right: 10px; /* מרחק של 10 פיקסלים מהצד הימני של המסך */
+    padding: 10px 20px; /* ריפוד בתוך הכפתור */
+    font-size: 16px; /* גודל הטקסט */
+    background-color: #0070f3; /* צבע רקע */
+    color: white; /* צבע הטקסט */
+    border: none; /* ללא גבול */
+    border-radius: 4px; /* פינות מעוגלות */
+    cursor: pointer; /* מצביע עכבר בצורת יד */
+  }
   
+  .topRightButton:hover {
+    background-color: #005bb5; /* צבע רקע כשמעבירים את העכבר מעל הכפתור */
+  }

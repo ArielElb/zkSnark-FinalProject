@@ -2,9 +2,13 @@
 "use client";
 import Head from 'next/head';
 import styles from '../../styles/information.module.css';
+import Link from "next/link";
 
-const InformationPage = () => {
-  return (
+const InformationPage = ({ searchParams }) => {
+  const handleBack = () => {
+    window.history.back();
+  };
+    return (
     <div className={styles.container}>
       <Head>
         <title>Information Page</title>
@@ -13,7 +17,8 @@ const InformationPage = () => {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>information about prime</h1>
+       <button onClick={handleBack} className={styles.topRightButton}>back to verify</button>
+        <h1 className={styles.title}>information about {searchParams.type}</h1>
 
         <h2 className={styles.subtitle}>What is our project all about?</h2>
 
