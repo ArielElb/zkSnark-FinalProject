@@ -31,7 +31,7 @@ pub struct PrimeCheck<ConstraintF: PrimeField> {
     x: ConstraintF,      // a seed for the initial hash // public input
     i: u64,              // the index i s.t we check if a_i=hash(x+i) is prime // public input
     r: ConstraintF,      // randomness // public input - r = x + i || a_i = hash(x+i) || i )
-    a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input
+    a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input - to check that we actually calculated the hash correctly
     a_i: Vec<u8>,        // a_i = hash(x+i) // public input
     is_prime: bool,      // witness if the number is prime
                          // modpow_ver_circuit: Vec<modpow_ver_circuit<ConstraintF>>, // vector of modpow circuits for each modpow.
