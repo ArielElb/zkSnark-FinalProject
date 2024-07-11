@@ -21,9 +21,6 @@ const Navbar = () => {
         <li className={styles.navItem}>
           <Link href='../inputPrime/'>Prime</Link>
         </li>
-        <li className={styles.navItem}>
-          <Link href='../information/'>information</Link>
-        </li>
       </ul>
     </nav>
   );
