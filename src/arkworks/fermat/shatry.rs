@@ -24,7 +24,7 @@ pub struct PreImage<ConstraintF: PrimeField> {
     pub hash_x: Option<Vec<u8>>, // digest - public input
 }
 
-fn to_byte_vars<ConstraintF: PrimeField>(
+pub fn to_byte_vars<ConstraintF: PrimeField>(
     cs: impl Into<Namespace<ConstraintF>>,
     data: &[u8],
 ) -> Vec<UInt8<ConstraintF>> {
@@ -86,6 +86,57 @@ pub fn hash_return_digest_var<ConstraintF: PrimeField>(
             &to_byte_vars(ns!(cs, "input"), &x_bytes_u8),
         )?;
     Ok(computed_hash)
+}
+
+pub fn hash_in_circut<ConstraintF: PrimeField>(
+    cs: ConstraintSystemRef<ConstraintF>,
+    x: FpVar<ConstraintF>,
+    hash_x: Vec<u8>,
+) -> Result<(), SynthesisError> {
+    let unit_var = UnitVar::default();
+    let x_bytes = x.to_bytes()?;
+    let x_bytes_u8 = x_bytes
+        .iter()
+        .map(|byte| byte.value().unwrap())
+        .collect::<Vec<u8>>();
+    let computed_hash =
+        <Sha256Gadget<ConstraintF> as CRHSchemeGadget<Sha256, ConstraintF>>::evaluate(
+            &unit_var,
+            &to_byte_vars(ns!(cs, "input"), &x_bytes_u8),
+        )?;
+    let hash_x_var = DigestVar::new_input(ns!(cs, "hash_x"), || Ok(hash_x))?;
+    computed_hash.enforce_equal(&hash_x_var)?;
+    Ok(())
+}
+pub fn compute_using_evaluate<ConstraintF: PrimeField>(
+    cs: ConstraintSystemRef<ConstraintF>,
+    x: ConstraintF,
+    hash_x: Vec<u8>,
+) {
+    // Create witness x:
+    let x_var = FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "x"), || Ok(x)).unwrap();
+    // Create parameter unit:
+    let unit_var = UnitVar::default();
+    // Convert x to bytes
+    let x_bytes = x_var.to_bytes().unwrap();
+    let x_bytes_u8 = x_bytes
+        .iter()
+        .map(|byte| byte.value().unwrap())
+        .collect::<Vec<u8>>();
+    // Compute the hash
+    let computed_hash =
+        <Sha256Gadget<ConstraintF> as CRHSchemeGadget<Sha256, ConstraintF>>::evaluate(
+            &unit_var,
+            &to_byte_vars(ns!(cs, "input"), &x_bytes_u8),
+        )
+        .unwrap();
+    println!("computed_hash: {:?}", computed_hash);
+    // Create digest variable from hash_x:
+    let hash_x_bytes = hash_x;
+    let hash_x_var = DigestVar::new_input(ns!(cs, "hash_x"), || Ok(hash_x_bytes)).unwrap();
+    println!("hash_x_var: {:?}", hash_x_var.value().unwrap());
+    // Ensure the computed hash equals the provided hash
+    computed_hash.enforce_equal(&hash_x_var).unwrap();
 }
 // compute the hash of a bytes of field element using non-gadget hash function
 pub fn hash_field_element(x: Vec<u8>) -> Vec<u8> {

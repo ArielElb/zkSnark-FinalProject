@@ -70,6 +70,34 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PreImage<Co
     }
 }
 
+fn compute_using_evaluate<ConstraintF: PrimeField>(
+    cs: ConstraintSystemRef<ConstraintF>,
+    x: ConstraintF,
+    hash_x: Vec<u8>,
+) {
+    // Create witness x:
+    let x_var = FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "x"), || Ok(x)).unwrap();
+    // Create parameter unit:
+    let unit_var = UnitVar::default();
+    // Convert x to bytes
+    let x_bytes = x_var.to_bytes().unwrap();
+    let x_bytes_u8 = x_bytes
+        .iter()
+        .map(|byte| byte.value().unwrap())
+        .collect::<Vec<u8>>();
+    // Compute the hash
+    let computed_hash =
+        <Sha256Gadget<ConstraintF> as CRHSchemeGadget<Sha256, ConstraintF>>::evaluate(
+            &unit_var,
+            &to_byte_vars(ns!(cs, "input"), &x_bytes_u8),
+        )
+        .unwrap();
+    // Create digest variable from hash_x:
+    let hash_x_bytes = hash_x;
+    let hash_x_var = DigestVar::new_input(ns!(cs, "hash_x"), || Ok(hash_x_bytes)).unwrap();
+    // Ensure the computed hash equals the provided hash
+    computed_hash.enforce_equal(&hash_x_var).unwrap();
+}
 // hash and concate:
 fn calculate_many_updates() {
     let cs = ConstraintSystem::<Fr>::new_ref();
@@ -87,7 +115,7 @@ fn calculate_many_updates() {
     sha256_var.update(&fe_bytes).unwrap();
     sha256_var.update(&fe_bytes2).unwrap();
     sha256_var.update(&fe_bytes3).unwrap();
-    let computed_hash_var = sha256_var.finalize().unwrap();
+    let computed_hash_var: DigestVar<_> = sha256_var.finalize().unwrap();
     let computed_hash = computed_hash_var.value().unwrap();
     println!("computed_hash: {:?}", computed_hash);
 }
