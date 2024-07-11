@@ -30,7 +30,7 @@ use super::shatry;
 pub struct PrimeCheck<ConstraintF: PrimeField> {
     x: ConstraintF,      // a seed for the initial hash // public input
     i: u64,              // the index i s.t we check if a_i=hash(x+i) is prime // public input
-    r: ConstraintF,      // randomness // public input - r = x + i || a_i = hash(x+i) || i )
+    r: ConstraintF,      // randomness // public input - r = hash(x + i || a_i = hash(x+i) || i )
     a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input - to check that we actually calculated the hash correctly
     a_i: Vec<u8>,        // a_i = hash(x+i) // public input
     is_prime: bool,      // witness if the number is prime
@@ -126,6 +126,7 @@ mod tests {
         let cs = ConstraintSystem::<Fr>::new_ref();
         let mut x = Fr::from(5u64);
         let mut r = [0u8; 32];
+        rng.fill_bytes(&mut r);
         let a_i = [0u8; 32];
         let i: u64 = 5;
         // create vector from i:
@@ -155,8 +156,14 @@ mod tests {
         let a_i = finalize(sha256.clone());
         println!("a_i: {:?}", a_i);
 
-        rng.fill_bytes(&mut r);
-        let r = Fr::from_random_bytes(&r).unwrap();
+        // r = hash(x + i || a_i = hash(x+i) || i )
+        sha256.update(&x_plus_i_bytes);
+        sha256.update(&a_i);
+        sha256.update(&i.to_le_bytes());
+        let r = finalize(sha256.clone());
+        // convert r to Fr:
+        let r = Fr::from_be_bytes_mod_order(&r);
+
         // create the circuit:
         let circuit = PrimeCheck {
             x,
