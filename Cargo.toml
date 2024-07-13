@@ -31,12 +31,10 @@ actix-rt = "2.4.0"
 num-traits = "0.2.19"
 tracing-subscriber = "0.3.18"
 itertools = "0.10.1"
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.8-testnet" }
 
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 clap = { version = "4.0", features = ["derive", "env"] }
 alloy-sol-types = "0.7.2"
-sp1-derive = { git = "https://github.com/succinctlabs/sp1.git" }
 
 base64 = "0.22.1"
 
@@ -45,4 +43,3 @@ ark-poly = { version = "^0.4.2", default-features = false }
 ark-poly-commit = { version = "^0.4.0", default-features = false }
 
 [build-dependencies]
-sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.8-testnet" }

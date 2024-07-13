@@ -13,6 +13,7 @@ use ark_r1cs_std::ToBitsGadget;
 use ark_r1cs_std::{alloc::AllocVar, fields::FieldVar};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use num_bigint::{BigUint, ToBigInt, ToBigUint};
+use std::ops::AddAssign;
 use std::{char::from_u32, ops::MulAssign};
 const NUM_BITS: usize = 381;
 
@@ -28,9 +29,19 @@ pub struct fermat_circuit<ConstraintF: PrimeField> {
     modpow_ver_circuit: modpow_ver_circuit<ConstraintF>,
 }
 
-// TODO:
-fn check_bits_is_exp<ConstraintF: PrimeField>(bits: Vec<ConstraintF>, exp: ConstraintF) {
-    let mut res = ConstraintF::one();
+
+fn check_bits_is_exp<ConstraintF: PrimeField>(cs: ConstraintSystemRef<ConstraintF>,bits: Vec<ConstraintF>, exp: FpVar<ConstraintF>) {
+    let mut res = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(ConstraintF::zero())).unwrap();
+    let two = FpVar::<ConstraintF>::constant(ConstraintF::one()+ConstraintF::one());
+    let mut cur_pow = FpVar::<ConstraintF>::constant(ConstraintF::one());
+    for i in 0..NUM_BITS{
+        res.add_assign(&cur_pow*bits[i]);
+        cur_pow.mul_assign(&two);
+    }
+    //println!("{:?}",res.value().unwrap());
+    //println!("{:?}",exp.value().unwrap());
+    res.enforce_equal(&exp).unwrap();
+
 }
 // function that get modpow_ver_circuit and create the constraints for  modpow
 fn modpow<ConstraintF: PrimeField>(
@@ -46,6 +57,7 @@ fn modpow<ConstraintF: PrimeField>(
         FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(modpow_ver_circuit.result))?;
     let one = &base * &base.inverse().unwrap();
     let mut calculated_res = one.clone();
+    check_bits_is_exp(cs.clone(), bits.clone(), exp);
     for i in 0..NUM_BITS {
         let elem_val = &bits[i];
         let elem = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(elem_val))?;
@@ -94,7 +106,9 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for fermat_circ
         let a = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a))?;
         let result = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.result))?;
         let is_prime = Boolean::<ConstraintF>::new_witness(cs.clone(), || Ok(self.is_prime))?;
+        let other_res = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.modpow_ver_circuit.result))?;
         let modpow_ver_circuit = self.modpow_ver_circuit;
+        result.enforce_equal(&other_res)?;
         let n_minus_one = n.clone() - FpVar::<ConstraintF>::constant(ConstraintF::one());
         let _ = modpow(cs.clone(), &modpow_ver_circuit, a, n, n_minus_one)?;
         let one = FpVar::<ConstraintF>::constant(ConstraintF::one());
