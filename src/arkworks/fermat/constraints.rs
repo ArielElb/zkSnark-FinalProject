@@ -118,6 +118,15 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for fermat_circ
         Ok(())
     }
 }
+fn Fermat_test(a:BigUint,p:BigUint)->bool{
+    let one_val = BigUint::from(1u32);
+    if(a.modpow(&(&p-&one_val), &p)==one_val){
+        return true;
+    }
+    return false;
+}
+
+
 
 // add tests :
 #[cfg(test)]
