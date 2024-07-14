@@ -19,13 +19,16 @@ use ark_relations::ns;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use modulo::{mod_pow_generate_witnesses, mod_vals, return_struct};
 use num_bigint::{BigUint, ToBigInt, ToBigUint};
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 use std::{char::from_u32, ops::MulAssign};
 const NUM_BITS: usize = 381;
-
+const K: usize = 10;
 use super::constraints::{fermat_circuit, fermat_constructor};
 use super::modulo;
 use super::shatry;
-
+use num_bigint::RandBigInt;
+use num_traits::ops::bytes::ToBytes;
 // struct for Final circuit: PrimeCheck:
 #[derive(Clone)]
 pub struct PrimeCheck<ConstraintF: PrimeField> {
@@ -57,40 +60,31 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         let mut sha256_var = Sha256Gadget::default();
         for j in 0..self.i {
             // compute x+j:
-            let x_plus_j = self.x + ConstraintF::from(j);
+            let x_plus_j = x_var.clone() + ConstraintF::from(j);
             // convert x_plus_j to bytes:
-            let x_plus_j_bytes = x_plus_j.into_bigint().to_bytes_le();
+            let x_plus_j_bytes = x_plus_j.to_bytes().unwrap();
             // calculate the hash(x+j):
-            sha256_var
-                .update(&shatry::to_byte_vars(ns!(cs, "input"), &x_plus_j_bytes))
-                .unwrap();
+            sha256_var.update(&x_plus_j_bytes).unwrap();
             let calculated_a_j = sha256_var.clone().finalize().unwrap();
 
             // enforce that a_j = hash(x+j):
             let a_j_var = DigestVar::new_input(ark_relations::ns!(cs, "a_j"), || {
                 Ok(self.a_j_s[j as usize].clone())
             })?;
-            println!("calculated_a_j: {:?}", calculated_a_j.value().unwrap());
-            println!("a_j_var: {:?}", a_j_var.value().unwrap());
+
             a_j_var.enforce_equal(&calculated_a_j)?;
         }
         // compute x+i:
-        let x_plus_i = self.x + ConstraintF::from(self.i);
+        let x_plus_i = x_var.clone() + ConstraintF::from(self.i);
         // convert x_plus_i to bytes:
-        let x_plus_i_bytes = x_plus_i.into_bigint().to_bytes_le();
-        println!("x_plus_i_bytes: {:?}", x_plus_i_bytes);
+        let x_plus_i_bytes = x_plus_i.to_bytes().unwrap();
         // calculate the hash(x+i):
-        sha256_var
-            .update(&shatry::to_byte_vars(ns!(cs, "input"), &x_plus_i_bytes))
-            .unwrap();
+        sha256_var.update(&x_plus_i_bytes).unwrap();
         let calculated_a_i: DigestVar<ConstraintF> = sha256_var.finalize().unwrap();
         // enforce that a_i = hash(x+i):
         let a_i_var = DigestVar::new_input(ark_relations::ns!(cs, "a_i"), || Ok(self.a_i))?;
         a_i_var.enforce_equal(&calculated_a_i)?;
 
-        // let a_i_bytes: Vec<UInt8<ConstraintF>> = a_i_var.to_bytes().unwrap();
-
-        println!("calculated_a_i: {:?}", calculated_a_i.value().unwrap());
         // TODO: fermat primality
         // TODO : validate that what i calculated is what in fermat_circuit.
 
@@ -115,11 +109,11 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
                 Ok(self.fermat_circuit.is_prime)
             })?;
 
-        // enforce that the randomness is the same:
+        // // enforce that the randomness is the same:
         randomness_var_fermat.enforce_equal(&r_var)?;
-        // enforce that the n is the same:
+        // // enforce that the n is the same:
         n_var_fermat.enforce_equal(&a_i_fpvar)?;
-        // enforce that the is_prime is the same:
+        // // enforce that the is_prime is the same:
         is_prime_var_fermat.enforce_equal(&is_prime_var)?;
         // In the end create the constraints for the fermat circuit:
         self.fermat_circuit
@@ -129,8 +123,17 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         Ok(())
     }
 }
-
-// create modulo for tests:
+fn is_prime(n: BigUint, r: [u8; 32]) -> bool {
+    let mut rng: StdRng = rand::SeedableRng::from_seed(r);
+    // now run for K times:
+    for _ in 0..K {
+        let a = rng.gen_biguint_range(&BigUint::from(2u64), &n);
+        if a.modpow(&(&n - 1u32), &n) != BigUint::from(1u32) {
+            return false;
+        }
+    }
+    return true;
+}
 
 #[cfg(test)]
 mod tests {
@@ -156,15 +159,15 @@ mod tests {
     fn finalize(sha256: Sha256) -> Vec<u8> {
         sha256.finalize().to_vec()
     }
-
     #[test]
+
     fn initial_procces() {
         let mut rng = ark_std::test_rng();
 
         let cs = ConstraintSystem::<Fr>::new_ref();
         let mut x = Fr::from(5u64);
-        let mut r = [0u8; 32];
-        rng.fill_bytes(&mut r);
+        let mut r_bytes = [0u8; 32];
+        rng.fill_bytes(&mut r_bytes);
         let a_i = [0u8; 32];
         let i: u64 = 5;
         // create vector from i:
@@ -187,8 +190,7 @@ mod tests {
 
         let x_plus_i = x + Fr::from(i);
         let x_plus_i_bytes = x_plus_i.into_bigint().to_bytes_le();
-        println!("x_plus_i: {:?}", x_plus_i);
-        println!("x_plus_i_bytes: {:?}", x_plus_i_bytes);
+
         // do the hash for x+i:
         sha256.update(&x_plus_i_bytes);
         let a_i = finalize(sha256.clone());
@@ -202,11 +204,16 @@ mod tests {
         sha256.update(&a_i);
         sha256.update(&i.to_le_bytes());
         let r = finalize(sha256.clone());
+
+        // take the 32 u8 from r:
+        for (i, byte) in r.iter().enumerate() {
+            r_bytes[i] = *byte;
+        }
         // convert r to Fr:
-        let r = Fr::from_le_bytes_mod_order(&r);
+        let r = Fr::from_le_bytes_mod_order(&r_bytes);
 
         // create fermat circuit:
-        let fermat_circuit = fermat_constructor::<Fr>(a_i_biguint, BigUint::from(r));
+        let fermat_circuit = fermat_constructor::<Fr>(BigUint::from(r), a_i_biguint.clone());
 
         // create the circuit:
         let circuit = PrimeCheck {
@@ -215,7 +222,7 @@ mod tests {
             r,
             a_j_s: a_j_s.clone(),
             a_i,
-            is_prime: false,
+            is_prime: is_prime(a_i_biguint, r_bytes),
             fermat_circuit,
         };
         circuit.generate_constraints(cs.clone()).unwrap();
