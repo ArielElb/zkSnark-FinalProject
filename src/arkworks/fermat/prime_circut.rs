@@ -60,7 +60,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         let mut sha256_var = Sha256Gadget::default();
         for j in 0..self.i {
             // compute x+j:
-            let x_plus_j = x_var.clone() + ConstraintF::from(j);
+            let x_plus_j = x_var.clone() + FpVar::<ConstraintF>::constant(ConstraintF::from(j));
             // convert x_plus_j to bytes:
             let x_plus_j_bytes = x_plus_j.to_bytes().unwrap();
             // calculate the hash(x+j):
@@ -75,7 +75,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
             a_j_var.enforce_equal(&calculated_a_j)?;
         }
         // compute x+i:
-        let x_plus_i = x_var.clone() + ConstraintF::from(self.i);
+        let x_plus_i = x_var.clone() + i_var.clone();
         // convert x_plus_i to bytes:
         let x_plus_i_bytes = x_plus_i.to_bytes().unwrap();
         // calculate the hash(x+i):
