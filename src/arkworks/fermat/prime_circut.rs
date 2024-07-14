@@ -1,9 +1,7 @@
 use crate::arkworks::fermat::modpow_circut::{mod_witnesses, modpow_ver_circuit};
-use alloy_sol_types::sol_data::Uint;
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_crypto_primitives::crh::sha256::constraints::DigestVar;
 use ark_crypto_primitives::crh::sha256::constraints::Sha256Gadget;
-use ark_crypto_primitives::sponge::DuplexSpongeMode;
 use ark_ff::BigInteger;
 use ark_ff::{Field, PrimeField};
 use ark_r1cs_std::boolean::Boolean;
@@ -21,14 +19,12 @@ use modulo::{mod_pow_generate_witnesses, mod_vals, return_struct};
 use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use std::{char::from_u32, ops::MulAssign};
 const NUM_BITS: usize = 381;
 const K: usize = 10;
 use super::constraints::{fermat_circuit, fermat_constructor};
 use super::modulo;
 use super::shatry;
 use num_bigint::RandBigInt;
-use num_traits::ops::bytes::ToBytes;
 // struct for Final circuit: PrimeCheck:
 #[derive(Clone)]
 pub struct PrimeCheck<ConstraintF: PrimeField> {
@@ -141,9 +137,7 @@ mod tests {
     use ark_bls12_381::{Bls12_381, Fr};
     use ark_ff::{BigInt, BigInteger};
     use ark_ff::{Field, PrimeField};
-    use ark_r1cs_std::alloc::AllocVar;
-    use ark_r1cs_std::fields::fp::FpVar;
-    use ark_r1cs_std::uint8::UInt8;
+
     use ark_relations::r1cs::{
         ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef, SynthesisError,
     };
