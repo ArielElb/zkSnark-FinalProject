@@ -17,6 +17,7 @@ use std::ops::AddAssign;
 use std::{char::from_u32, ops::MulAssign};
 const NUM_BITS: usize = 381;
 
+use super::modpow_circut::structInitializer;
 use super::modulo;
 
 // struct for fermat circuit:
@@ -120,12 +121,22 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for fermat_circ
 }
 fn Fermat_test(a:BigUint,p:BigUint)->bool{
     let one_val = BigUint::from(1u32);
-    if(a.modpow(&(&p-&one_val), &p)==one_val){
+    if a.modpow(&(&p-&one_val), &p)==one_val {
         return true;
     }
     return false;
 }
 
+pub fn fermat_constructor<ConstraintF:PrimeField>(a:BigUint,n:BigUint)->fermat_circuit<ConstraintF>{
+    let modpow_circuit = structInitializer::<ConstraintF>(a.clone(),n.clone()-1u32,n.clone()); 
+    return fermat_circuit{
+        n:ConstraintF::from(n.clone()),
+        a:ConstraintF::from(a.clone()),
+        is_prime:Fermat_test(a, n),
+        result: modpow_circuit.result.clone(),
+        modpow_ver_circuit: modpow_circuit,
+    };
+}
 
 
 // add tests :
