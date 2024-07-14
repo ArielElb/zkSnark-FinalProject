@@ -121,7 +121,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
         Ok(())
     }
 }
-fn structInitializer<ConstraintF: PrimeField>(
+pub fn structInitializer<ConstraintF: PrimeField>(
     base: BigUint,
     exp: BigUint,
     modulo: BigUint,
