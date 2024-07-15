@@ -89,37 +89,37 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // TODO: fermat primality
         // TODO : validate that what i calculated is what in fermat_circuit.
 
-        // let a_i_fpvar =
-        //     FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
-        //         Ok(ConstraintF::from_le_bytes_mod_order(
-        //             &a_i_var.to_bytes().unwrap().value().unwrap(),
-        //         ))
-        //     })?;
-        // // create a witness from fermat_circuit:
-        // let randomness_var_fermat = FpVar::<ConstraintF>::new_witness(
-        //     ark_relations::ns!(cs, "randomness_var_fermat"),
-        //     || Ok(self.fermat_circuit.a),
-        // )?;
-        // let n_var_fermat =
-        //     FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
-        //         Ok(self.fermat_circuit.n)
-        //     })?;
+        let a_i_fpvar =
+            FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
+                Ok(ConstraintF::from_le_bytes_mod_order(
+                    &a_i_var.to_bytes().unwrap().value().unwrap(),
+                ))
+            })?;
+        // create a witness from fermat_circuit:
+        let randomness_var_fermat = FpVar::<ConstraintF>::new_witness(
+            ark_relations::ns!(cs, "randomness_var_fermat"),
+            || Ok(self.fermat_circuit.a),
+        )?;
+        let n_var_fermat =
+            FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
+                Ok(self.fermat_circuit.n)
+            })?;
 
-        // let is_prime_var_fermat =
-        //     Boolean::new_witness(ark_relations::ns!(cs, "is_prime_var_fermat"), || {
-        //         Ok(self.fermat_circuit.is_prime)
-        //     })?;
+        let is_prime_var_fermat =
+            Boolean::new_witness(ark_relations::ns!(cs, "is_prime_var_fermat"), || {
+                Ok(self.fermat_circuit.is_prime)
+            })?;
 
-        // // // enforce that the randomness is the same:
-        // randomness_var_fermat.enforce_equal(&r_var)?;
-        // // // enforce that the n is the same:
-        // n_var_fermat.enforce_equal(&a_i_fpvar)?;
-        // // // enforce that the is_prime is the same:
-        // is_prime_var_fermat.enforce_equal(&is_prime_var)?;
-        // // In the end create the constraints for the fermat circuit:
-        // self.fermat_circuit
-        //     .generate_constraints(cs.clone())
-        //     .unwrap();
+        // // enforce that the randomness is the same:
+        randomness_var_fermat.enforce_equal(&r_var)?;
+        // // enforce that the n is the same:
+        n_var_fermat.enforce_equal(&a_i_fpvar)?;
+        // // enforce that the is_prime is the same:
+        is_prime_var_fermat.enforce_equal(&is_prime_var)?;
+        // In the end create the constraints for the fermat circuit:
+        self.fermat_circuit
+            .generate_constraints(cs.clone())
+            .unwrap();
 
         Ok(())
     }
