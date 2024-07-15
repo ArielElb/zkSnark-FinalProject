@@ -53,32 +53,38 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         let is_prime_var =
             Boolean::new_witness(ark_relations::ns!(cs, "is_prime"), || Ok(self.is_prime))?;
         // for each j in 0..i-1:
-        let mut sha256_var = Sha256Gadget::default();
         for j in 0..self.i {
+            let mut sha256_var = Sha256Gadget::default();
             // compute x+j:
             let x_plus_j = x_var.clone() + FpVar::<ConstraintF>::constant(ConstraintF::from(j));
             // convert x_plus_j to bytes:
             let x_plus_j_bytes = x_plus_j.to_bytes().unwrap();
+
             // calculate the hash(x+j):
             sha256_var.update(&x_plus_j_bytes).unwrap();
             let calculated_a_j = sha256_var.clone().finalize().unwrap();
 
             // enforce that a_j = hash(x+j):
             let a_j_var = DigestVar::new_input(ark_relations::ns!(cs, "a_j"), || {
+                println!("self.a_j_s[j as usize]: {:?}", self.a_j_s[j as usize]);
                 Ok(self.a_j_s[j as usize].clone())
             })?;
 
             a_j_var.enforce_equal(&calculated_a_j)?;
         }
+
+        let mut sha256_var = Sha256Gadget::default();
         // compute x+i:
-        let x_plus_i = x_var.clone() + i_var.clone();
+        let x_plus_i = x_var.clone() + FpVar::<ConstraintF>::constant(ConstraintF::from(self.i));
         // convert x_plus_i to bytes:
         let x_plus_i_bytes = x_plus_i.to_bytes().unwrap();
         // calculate the hash(x+i):
         sha256_var.update(&x_plus_i_bytes).unwrap();
         let calculated_a_i: DigestVar<ConstraintF> = sha256_var.finalize().unwrap();
+        println!("calculated_a_i: {:?}", calculated_a_i.value().unwrap());
         // enforce that a_i = hash(x+i):
         let a_i_var = DigestVar::new_input(ark_relations::ns!(cs, "a_i"), || Ok(self.a_i))?;
+        println!("a_i_var: {:?}", a_i_var.value().unwrap());
         a_i_var.enforce_equal(&calculated_a_i)?;
 
         // TODO: fermat primality
@@ -131,6 +137,20 @@ fn is_prime(n: BigUint, r: [u8; 32]) -> bool {
     return true;
 }
 
+fn hash_using_fpvar<ConstraintF: PrimeField>(
+    x_var: FpVar<ConstraintF>,
+    i_var: FpVar<ConstraintF>,
+) -> Vec<u8> {
+    let mut sha256_var = Sha256Gadget::default();
+    // compute x+i:
+    let x_plus_i = x_var + i_var;
+    // convert x_plus_i to bytes:
+    let x_plus_i_bytes = x_plus_i.to_bytes().unwrap();
+    // calculate the hash(x+i):
+    sha256_var.update(&x_plus_i_bytes).unwrap();
+    let calculated_a_i: DigestVar<ConstraintF> = sha256_var.finalize().unwrap();
+    calculated_a_i.value().unwrap().to_vec()
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,9 +161,13 @@ mod tests {
     use ark_relations::r1cs::{
         ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef, SynthesisError,
     };
+    use ark_snark::SNARK;
+    use ark_std::test_rng;
     use itertools::Itertools;
     use rand::RngCore;
     use sha2::{Digest, Sha256};
+
+    use ark_groth16::Groth16;
     /// Finalizes a SHA256 gadget and gets the bytes
     fn finalize_var(sha256_var: Sha256Gadget<Fr>) -> Vec<u8> {
         sha256_var.finalize().unwrap().value().unwrap().to_vec()
@@ -153,8 +177,8 @@ mod tests {
     fn finalize(sha256: Sha256) -> Vec<u8> {
         sha256.finalize().to_vec()
     }
-    #[test]
 
+    #[test]
     fn initial_procces() {
         let mut rng = ark_std::test_rng();
 
@@ -163,22 +187,25 @@ mod tests {
         let mut r_bytes = [0u8; 32];
         rng.fill_bytes(&mut r_bytes);
         let a_i = [0u8; 32];
-        let i: u64 = 5;
+        let i: u64 = 2;
         // create vector from i:
         // set it up using sha256 default:
-
         let mut sha256 = Sha256::default();
-
         // create for each j in 0..i-1 the hash(x+j):
         let mut a_j_s = vec![];
         for j in 0..i {
-            let x_plus_j = x + Fr::from(j);
-            let x_plus_j_bytes = x_plus_j.into_bigint().to_bytes_le();
-            println!("x_plus_j: {:?}", x_plus_j);
-            println!("x_plus_j_bytes: {:?}", x_plus_j_bytes);
-            // do the hash for x+j:
-            sha256.update(&x_plus_j_bytes);
-            let a_j = finalize(sha256.clone());
+            // let x_plus_j = x + Fr::from(j);
+            // let x_plus_j_bytes = x_plus_j.into_bigint().to_bytes_le();
+            // println!("x_plus_j: {:?}", x_plus_j);
+            // println!("x_plus_j_bytes: {:?}", x_plus_j_bytes);
+            // // do the hash for x+j:
+            // sha256.update(&x_plus_j_bytes);
+            // let a_j = finalize(sha256.clone());
+            // hash using fpvar:
+            let x_var = FpVar::new_input(ark_relations::ns!(cs, "x"), || Ok(x)).unwrap();
+            let j_var = FpVar::new_constant(ark_relations::ns!(cs, "j"), Fr::from(j)).unwrap();
+            let a_j = hash_using_fpvar(x_var, j_var);
+            println!("a_j: {:?}", a_j);
             a_j_s.push(a_j);
         }
 
@@ -189,6 +216,10 @@ mod tests {
         sha256.update(&x_plus_i_bytes);
         let a_i = finalize(sha256.clone());
 
+        let a_i_var = hash_using_fpvar(
+            FpVar::new_input(ark_relations::ns!(cs, "x"), || Ok(x)).unwrap(),
+            FpVar::new_constant(ark_relations::ns!(cs, "i"), Fr::from(i)).unwrap(),
+        );
         // convert a_i to biguint:
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
         println!("a_i: {:?}", a_i);
@@ -215,7 +246,7 @@ mod tests {
             i,
             r,
             a_j_s: a_j_s.clone(),
-            a_i,
+            a_i: a_i_var,
             is_prime: is_prime(a_i_biguint, r_bytes),
             fermat_circuit,
         };
