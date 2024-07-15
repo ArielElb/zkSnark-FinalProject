@@ -89,37 +89,37 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // TODO: fermat primality
         // TODO : validate that what i calculated is what in fermat_circuit.
 
-        let a_i_fpvar =
-            FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
-                Ok(ConstraintF::from_le_bytes_mod_order(
-                    &a_i_var.to_bytes().unwrap().value().unwrap(),
-                ))
-            })?;
-        // create a witness from fermat_circuit:
-        let randomness_var_fermat = FpVar::<ConstraintF>::new_witness(
-            ark_relations::ns!(cs, "randomness_var_fermat"),
-            || Ok(self.fermat_circuit.a),
-        )?;
-        let n_var_fermat =
-            FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
-                Ok(self.fermat_circuit.n)
-            })?;
+        // let a_i_fpvar =
+        //     FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
+        //         Ok(ConstraintF::from_le_bytes_mod_order(
+        //             &a_i_var.to_bytes().unwrap().value().unwrap(),
+        //         ))
+        //     })?;
+        // // create a witness from fermat_circuit:
+        // let randomness_var_fermat = FpVar::<ConstraintF>::new_witness(
+        //     ark_relations::ns!(cs, "randomness_var_fermat"),
+        //     || Ok(self.fermat_circuit.a),
+        // )?;
+        // let n_var_fermat =
+        //     FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
+        //         Ok(self.fermat_circuit.n)
+        //     })?;
 
-        let is_prime_var_fermat =
-            Boolean::new_witness(ark_relations::ns!(cs, "is_prime_var_fermat"), || {
-                Ok(self.fermat_circuit.is_prime)
-            })?;
+        // let is_prime_var_fermat =
+        //     Boolean::new_witness(ark_relations::ns!(cs, "is_prime_var_fermat"), || {
+        //         Ok(self.fermat_circuit.is_prime)
+        //     })?;
 
-        // // enforce that the randomness is the same:
-        randomness_var_fermat.enforce_equal(&r_var)?;
-        // // enforce that the n is the same:
-        n_var_fermat.enforce_equal(&a_i_fpvar)?;
-        // // enforce that the is_prime is the same:
-        is_prime_var_fermat.enforce_equal(&is_prime_var)?;
-        // In the end create the constraints for the fermat circuit:
-        self.fermat_circuit
-            .generate_constraints(cs.clone())
-            .unwrap();
+        // // // enforce that the randomness is the same:
+        // randomness_var_fermat.enforce_equal(&r_var)?;
+        // // // enforce that the n is the same:
+        // n_var_fermat.enforce_equal(&a_i_fpvar)?;
+        // // // enforce that the is_prime is the same:
+        // is_prime_var_fermat.enforce_equal(&is_prime_var)?;
+        // // In the end create the constraints for the fermat circuit:
+        // self.fermat_circuit
+        //     .generate_constraints(cs.clone())
+        //     .unwrap();
 
         Ok(())
     }
@@ -270,14 +270,6 @@ mod tests {
         // create for each j in 0..i-1 the hash(x+j):
         let mut a_j_s = vec![];
         for j in 0..i {
-            // let x_plus_j = x + Fr::from(j);
-            // let x_plus_j_bytes = x_plus_j.into_bigint().to_bytes_le();
-            // println!("x_plus_j: {:?}", x_plus_j);
-            // println!("x_plus_j_bytes: {:?}", x_plus_j_bytes);
-            // // do the hash for x+j:
-            // sha256.update(&x_plus_j_bytes);
-            // let a_j = finalize(sha256.clone());
-            // hash using fpvar:
             let x_var = FpVar::new_input(ark_relations::ns!(cs, "x"), || Ok(x)).unwrap();
             let j_var = FpVar::new_constant(ark_relations::ns!(cs, "j"), Fr::from(j)).unwrap();
             let a_j = hash_using_fpvar(x_var, j_var);
@@ -331,8 +323,22 @@ mod tests {
         // setup the groth16:
         let (pk, vk) =
             Groth16::<Bls12_381>::circuit_specific_setup(circuit.clone(), &mut rng).unwrap();
-
         // create the proof:
         let proof = Groth16::<Bls12_381>::prove(&pk, circuit.clone(), &mut rng).unwrap();
+
+        // create the public input:
+        let cs_too: ConstraintSystemRef<Fr> = ConstraintSystem::new_ref();
+        circuit.generate_constraints(cs_too.clone()).unwrap();
+        let public_input = ConstraintSystemRef::borrow(&cs_too)
+            .unwrap()
+            .instance_assignment
+            .clone();
+
+        // print the public inpus one by one nicely:
+        for (i, input) in public_input.iter().enumerate() {
+            println!("public_input[{}]: {:?}", i, input);
+        }
+        let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
+        print!("is_correct: {:?}", is_correct);
     }
 }
