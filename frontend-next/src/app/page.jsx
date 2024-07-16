@@ -7,7 +7,7 @@ export default function Home() {
       <div className={styles.container}>
         <header className={styles.header}>
           <div className={styles.headerParagraph}>
-            <h1>Home Page</h1>
+            <h1>Zero-Knowledge Proofs Project</h1>
             <h2>What is our project all about?</h2>
             <p>
               Our project is a Proof of Concept (PoC) for implementing zero-knowledge

@@ -12,11 +12,12 @@ use ark_r1cs_std::R1CSVar;
 use ark_r1cs_std::ToBitsGadget;
 use ark_r1cs_std::{alloc::AllocVar, fields::FieldVar};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
+use num_bigint::RandBigInt;
 use num_bigint::{BigUint, ToBigInt, ToBigUint};
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 use std::ops::AddAssign;
 use std::{char::from_u32, ops::MulAssign};
-
-use rand::SeedableRng;
 const NUM_BITS: usize = 381;
 
 use super::modpow_circut::structInitializer;
@@ -108,10 +109,9 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for fermat_circ
         self,
         cs: ConstraintSystemRef<ConstraintF>,
     ) -> Result<(), SynthesisError> {
-        // let rng = rand::SeedableRng::from_seed(self.a.to_bytes());
-        let n = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.n))?;
+        let n = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.n))?;
         let a = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a))?;
-        let result = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.result))?;
+        let result = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.result))?;
         let is_prime = Boolean::<ConstraintF>::new_witness(cs.clone(), || Ok(self.is_prime))?;
         let other_res =
             FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.modpow_ver_circuit.result))?;
@@ -139,6 +139,8 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
     n: BigUint,
 ) -> fermat_circuit<ConstraintF> {
     let modpow_circuit = structInitializer::<ConstraintF>(a.clone(), n.clone() - 1u32, n.clone());
+
+
     return fermat_circuit {
         n: ConstraintF::from(n.clone()),
         a: ConstraintF::from(a.clone()),

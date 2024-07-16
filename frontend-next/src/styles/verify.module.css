@@ -1,80 +1,107 @@
-/* src/styles/verify.module.css */
-.background {
-    background-image: url("../styles/prime.jpg"); /* נתיב לקובץ התמונה בתיקיית public */
-    background-size: contain; /* Ensure the image covers the entire container */
-    background-position: center; /* Center the background image */
-    height: 100vh; /* Set the height of the container to fill the viewport */
-    display: flex; /* Enable flexbox layout */
-    justify-content: center; /* Center children horizontally */
-    align-items: center; /* Center children vertically */
-  }
-  
 .container {
-    font-family: Arial, sans-serif;
-    margin: 0 auto;
-    padding: 20px;
-    max-width: 600px;
-    text-align: center;
-  }
-  
-  .title {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: white; /* Text color */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-image: url("../public/black.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
-  
-  .header {
-    margin-bottom: 20px;
-  }
-  
-  .form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .inputGroup {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 10px;
-    width: 100%;
-  }
-  
-  .label {
-    margin-bottom: 5px;
-  }
-  
-  .input {
-    padding: 8px;
-    font-size: 16px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .button {
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .button:hover {
-    background-color: #0056b3;
-  }
-  
-  .result {
-    margin-top: 20px;
-  }
-  
-  .result h2 {
-    margin-bottom: 10px;
-  }
-  
-  .result p {
-    margin: 5px 0;
-  }
-  
+.title {
+  margin-bottom: 20px;
+  color: #0070f3;
+}
+
+.label {
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.saveButton {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: white;
+  background-color: #0070f3;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.saveButton:hover {
+  background-color: #005bb5;
+}
+
+.optionButtons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.optionButtons button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 4px;
+}
+
+.optionButtons .activeButton {
+  background-color: #0070f3;
+  color: white;
+  border-color: #0070f3;
+}
+
+.option2Container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inputBox {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.inputRows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inputField {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.topRightButton {
+  position: fixed; /* מקבע את הכפתור כך שיהיה תמיד במקום הזה במסך */
+  top: 60px; /* מרחק של 10 פיקסלים מהחלק העליון של המסך */
+  right: 10px; /* מרחק של 10 פיקסלים מהצד הימני של המסך */
+  padding: 10px 20px; /* ריפוד בתוך הכפתור */
+  font-size: 16px; /* גודל הטקסט */
+  background-color: #0070f3; /* צבע רקע */
+  color: white; /* צבע הטקסט */
+  border: none; /* ללא גבול */
+  border-radius: 4px; /* פינות מעוגלות */
+  cursor: pointer; /* מצביע עכבר בצורת יד */
+}
+
+.topRightButton:hover {
+  background-color: #005bb5; /* צבע רקע כשמעבירים את העכבר מעל הכפתור */
+}
