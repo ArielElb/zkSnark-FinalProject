@@ -64,6 +64,32 @@ fn hash_to_bytes<ConstraintF: PrimeField>(x_plus_j: FpVar<ConstraintF>) -> Diges
     let result = sha256_var.finalize().unwrap();
     result
 }
+
+fn generate_bases_a<ConstraintF: PrimeField>(
+    cs: ConstraintSystemRef<ConstraintF>,
+    r: FpVar<ConstraintF>,
+) -> Vec<FpVar<ConstraintF>> {
+    let mut a_j_s = vec![];
+    for j in 0..K {
+        let mut sha256_var = Sha256Gadget::default();
+        let r = r.to_bytes().unwrap();
+        let j_bytes = FpVar::<ConstraintF>::constant(ConstraintF::from(j as u64))
+            .to_bytes()
+            .unwrap();
+        sha256_var.update(&r).unwrap();
+        sha256_var.update(&j_bytes).unwrap();
+        let result: DigestVar<ConstraintF> = sha256_var.finalize().unwrap(); // a_i = hash(r || j)
+        let a_j_fpvar =
+            FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "r_j_fpvar"), || {
+                Ok(ConstraintF::from_le_bytes_mod_order(
+                    &result.to_bytes().unwrap().value().unwrap(),
+                ))
+            })
+            .unwrap();
+        a_j_s.push(a_j_fpvar);
+    }
+    a_j_s
+}
 // implement the constraints for the circuit:
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<ConstraintF> {
     fn generate_constraints(
@@ -72,6 +98,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
     ) -> Result<(), SynthesisError> {
         // create the public inputs:
         let x_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "x"), || Ok(self.x))?;
+
         // create the witness:
         let is_prime_var =
             Boolean::new_witness(ark_relations::ns!(cs, "is_prime"), || Ok(self.is_prime))?;
@@ -95,18 +122,24 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // enforce that a_i = hash(x+i):
         let a_i_var = DigestVar::new_input(ark_relations::ns!(cs, "a_i"), || Ok(self.a_i))?;
         a_i_var.enforce_equal(&calculated_a_i)?;
+
         // TODO: fermat primality
         // TODO : validate that what i calculated is what in fermat_circuit.
+
         let a_i_fpvar =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
                 Ok(ConstraintF::from_le_bytes_mod_order(
                     &a_i_var.to_bytes().unwrap().value().unwrap(),
                 ))
             })?;
+
         let n_var_fermat =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
                 Ok(self.fermat_circuit.n)
             })?;
+
+        // generate a_1,a_2,a_3 by doing : a_1 = hash(r || 1 ) ,a_2 = hash(r|| 2) ,...
+
         let is_prime_var_fermat =
             Boolean::new_witness(ark_relations::ns!(cs, "is_prime_var_fermat"), || {
                 Ok(self.fermat_circuit.is_prime)
@@ -246,7 +279,7 @@ mod tests {
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
         // r = hash(x + i || a_i = hash(x+i) || i )
         // create the randomnes:
-        let mut r_bytes: [u8; 32] = [0u8; 32];
+        let mut r_bytes = [0u8; 32];
         init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
         // convert r to Fr:
         let r = Fr::from_le_bytes_mod_order(&r_bytes);
