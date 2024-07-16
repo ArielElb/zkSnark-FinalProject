@@ -28,7 +28,7 @@ pub fn hash_to_bytes<ConstraintF: PrimeField>(
     let result = sha256_var.finalize().unwrap();
     result
 }
-pub fn generate_bases_native(x: BigUint) -> Vec<BigUint> {
+pub fn generate_bases_native(x: &BigUint) -> Vec<BigUint> {
     let mut a_j_s = vec![];
     for j in 0..K {
         let mut sha256 = Sha256::default();
@@ -51,7 +51,7 @@ pub fn generate_bases_native(x: BigUint) -> Vec<BigUint> {
 }
 pub fn generate_bases_a<ConstraintF: PrimeField>(
     cs: ConstraintSystemRef<ConstraintF>,
-    r: FpVar<ConstraintF>,
+    r: &FpVar<ConstraintF>,
 ) -> Vec<FpVar<ConstraintF>> {
     let mut a_j_s = vec![];
     for j in 0..K {
