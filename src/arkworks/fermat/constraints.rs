@@ -139,8 +139,6 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
     n: BigUint,
 ) -> fermat_circuit<ConstraintF> {
     let modpow_circuit = structInitializer::<ConstraintF>(a.clone(), n.clone() - 1u32, n.clone());
-
-
     return fermat_circuit {
         n: ConstraintF::from(n.clone()),
         a: ConstraintF::from(a.clone()),
