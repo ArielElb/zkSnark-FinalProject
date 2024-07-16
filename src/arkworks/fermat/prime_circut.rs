@@ -23,18 +23,19 @@ const NUM_BITS: usize = 381;
 const K: usize = 10;
 use super::constraints::{fermat_circuit, fermat_constructor};
 use super::modulo;
-use super::shatry;
+use itertools::Itertools;
+use sha2::{Digest, Sha256};
+
 use num_bigint::RandBigInt;
 // struct for Final circuit: PrimeCheck:
 #[derive(Clone)]
 pub struct PrimeCheck<ConstraintF: PrimeField> {
-    x: ConstraintF,      // a seed for the initial hash // public input
-    i: u64,              // the index i s.t we check if a_i=hash(x+i) is prime // public input
-    r: ConstraintF,      // randomness // public input - r = hash(x + i || a_i = hash(x+i) || i )
+    x: ConstraintF, // a seed for the initial hash // public input
+    i: u64,         // the index i s.t we check if a_i=hash(x+i) is prime // public input
+    // r: ConstraintF,      // randomness // public input - r = hash(x + i || a_i = hash(x+i) || i )
     a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input - to check that we actually calculated the hash correctly
     a_i: Vec<u8>,        // a_i = hash(x+i) // public input
     is_prime: bool,      // witness if the number is prime
-    // modpow_ver_circuit: Vec<modpow_ver_circuit<ConstraintF>>, // vector of modpow circuits for each modpow.
     fermat_circuit: fermat_circuit<ConstraintF>,
 }
 
@@ -72,7 +73,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
     ) -> Result<(), SynthesisError> {
         // create the public inputs:
         let x_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "x"), || Ok(self.x))?;
-        let r_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "r"), || Ok(self.r))?;
         // create the witness:
         let is_prime_var =
             Boolean::new_witness(ark_relations::ns!(cs, "is_prime"), || Ok(self.is_prime))?;
@@ -106,11 +106,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
                     &a_i_var.to_bytes().unwrap().value().unwrap(),
                 ))
             })?;
-        // create a witness from fermat_circuit:
-        let randomness_var_fermat = FpVar::<ConstraintF>::new_witness(
-            ark_relations::ns!(cs, "randomness_var_fermat"),
-            || Ok(self.fermat_circuit.a),
-        )?;
+
         let n_var_fermat =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
                 Ok(self.fermat_circuit.n)
@@ -120,9 +116,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
             Boolean::new_witness(ark_relations::ns!(cs, "is_prime_var_fermat"), || {
                 Ok(self.fermat_circuit.is_prime)
             })?;
-
-        // // enforce that the randomness is the same:
-        randomness_var_fermat.enforce_equal(&r_var)?;
         // // enforce that the n is the same:
         n_var_fermat.enforce_equal(&a_i_fpvar)?;
         // // enforce that the is_prime is the same:
@@ -139,12 +132,28 @@ fn is_prime(n: BigUint, r: [u8; 32]) -> bool {
     let mut rng: StdRng = rand::SeedableRng::from_seed(r);
     // now run for K times:
     for _ in 0..K {
-        let a = rng.gen_biguint_range(&BigUint::from(2u64), &n);
+        let a: BigUint = rng.gen_biguint_range(&BigUint::from(2u64), &n);
         if a.modpow(&(&n - 1u32), &n) != BigUint::from(1u32) {
             return false;
         }
     }
     return true;
+}
+/// Finalizes a native SHA256 struct and gets the bytes
+fn finalize(sha256: Sha256) -> Vec<u8> {
+    sha256.finalize().to_vec()
+}
+
+// function to create the randomness:
+fn init_randomness(randomness: &mut [u8; 32], x_plus_i_bytes: Vec<u8>, a_i: Vec<u8>, i: u64) {
+    let mut sha256 = Sha256::default();
+    sha256.update(&x_plus_i_bytes);
+    sha256.update(&a_i);
+    sha256.update(&i.to_le_bytes());
+    let r = finalize(sha256);
+    for (i, byte) in r.iter().enumerate() {
+        randomness[i] = *byte;
+    }
 }
 
 #[cfg(test)]
@@ -164,11 +173,6 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     use ark_groth16::Groth16;
-
-    /// Finalizes a native SHA256 struct and gets the bytes
-    fn finalize(sha256: Sha256) -> Vec<u8> {
-        sha256.finalize().to_vec()
-    }
 
     #[test]
     fn initial_procces() {
@@ -218,7 +222,6 @@ mod tests {
         let circuit = PrimeCheck {
             x,
             i,
-            r,
             a_j_s: a_j_s.clone(),
             a_i,
             is_prime: is_prime(a_i_biguint, r_bytes),
@@ -234,8 +237,7 @@ mod tests {
         let mut rng = ark_std::test_rng();
         let cs = ConstraintSystem::<Fr>::new_ref();
         let mut x = Fr::from(5u64);
-        let mut r_bytes = [0u8; 32];
-        rng.fill_bytes(&mut r_bytes);
+
         let a_i = [0u8; 32];
         let i: u64 = 2;
         // set it up using sha256 default:
@@ -259,14 +261,9 @@ mod tests {
         // convert a_i to biguint:
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
         // r = hash(x + i || a_i = hash(x+i) || i )
-        sha256.update(&x_plus_i_bytes);
-        sha256.update(&a_i);
-        sha256.update(&i.to_le_bytes());
-        let r = finalize(sha256.clone());
-        // take the 32 u8 from r:
-        for (i, byte) in r.iter().enumerate() {
-            r_bytes[i] = *byte;
-        }
+        // create the randomnes:
+        let mut r_bytes = [0u8; 32];
+        init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
         // convert r to Fr:
         let r = Fr::from_le_bytes_mod_order(&r_bytes);
         // create fermat circuit:
@@ -275,7 +272,6 @@ mod tests {
         let circuit = PrimeCheck {
             x,
             i,
-            r,
             a_j_s: a_j_s.clone(),
             a_i,
             is_prime: is_prime(a_i_biguint, r_bytes),
