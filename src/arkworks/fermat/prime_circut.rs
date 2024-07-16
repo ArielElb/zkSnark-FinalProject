@@ -19,13 +19,12 @@ use modulo::{mod_pow_generate_witnesses, mod_vals, return_struct};
 use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-const NUM_BITS: usize = 381;
-const K: usize = 10;
+
 use super::constraints::{fermat_circuit, fermat_constructor};
 use super::modulo;
 use itertools::Itertools;
 use sha2::{Digest, Sha256};
-
+const K: usize = 10;
 use num_bigint::RandBigInt;
 // struct for Final circuit: PrimeCheck:
 #[derive(Clone)]
@@ -205,15 +204,8 @@ mod tests {
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
 
         // r = hash(x + i || a_i = hash(x+i) || i )
-        sha256.update(&x_plus_i_bytes);
-        sha256.update(&a_i);
-        sha256.update(&i.to_le_bytes());
-        let r = finalize(sha256.clone());
-
-        // take the 32 u8 from r:
-        for (i, byte) in r.iter().enumerate() {
-            r_bytes[i] = *byte;
-        }
+        // create the randomnes:
+        init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
         // convert r to Fr:
         let r = Fr::from_le_bytes_mod_order(&r_bytes);
         // create fermat circuit:
@@ -234,11 +226,8 @@ mod tests {
 
     #[test]
     fn groth16() {
-        let mut rng = ark_std::test_rng();
-        let cs = ConstraintSystem::<Fr>::new_ref();
-        let mut x = Fr::from(5u64);
+        let x = Fr::from(5u64);
 
-        let a_i = [0u8; 32];
         let i: u64 = 2;
         // set it up using sha256 default:
         // create for each j in 0..i-1 the hash(x+j):
