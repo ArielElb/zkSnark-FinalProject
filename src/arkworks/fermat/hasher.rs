@@ -33,8 +33,8 @@ pub fn generate_bases_native(x: BigUint) -> Vec<BigUint> {
     let mut a_j_s = vec![];
     for j in 0..K {
         let mut sha256 = Sha256::default();
-        let x_fr = Fr::from(x);
-        let j_fr = Fr::from(j);
+        let x_fr = Fr::from(x.clone());
+        let j_fr = Fr::from(j as u64);
 
         let x_bytes = x_fr.into_bigint().to_bytes_le();
         let j_bytes = j_fr.into_bigint().to_bytes_le();
