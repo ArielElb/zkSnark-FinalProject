@@ -72,7 +72,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
     ) -> Result<(), SynthesisError> {
         // create the public inputs:
         let x_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "x"), || Ok(self.x))?;
-        let r_var = FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "r"), || Ok(self.r))?;
+        let r_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "r"), || Ok(self.r))?;
         // create the witness:
         let is_prime_var =
             Boolean::new_witness(ark_relations::ns!(cs, "is_prime"), || Ok(self.is_prime))?;

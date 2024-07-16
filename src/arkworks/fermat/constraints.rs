@@ -109,9 +109,9 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for fermat_circ
         cs: ConstraintSystemRef<ConstraintF>,
     ) -> Result<(), SynthesisError> {
         // let rng = rand::SeedableRng::from_seed(self.a.to_bytes());
-        let n = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.n))?;
+        let n = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.n))?;
         let a = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a))?;
-        let result = FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(self.result))?;
+        let result = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.result))?;
         let is_prime = Boolean::<ConstraintF>::new_witness(cs.clone(), || Ok(self.is_prime))?;
         let other_res =
             FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.modpow_ver_circuit.result))?;
