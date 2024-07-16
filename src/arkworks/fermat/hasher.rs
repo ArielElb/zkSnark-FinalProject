@@ -25,7 +25,6 @@ pub fn hash_to_bytes<ConstraintF: PrimeField>(
     let x_plus_j_bytes = x_plus_j.to_bytes().unwrap();
     // calculate the hash(x+j):
     sha256_var.update(&x_plus_j_bytes).unwrap();
-
     let result = sha256_var.finalize().unwrap();
     result
 }
@@ -34,7 +33,8 @@ pub fn generate_bases_native(x: BigUint) -> Vec<BigUint> {
     for j in 0..K {
         let mut sha256 = Sha256::default();
         let x_fr = Fr::from(x.clone());
-        let j_fr = Fr::from(j as u64);
+        let j_fr: ark_ff::Fp<ark_ff::MontBackend<ark_bls12_381::FrConfig, 4>, 4> =
+            Fr::from(j as u64);
 
         let x_bytes = x_fr.into_bigint().to_bytes_le();
         let j_bytes = j_fr.into_bigint().to_bytes_le();
@@ -44,6 +44,7 @@ pub fn generate_bases_native(x: BigUint) -> Vec<BigUint> {
         let a_j = finalize(sha256.clone()); // hash(x || j)
                                             // convert a_j to BigUint:
         let a_j = BigUint::from_bytes_le(&a_j);
+
         a_j_s.push(a_j);
     }
     a_j_s
