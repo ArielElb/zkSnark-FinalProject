@@ -1,0 +1,78 @@
+/* styles/InformationPage.module.css */
+.container {
+    min-height: 100vh;
+    padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #1a1a1a; /* Dark but not black background */
+  }
+  
+  .main {
+    padding: 5rem 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+  }
+  
+  .title {
+    margin: 0;
+    margin-top: 20px; /* Adjust the value as needed */
+    line-height: 1.15;
+    font-size: 4rem;
+    color: #0000ff;
+  }
+  
+  .subtitle {
+    margin: 1rem 0;
+    font-size: 2rem;
+    color: white;
+  }
+  
+  .description {
+    margin: 1rem 0;
+    font-size: 1.25rem;
+    text-align: center;
+    max-width: 800px;
+  }
+  
+  .imageContainer {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2rem;
+  }
+  
+  .imageRow {
+    display: flex;
+    justify-content: space-between; /* Adjust to justify content to the ends */
+    width: 100%;
+    margin-bottom: 3rem; /* Increased bottom margin */
+  }
+  
+  .image {
+    width: 45%; /* Slightly reduced width to accommodate larger margins */
+    height: auto;
+    border-radius: 8px;
+  }
+  .topRightButton {
+    position: fixed; /* מקבע את הכפתור כך שיהיה תמיד במקום הזה במסך */
+    top: 60px; /* מרחק של 10 פיקסלים מהחלק העליון של המסך */
+    right: 10px; /* מרחק של 10 פיקסלים מהצד הימני של המסך */
+    padding: 10px 20px; /* ריפוד בתוך הכפתור */
+    font-size: 16px; /* גודל הטקסט */
+    background-color: #0070f3; /* צבע רקע */
+    color: white; /* צבע הטקסט */
+    border: none; /* ללא גבול */
+    border-radius: 4px; /* פינות מעוגלות */
+    cursor: pointer; /* מצביע עכבר בצורת יד */
+  }
+  
+  .topRightButton:hover {
+    background-color: #005bb5; /* צבע רקע כשמעבירים את העכבר מעל הכפתור */
+  }
