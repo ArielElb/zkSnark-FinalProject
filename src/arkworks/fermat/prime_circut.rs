@@ -246,7 +246,7 @@ mod tests {
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
         // r = hash(x + i || a_i = hash(x+i) || i )
         // create the randomnes:
-        let mut r_bytes = [0u8; 32];
+        let mut r_bytes: [u8; 32] = [0u8; 32];
         init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
         // convert r to Fr:
         let r = Fr::from_le_bytes_mod_order(&r_bytes);
