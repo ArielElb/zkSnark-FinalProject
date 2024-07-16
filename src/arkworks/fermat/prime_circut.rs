@@ -95,22 +95,18 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // enforce that a_i = hash(x+i):
         let a_i_var = DigestVar::new_input(ark_relations::ns!(cs, "a_i"), || Ok(self.a_i))?;
         a_i_var.enforce_equal(&calculated_a_i)?;
-
         // TODO: fermat primality
         // TODO : validate that what i calculated is what in fermat_circuit.
-
         let a_i_fpvar =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
                 Ok(ConstraintF::from_le_bytes_mod_order(
                     &a_i_var.to_bytes().unwrap().value().unwrap(),
                 ))
             })?;
-
         let n_var_fermat =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
                 Ok(self.fermat_circuit.n)
             })?;
-
         let is_prime_var_fermat =
             Boolean::new_witness(ark_relations::ns!(cs, "is_prime_var_fermat"), || {
                 Ok(self.fermat_circuit.is_prime)
@@ -202,7 +198,6 @@ mod tests {
         let a_i = finalize(sha256.clone());
         // convert a_i to biguint:
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
-
         // r = hash(x + i || a_i = hash(x+i) || i )
         // create the randomnes:
         init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
