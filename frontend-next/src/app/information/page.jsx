@@ -15,10 +15,10 @@ const InformationPage = ({ searchParams }) => {
         <h1 className={styles.title}>information about {searchParams.type}</h1>
         {searchParams.type=="Prime number"&& //explain about prime
         <p className={styles.description}>
-         explain about prime
-         Our project is a Proof of Concept (PoC) for implementing zero-knowledge proofs (zkProofs) using the SP1 framework and arkworks.rs. 
-          We are demonstrating zkProofs for various computational tasks, including primality tests, matrix multiplication, and Fibonacci sequence computation. 
-          Our project leverages zkProofs to ensure the integrity and efficiency of computations while holding the Zero-Knowledge property.
+        In cryptography, there are many scenarios where we use prime numbers.
+        These prime numbers need to be mutually agreed upon by both parties involved. 
+        We do not want the client to compute the prime number on their own. Conversely, we do not want the server to have full control over the selection of the prime number. <br></br> <br></br>
+        with zk proof we can use the server to work on checking if the number is a prime number and the client will need only to verify it.
         </p>}
         {searchParams.type=="fibonachi number"&& //explain about fibonachi number
         <p className={styles.description}>
