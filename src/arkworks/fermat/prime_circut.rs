@@ -21,7 +21,7 @@ use rand::rngs::StdRng;
 use rand::SeedableRng;
 
 use super::constraints::{fermat_circuit, fermat_constructor};
-use super::hasher::hash_to_bytes;
+use super::hasher::{finalize, hash_to_bytes};
 use super::modulo;
 use itertools::Itertools;
 use sha2::{Digest, Sha256};
@@ -115,10 +115,6 @@ fn is_prime(n: BigUint, r: [u8; 32]) -> bool {
         }
     }
     return true;
-}
-/// Finalizes a native SHA256 struct and gets the bytes
-fn finalize(sha256: Sha256) -> Vec<u8> {
-    sha256.finalize().to_vec()
 }
 
 // function to create the randomness:
