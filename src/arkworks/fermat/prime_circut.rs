@@ -52,6 +52,18 @@ fn hash_using_fpvar<ConstraintF: PrimeField>(
     let calculated_a_i: DigestVar<ConstraintF> = sha256_var.finalize().unwrap();
     calculated_a_i.value().unwrap().to_vec()
 }
+
+// hash to bytes:
+fn hash_to_bytes<ConstraintF: PrimeField>(x_plus_j: FpVar<ConstraintF>) -> DigestVar<ConstraintF> {
+    let mut sha256_var = Sha256Gadget::default();
+    // convert x_plus_j to bytes:
+    let x_plus_j_bytes = x_plus_j.to_bytes().unwrap();
+    // calculate the hash(x+j):
+    sha256_var.update(&x_plus_j_bytes).unwrap();
+
+    let result = sha256_var.finalize().unwrap();
+    result
+}
 // implement the constraints for the circuit:
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<ConstraintF> {
     fn generate_constraints(
@@ -60,38 +72,27 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
     ) -> Result<(), SynthesisError> {
         // create the public inputs:
         let x_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "x"), || Ok(self.x))?;
-        let i_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "i"), || {
-            Ok(ConstraintF::from(self.i))
-        })?;
         let r_var = FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "r"), || Ok(self.r))?;
         // create the witness:
         let is_prime_var =
             Boolean::new_witness(ark_relations::ns!(cs, "is_prime"), || Ok(self.is_prime))?;
         // for each j in 0..i-1:
         for j in 0..self.i {
-            let mut sha256_var = Sha256Gadget::default();
             // compute x+j:
-            let x_plus_j = x_var.clone() + FpVar::<ConstraintF>::constant(ConstraintF::from(j)); // x+j
-                                                                                                 // convert x_plus_j to bytes:
-            let x_plus_j_bytes = x_plus_j.to_bytes().unwrap(); // x+j as bytes to le
-                                                               // calculate the hash(x+j):
-            sha256_var.update(&x_plus_j_bytes).unwrap();
-            let calculated_a_j = sha256_var.clone().finalize().unwrap(); // hash(x+j)
-                                                                         // enforce that a_j = hash(x+j):
-            let a_j_var = DigestVar::new_input(ark_relations::ns!(cs, "a_j"), || {
-                Ok(self.a_j_s[j as usize].clone())
-            })?;
+            let x_plus_j = &x_var + FpVar::<ConstraintF>::constant(ConstraintF::from(j)); // x+j
+            let calculated_a_j = hash_to_bytes(x_plus_j);
+            // enforce that a_j = hash(x+j):
+            let a_j_var =
+                DigestVar::new_input(
+                    ark_relations::ns!(cs, "a_j"),
+                    || Ok(&self.a_j_s[j as usize]),
+                )?;
             a_j_var.enforce_equal(&calculated_a_j)?;
         }
-        let mut sha256_var = Sha256Gadget::default();
         // compute x+i:
-        let x_plus_i = x_var.clone() + FpVar::<ConstraintF>::constant(ConstraintF::from(self.i));
-        // convert x_plus_i to bytes:
-        let x_plus_i_bytes = x_plus_i.to_bytes().unwrap();
-
+        let x_plus_i = x_var + FpVar::<ConstraintF>::constant(ConstraintF::from(self.i));
         // calculate the hash(x+i):
-        sha256_var.update(&x_plus_i_bytes).unwrap();
-        let calculated_a_i: DigestVar<ConstraintF> = sha256_var.finalize().unwrap();
+        let calculated_a_i: DigestVar<ConstraintF> = hash_to_bytes(x_plus_i);
         // enforce that a_i = hash(x+i):
         let a_i_var = DigestVar::new_input(ark_relations::ns!(cs, "a_i"), || Ok(self.a_i))?;
         a_i_var.enforce_equal(&calculated_a_i)?;
