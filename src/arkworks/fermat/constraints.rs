@@ -19,7 +19,7 @@ use rand::SeedableRng;
 use std::ops::AddAssign;
 use std::{char::from_u32, ops::MulAssign};
 const NUM_BITS: usize = 381;
-const k:usize = 10;
+const k:usize = 2;
 use super::hasher::generate_bases_a;
 use super::hasher::generate_bases_native;
 use super::modpow_circut::structInitializer;

@@ -25,7 +25,7 @@ use super::hasher::{finalize, hash_to_bytes};
 use super::modulo;
 use itertools::Itertools;
 use sha2::{Digest, Sha256};
-const K: usize = 10;
+const K: usize = 2;
 use num_bigint::RandBigInt;
 // struct for Final circuit: PrimeCheck:
 #[derive(Clone)]
