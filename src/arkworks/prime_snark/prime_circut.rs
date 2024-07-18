@@ -20,7 +20,7 @@ use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 
-use super::fermat_circut::{FermatCircuit, fermat_constructor};
+use super::fermat_circut::FermatCircuit;
 use super::hasher::{finalize, hash_to_bytes};
 use super::modulo;
 use itertools::Itertools;
@@ -131,6 +131,8 @@ fn init_randomness(randomness: &mut [u8; 32], x_plus_i_bytes: Vec<u8>, a_i: Vec<
 
 #[cfg(test)]
 mod tests {
+    use crate::arkworks::prime_snark::fermat_circut::fermat_constructor;
+
     use super::*;
     use ark_bls12_381::{Bls12_381, Fr};
     use ark_ff::{BigInt, BigInteger};

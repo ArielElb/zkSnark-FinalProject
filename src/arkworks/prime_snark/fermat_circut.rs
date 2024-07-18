@@ -1,5 +1,5 @@
-use crate::arkworks::fermat::modpow_circut::{mod_witnesses, modpow_ver_circuit};
-use modulo::{mod_pow_generate_witnesses, mod_vals, return_struct};
+use crate::arkworks::prime_snark::modpow_circut::{ModWitnesses, ModpowVerCircuit};
+use modulo::{mod_pow_generate_witnesses, ModVals, ReturnStruct};
 
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_crypto_primitives::sponge::DuplexSpongeMode;
@@ -19,20 +19,20 @@ use rand::SeedableRng;
 use std::ops::AddAssign;
 use std::{char::from_u32, ops::MulAssign};
 const NUM_BITS: usize = 381;
-const k:usize = 2;
+const k: usize = 2;
 use super::hasher::generate_bases_a;
 use super::hasher::generate_bases_native;
-use super::modpow_circut::structInitializer;
+use super::modpow_circut::struct_initializer;
 use super::modulo;
 
 // struct for fermat circuit:
 #[derive(Clone)]
-pub struct fermat_circuit<ConstraintF: PrimeField> {
+pub struct FermatCircuit<ConstraintF: PrimeField> {
     pub n: ConstraintF,
-    pub a: ConstraintF,  // randomness
+    pub a: ConstraintF,        // randomness
     results: Vec<ConstraintF>, // result of the modpow
-    pub is_prime: bool,  // witness if the number is prime
-    modpow_ver_circuits: Vec<modpow_ver_circuit<ConstraintF>>,
+    pub is_prime: bool,        // witness if the number is prime
+    modpow_ver_circuits: Vec<ModpowVerCircuit<ConstraintF>>,
 }
 
 fn check_bits_is_exp<ConstraintF: PrimeField>(
@@ -55,7 +55,7 @@ fn check_bits_is_exp<ConstraintF: PrimeField>(
 // function that get modpow_ver_circuit and create the constraints for  modpow
 fn modpow<ConstraintF: PrimeField>(
     cs: ConstraintSystemRef<ConstraintF>,
-    modpow_ver_circuit: &modpow_ver_circuit<ConstraintF>,
+    modpow_ver_circuit: &ModpowVerCircuit<ConstraintF>,
     base: &FpVar<ConstraintF>,
     divisor: &FpVar<ConstraintF>,
     exp: FpVar<ConstraintF>,
@@ -106,7 +106,7 @@ fn modpow<ConstraintF: PrimeField>(
 }
 
 // implement the constraints for the fermat circuit:
-impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for fermat_circuit<ConstraintF> {
+impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for FermatCircuit<ConstraintF> {
     fn generate_constraints(
         self,
         cs: ConstraintSystemRef<ConstraintF>,
@@ -115,11 +115,12 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for fermat_circ
         let a = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a))?;
         let bases = generate_bases_a(cs.clone(), &a);
         let one = FpVar::<ConstraintF>::constant(ConstraintF::one());
-        for i in 0..k{
+        for i in 0..k {
             let result = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.results[i]))?;
             let is_prime = Boolean::<ConstraintF>::new_witness(cs.clone(), || Ok(self.is_prime))?;
-            let other_res =
-                FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.modpow_ver_circuits[i].result))?;
+            let other_res = FpVar::<ConstraintF>::new_witness(cs.clone(), || {
+                Ok(self.modpow_ver_circuits[i].result)
+            })?;
             let modpow_ver_circuit = self.modpow_ver_circuits[i].clone();
             result.enforce_equal(&other_res)?;
             let n_minus_one = n.clone() - FpVar::<ConstraintF>::constant(ConstraintF::one());
@@ -128,14 +129,14 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for fermat_circ
                 .is_eq(&one)?
                 .conditional_enforce_equal(&is_prime, &Boolean::constant(true))?;
         }
- // result == 1 => is_prime
+        // result == 1 => is_prime
         Ok(())
     }
 }
-fn Fermat_test(a: &BigUint, p: &BigUint) -> bool {
+fn fermat_test(a: &BigUint, p: &BigUint) -> bool {
     let one_val = BigUint::from(1u32);
     let bases = generate_bases_native(a);
-    for i in 0..k{
+    for i in 0..k {
         if bases[i].modpow(&(p - &one_val), p) == one_val {
             return true;
         }
@@ -146,17 +147,18 @@ fn Fermat_test(a: &BigUint, p: &BigUint) -> bool {
 pub fn fermat_constructor<ConstraintF: PrimeField>(
     a: BigUint,
     n: BigUint,
-) -> fermat_circuit<ConstraintF> {
-    let modpow_circuit = structInitializer::<ConstraintF>(a.clone(), n.clone() - 1u32, n.clone());
-    let mut circuits = vec![modpow_circuit;k];
-    let mut results = vec![ConstraintF::from(0u8);k];
+) -> FermatCircuit<ConstraintF> {
+    let modpow_circuit = struct_initializer::<ConstraintF>(a.clone(), n.clone() - 1u32, n.clone());
+    let mut circuits = vec![modpow_circuit; k];
+    let mut results = vec![ConstraintF::from(0u8); k];
     let bases = generate_bases_native(&a);
-    for i in 0..k{
-        circuits[i] = structInitializer::<ConstraintF>(bases[i].clone(), n.clone() - 1u32, n.clone());
-        results[i]=circuits[i].result.clone();
+    for i in 0..k {
+        circuits[i] =
+            struct_initializer::<ConstraintF>(bases[i].clone(), n.clone() - 1u32, n.clone());
+        results[i] = circuits[i].result.clone();
     }
-    return fermat_circuit {
-        is_prime: Fermat_test(&a, &n),
+    return FermatCircuit {
+        is_prime: fermat_test(&a, &n),
         n: ConstraintF::from(n),
         a: ConstraintF::from(a),
         results: results,
@@ -168,8 +170,8 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::arkworks::fermat::modpow_circut::bits_vector_convertor;
-    use crate::arkworks::fermat::modpow_circut::vector_convertor;
+    use crate::arkworks::prime_snark::modpow_circut::bits_vector_convertor;
+    use crate::arkworks::prime_snark::modpow_circut::vector_convertor;
     use ark_relations::r1cs::ConstraintSystem;
     use ark_relations::r1cs::ConstraintSystemRef;
     use ark_relations::r1cs::SynthesisError;
