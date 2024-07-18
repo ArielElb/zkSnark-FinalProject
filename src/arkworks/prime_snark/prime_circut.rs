@@ -35,7 +35,6 @@ pub struct PrimeCheck<ConstraintF: PrimeField> {
     // r: ConstraintF,      // randomness // public input - r = hash(x + i || a_i = hash(x+i) || i )
     a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input - to check that we actually calculated the hash correctly
     a_i: Vec<u8>,        // a_i = hash(x+i) // public input
-    is_prime: bool,      // witness if the number is prime
     fermat_circuit: FermatCircuit<ConstraintF>,
 }
 
@@ -47,10 +46,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
     ) -> Result<(), SynthesisError> {
         // create the public inputs:
         let x_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "x"), || Ok(self.x))?;
-
-        // create the witness:
-        let is_prime_var =
-            Boolean::new_witness(ark_relations::ns!(cs, "is_prime"), || Ok(self.is_prime))?;
         // for each j in 0..i-1:
         for j in 0..self.i {
             // compute x+j:
@@ -96,7 +91,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // // enforce that the n is the same:
         n_var_fermat.enforce_equal(&a_i_fpvar)?;
         // // enforce that the is_prime is the same:
-        is_prime_var_fermat.enforce_equal(&is_prime_var)?;
         // In the end create the constraints for the fermat circuit:
         self.fermat_circuit
             .generate_constraints(cs.clone())
@@ -242,7 +236,6 @@ mod tests {
             i,
             a_j_s: a_j_s.clone(),
             a_i,
-            is_prime: is_prime(a_i_biguint, r_bytes),
             fermat_circuit,
         };
         // rng:
