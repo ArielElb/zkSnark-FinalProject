@@ -15,6 +15,7 @@ const InformationPage = ({ searchParams }) => {
           back to verify
         </button>
         <h1 className={styles.title}>information about {searchParams.type}</h1>
+
         {searchParams.type == "Prime number" && ( //explain about prime
           <p className={styles.description}>
             In cryptography, there are many scenarios where we use prime numbers. These
@@ -222,43 +223,41 @@ const InformationPage = ({ searchParams }) => {
             </p>
           </div>
         )}
+        {searchParams.type=="Prime number"&& //explain about prime
+       
+       <div className={styles.imageContainer}>
+          
+       <div className={styles.imageRow}>
+         <img src="/logo.jpg" alt="Image 1" className={styles.image} />
+         <img src="/logo.jpg" alt="Image 2" className={styles.image} />
+       </div>
+       <div className={styles.imageRow}>
+         <img src="/logo.jpg" alt="Image 3" className={styles.image} />
+         <img src="/logo.jpg" alt="Image 4" className={styles.image} />
+       </div>
+     </div>}
+        {searchParams.type=="fibonachi number"&& //explain about fibonachi number
+      
+      <div className={styles.imageContainer}>
+          
+      <div className={styles.imageRow}>
+        <img src="/fib_1.png" alt="Image 1" className={styles.image} />
+        <img src="/fib_2.png" alt="Image 2" className={styles.image} />
+      </div>
+    </div>}
+        {searchParams.type=="matrix multification"&& //explain about matrix multification
+     
+        <div className={styles.imageContainer}>
+              
+        <div className={styles.imageRow}>
+          <img src="/matrixGraph1.png" alt="Image 1" className={styles.image} />
+          <img src="/matrixGraph2.png" alt="Image 2" className={styles.image} />
+        </div>
+        <div className={styles.imageRow}>
+          <img src="/matrixGraph3.png" alt="Image 3" className={styles.image} />
+        </div>
+        </div>}
 
-        {searchParams.type == "Prime number" && ( //explain about prime
-          <div className={styles.imageContainer}>
-            <div className={styles.imageRow}>
-              <img src='/logo.jpg' alt='Image 1' className={styles.image} />
-              <img src='/logo.jpg' alt='Image 2' className={styles.image} />
-            </div>
-            <div className={styles.imageRow}>
-              <img src='/logo.jpg' alt='Image 3' className={styles.image} />
-              <img src='/logo.jpg' alt='Image 4' className={styles.image} />
-            </div>
-          </div>
-        )}
-        {searchParams.type == "fibonachi number" && ( //explain about fibonachi number
-          <div className={styles.imageContainer}>
-            <div className={styles.imageRow}>
-              <img src='/logo.jpg' alt='Image 1' className={styles.image} />
-              <img src='/logo.jpg' alt='Image 2' className={styles.image} />
-            </div>
-            <div className={styles.imageRow}>
-              <img src='/logo.jpg' alt='Image 3' className={styles.image} />
-              <img src='/logo.jpg' alt='Image 4' className={styles.image} />
-            </div>
-          </div>
-        )}
-        {searchParams.type == "matrix multification" && ( //explain about matrix multification
-          <div className={styles.imageContainer}>
-            <div className={styles.imageRow}>
-              <img src='/logo.jpg' alt='Image 1' className={styles.image} />
-              <img src='/logo.jpg' alt='Image 2' className={styles.image} />
-            </div>
-            <div className={styles.imageRow}>
-              <img src='/logo.jpg' alt='Image 3' className={styles.image} />
-              <img src='/logo.jpg' alt='Image 4' className={styles.image} />
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );
