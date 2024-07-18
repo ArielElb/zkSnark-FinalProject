@@ -1,4 +1,4 @@
-use super::prime_circut::K;
+use super::constants::K;
 use ark_bls12_381::Fr;
 use ark_crypto_primitives::crh::sha256::constraints::{DigestVar, Sha256Gadget};
 use ark_ff::BigInteger;

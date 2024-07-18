@@ -20,23 +20,22 @@ use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 
+use super::constants;
 use super::fermat_circut::FermatCircuit;
 use super::hasher::{finalize, hash_to_bytes};
 use super::modulo;
 use itertools::Itertools;
 use sha2::{Digest, Sha256};
-use super::constants;
-const K: usize = constants::k;
+const K: usize = constants::K;
 use num_bigint::RandBigInt;
 // struct for Final circuit: PrimeCheck:
 #[derive(Clone)]
 pub struct PrimeCheck<ConstraintF: PrimeField> {
-    x: ConstraintF, // a seed for the initial hash // public input
-    i: u64,         // the index i s.t we check if a_i=hash(x+i) is prime // public input
-    // r: ConstraintF,      // randomness // public input - r = hash(x + i || a_i = hash(x+i) || i )
+    x: ConstraintF,      // a seed for the initial hash // public input
+    i: u64,              // the index i s.t we check if a_i=hash(x+i) is prime // public input
     a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input - to check that we actually calculated the hash correctly
     a_i: Vec<u8>,        // a_i = hash(x+i) // public input
-    fermat_circuit: FermatCircuit<ConstraintF>,
+    fermat_circuit: FermatCircuit<ConstraintF>, // The randomness is inside this struct
 }
 
 // implement the constraints for the circuit:
@@ -85,11 +84,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
 
         // generate a_1,a_2,a_3 by doing : a_1 = hash(r || 1 ) ,a_2 = hash(r|| 2) ,...
 
-        let is_prime_var_fermat =
-            Boolean::new_witness(ark_relations::ns!(cs, "is_prime_var_fermat"), || {
-                Ok(self.fermat_circuit.is_prime)
-            })?;
-        // // enforce that the n is the same:
         n_var_fermat.enforce_equal(&a_i_fpvar)?;
         // // enforce that the is_prime is the same:
         // In the end create the constraints for the fermat circuit:
@@ -188,7 +182,7 @@ mod tests {
             i,
             a_j_s: a_j_s.clone(),
             a_i,
-            is_prime: is_prime(a_i_biguint, r_bytes),
+
             fermat_circuit,
         };
         circuit.generate_constraints(cs.clone()).unwrap();

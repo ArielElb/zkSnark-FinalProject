@@ -1,6 +1,7 @@
 use crate::arkworks::prime_snark::modpow_circut::{ModWitnesses, ModpowVerCircuit};
 use modulo::{mod_pow_generate_witnesses, ModVals, ReturnStruct};
 
+use super::constants;
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_crypto_primitives::sponge::DuplexSpongeMode;
 use ark_ff::{Field, PrimeField};
@@ -18,8 +19,7 @@ use rand::rngs::StdRng;
 use rand::SeedableRng;
 use std::ops::AddAssign;
 use std::{char::from_u32, ops::MulAssign};
-use super::constants;
-const k: usize = constants::k;
+const K: usize = constants::K;
 const NUM_BITS: usize = constants::NUM_BITS;
 use super::hasher::generate_bases_a;
 use super::hasher::generate_bases_native;
@@ -116,7 +116,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for FermatCircu
         let a = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a))?;
         let bases = generate_bases_a(cs.clone(), &a);
         let one = FpVar::<ConstraintF>::constant(ConstraintF::one());
-        for i in 0..k {
+        for i in 0..K {
             let result = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.results[i]))?;
             let is_prime = Boolean::<ConstraintF>::new_witness(cs.clone(), || Ok(self.is_prime))?;
             let other_res = FpVar::<ConstraintF>::new_witness(cs.clone(), || {
@@ -137,7 +137,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for FermatCircu
 fn fermat_test(a: &BigUint, p: &BigUint) -> bool {
     let one_val = BigUint::from(1u32);
     let bases = generate_bases_native(a);
-    for i in 0..k {
+    for i in 0..K {
         if bases[i].modpow(&(p - &one_val), p) == one_val {
             return true;
         }
@@ -150,10 +150,10 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
     n: BigUint,
 ) -> FermatCircuit<ConstraintF> {
     let modpow_circuit = struct_initializer::<ConstraintF>(a.clone(), n.clone() - 1u32, n.clone());
-    let mut circuits = vec![modpow_circuit; k];
-    let mut results = vec![ConstraintF::from(0u8); k];
+    let mut circuits = vec![modpow_circuit; K];
+    let mut results = vec![ConstraintF::from(0u8); K];
     let bases = generate_bases_native(&a);
-    for i in 0..k {
+    for i in 0..K {
         circuits[i] =
             struct_initializer::<ConstraintF>(bases[i].clone(), n.clone() - 1u32, n.clone());
         results[i] = circuits[i].result.clone();

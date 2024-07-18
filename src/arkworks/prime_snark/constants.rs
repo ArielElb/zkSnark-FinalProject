@@ -1,2 +1,2 @@
-pub const k:usize = 1;
-pub const NUM_BITS:usize = 381;
+pub const K: usize = 1;
+pub const NUM_BITS: usize = 381;
