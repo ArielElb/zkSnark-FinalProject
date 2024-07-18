@@ -126,7 +126,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for FermatCircu
         Ok(())
     }
 }
-fn Fermat_test(a: BigUint, p: BigUint) -> bool {
+fn fermat_test(a: BigUint, p: BigUint) -> bool {
     let one_val = BigUint::from(1u32);
     if a.modpow(&(&p - &one_val), &p) == one_val {
         return true;
@@ -143,7 +143,7 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
     return FermatCircuit {
         n: ConstraintF::from(n.clone()),
         a: ConstraintF::from(a.clone()),
-        is_prime: Fermat_test(a, n),
+        is_prime: fermat_test(a, n),
         result: modpow_circuit.result.clone(),
         modpow_ver_circuit: modpow_circuit,
     };
