@@ -15,8 +15,8 @@ use std::{char::from_u32, ops::MulAssign};
 use super::modulo::mod_pow_generate_witnesses;
 use super::modulo::ModVals;
 use super::modulo::ReturnStruct;
-const NUM_BITS: usize = 381;
-
+use super::constants;
+const NUM_BITS: usize = constants::NUM_BITS;
 #[derive(Clone)]
 pub struct ModWitnesses<ConstraintF: PrimeField> {
     pub n: ConstraintF,
