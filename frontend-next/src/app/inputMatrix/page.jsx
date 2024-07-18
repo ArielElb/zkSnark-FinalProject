@@ -12,12 +12,15 @@ const InputMatrixPage = () => {
   const [savedMatrix1, setSavedMatrix1] = useState(matrix1);
   const [savedMatrix2, setSavedMatrix2] = useState(matrix2);
   const [currentOption, setCurrentOption] = useState("prove");
-  const [hashes, setHashes] = useState({ hash_a: "", hash_b: "", hash_c: "" });
   const [verifyHashes, setVerifyHashes] = useState({
     hash_a: "",
     hash_b: "",
     hash_c: "",
   });
+  const [verifyHashA,setVerifyHashA]=useState("");
+  const [verifyHashB,setVerifyHashB]=useState("");
+  const [verifyHashC,setVerifyHashC]=useState("");
+  const [hashes, setHashes] = useState({ hash_a: "", hash_b: "", hash_c: "" });
   const [verifyResult, setVerifyResult] = useState("");
   const [verifyingTime, setVerifyingTime] = useState("");
   const [isLoadingProof, setIsLoadingProof] = useState(false);
@@ -101,6 +104,10 @@ const InputMatrixPage = () => {
         localStorage.setItem("proof", JSON.stringify(proof));
         localStorage.setItem("pvk", JSON.stringify(pvk));
         setHashes({ hash_a, hash_b, hash_c });
+        localStorage.setItem("hash_a", JSON.stringify(hash_a));
+        localStorage.setItem("hash_b", JSON.stringify(hash_b));
+        localStorage.setItem("hash_c", JSON.stringify(hash_c));
+
         setSetupTime(setup_time);
         setProvingTime(proving_time);
         setNumConstraints(num_constraints);
@@ -121,11 +128,11 @@ const InputMatrixPage = () => {
     const requestData = {
       pvk,
       proof,
-      hash_a: verifyHashes.hash_a,
-      hash_b: verifyHashes.hash_b,
-      hash_c: verifyHashes.hash_c,
+      hash_a: verifyHashA,
+      hash_b: verifyHashB,
+      hash_c: verifyHashC,
     };
-
+    console.log(requestData);
     setIsLoadingVerify(true);
     axios
       .post("http://127.0.0.1:8080/api/matrix_prove/verify", requestData)
@@ -189,7 +196,17 @@ const InputMatrixPage = () => {
           Prove
         </button>
         <button
-          onClick={() => setCurrentOption("verify")}
+          onClick={() => {setCurrentOption("verify");
+          if (localStorage.getItem("hash_a")) {
+          setVerifyHashA(JSON.parse(localStorage.getItem("hash_a")));
+            }
+            if (localStorage.getItem("hash_b")) {
+              setVerifyHashB(JSON.parse(localStorage.getItem("hash_b")));
+                }
+                if (localStorage.getItem("hash_c")) {
+                  setVerifyHashC(JSON.parse(localStorage.getItem("hash_c")));
+                    }
+          }}
           className={currentOption === "verify" ? styles.activeButton : ""}
         >
           Verify
@@ -234,15 +251,16 @@ const InputMatrixPage = () => {
       )}
 
       {currentOption === "verify" && (
+        
         <div className={styles.option2Container}>
           <h1 className={styles.title}>Verify Proof</h1>
           <label className={styles.label}>
             Enter Hash A:
             <input
               type='text'
-              value={verifyHashes.hash_a}
+              value={JSON.parse(localStorage.getItem("hash_a"))}
               onChange={(e) =>
-                setVerifyHashes({ ...verifyHashes, hash_a: e.target.value })
+                setVerifyHashA( e.target.value )
               }
               className={styles.inputBox}
             />
@@ -251,9 +269,9 @@ const InputMatrixPage = () => {
             Enter Hash B:
             <input
               type='text'
-              value={verifyHashes.hash_b}
+              value={JSON.parse(localStorage.getItem("hash_b"))}
               onChange={(e) =>
-                setVerifyHashes({ ...verifyHashes, hash_b: e.target.value })
+                setVerifyHashB( e.target.value )
               }
               className={styles.inputBox}
             />
@@ -262,9 +280,9 @@ const InputMatrixPage = () => {
             Enter Hash C:
             <input
               type='text'
-              value={verifyHashes.hash_c}
+              value={JSON.parse(localStorage.getItem("hash_c"))}
               onChange={(e) =>
-                setVerifyHashes({ ...verifyHashes, hash_c: e.target.value })
+                setVerifyHashC( e.target.value )
               }
               className={styles.inputBox}
             />
