@@ -1,7 +1,5 @@
 use ark_bls12_381::{Bls12_381, Fr};
-use ark_crypto_primitives::sponge::DuplexSpongeMode;
 use ark_ff::{Field, PrimeField};
-use ark_r1cs_std::boolean::Boolean;
 use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_r1cs_std::select::CondSelectGadget;
@@ -15,42 +13,42 @@ use std::str::FromStr;
 use std::{char::from_u32, ops::MulAssign};
 
 use super::modulo::mod_pow_generate_witnesses;
-use super::modulo::mod_vals;
-use super::modulo::return_struct;
+use super::modulo::ModVals;
+use super::modulo::ReturnStruct;
 const NUM_BITS: usize = 381;
 
 #[derive(Clone)]
-pub struct mod_witnesses<ConstraintF: PrimeField> {
+pub struct ModWitnesses<ConstraintF: PrimeField> {
     pub n: ConstraintF,
     pub q: ConstraintF,
     pub remainder: ConstraintF,
 }
 #[derive(Clone)]
-pub struct modpow_ver_circuit<ConstraintF: PrimeField> {
+pub struct ModpowVerCircuit<ConstraintF: PrimeField> {
     pub base: ConstraintF,
     pub exponent: ConstraintF,
     pub result: ConstraintF,
     pub divisor: ConstraintF,
-    pub modulo_witnesses: Vec<mod_witnesses<ConstraintF>>,
-    pub modulo_of_pow_witnesses: Vec<mod_witnesses<ConstraintF>>,
+    pub modulo_witnesses: Vec<ModWitnesses<ConstraintF>>,
+    pub modulo_of_pow_witnesses: Vec<ModWitnesses<ConstraintF>>,
     pub bits: Vec<ConstraintF>,
 }
-pub fn modVals_to_modWitness<ConstraintF: PrimeField>(
-    modVal: mod_vals,
-) -> mod_witnesses<ConstraintF> {
-    let witness = mod_witnesses {
-        n: ConstraintF::from(modVal.num),
-        q: ConstraintF::from(modVal.q),
-        remainder: ConstraintF::from(modVal.remainder),
+pub fn mod_vals_to_mod_witness<ConstraintF: PrimeField>(
+    mod_val: ModVals,
+) -> ModWitnesses<ConstraintF> {
+    let witness = ModWitnesses {
+        n: ConstraintF::from(mod_val.num),
+        q: ConstraintF::from(mod_val.q),
+        remainder: ConstraintF::from(mod_val.remainder),
     };
     return witness;
 }
 pub fn vector_convertor<ConstraintF: PrimeField>(
-    mod_vals: Vec<mod_vals>,
-) -> Vec<mod_witnesses<ConstraintF>> {
-    let vec_wits: Vec<mod_witnesses<ConstraintF>> = mod_vals
+    mod_vals: Vec<ModVals>,
+) -> Vec<ModWitnesses<ConstraintF>> {
+    let vec_wits: Vec<ModWitnesses<ConstraintF>> = mod_vals
         .iter()
-        .map(|elem| modVals_to_modWitness(elem.clone()))
+        .map(|elem| mod_vals_to_mod_witness(elem.clone()))
         .collect();
     return vec_wits;
 }
@@ -64,7 +62,7 @@ pub fn bits_vector_convertor<ConstraintF: PrimeField>(bit_vec: Vec<u8>) -> Vec<C
 
 // fn mod_pow_constraints
 impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
-    for modpow_ver_circuit<ConstraintF>
+    for ModpowVerCircuit<ConstraintF>
 {
     fn generate_constraints(
         self,
@@ -121,13 +119,13 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
         Ok(())
     }
 }
-pub fn structInitializer<ConstraintF: PrimeField>(
+pub fn struct_initializer<ConstraintF: PrimeField>(
     base: BigUint,
     exp: BigUint,
     modulo: BigUint,
-) -> modpow_ver_circuit<ConstraintF> {
+) -> ModpowVerCircuit<ConstraintF> {
     let res = base.modpow(&exp, &modulo);
-    let returnted_val: return_struct =
+    let returnted_val: ReturnStruct =
         mod_pow_generate_witnesses(base.clone(), modulo.clone(), exp.clone());
     let base = ConstraintF::from(base);
     let exponent = ConstraintF::from(exp);
@@ -136,7 +134,7 @@ pub fn structInitializer<ConstraintF: PrimeField>(
     //let cs = ConstraintSystem::<Fr>::new_ref();
     let mod_wits = returnted_val.mod_vals;
     let mod_pow_wits = returnted_val.mod_pow_vals;
-    let circuit = modpow_ver_circuit {
+    let circuit = ModpowVerCircuit {
         base,
         exponent,
         result,
@@ -150,12 +148,12 @@ pub fn structInitializer<ConstraintF: PrimeField>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::arkworks::fermat::modulo;
+    use crate::arkworks::prime_snark::modulo;
     use ark_bls12_381::Fr;
     use ark_ff::fields::PrimeField;
     use ark_relations::r1cs::ConstraintSystem;
     use ark_std::{One, Zero};
-    use modulo::{mod_pow_generate_witnesses, mod_vals, return_struct};
+    use modulo::{mod_pow_generate_witnesses, ModVals, ReturnStruct};
     use num_bigint::BigUint;
     use rand::{thread_rng, Rng};
     /// Generates a random field element
@@ -188,7 +186,7 @@ mod tests {
         let cs = ConstraintSystem::<Fr>::new_ref();
         let mod_wits = returnted_val.mod_vals;
         let mod_pow_wits = returnted_val.mod_pow_vals;
-        let circuit = modpow_ver_circuit {
+        let circuit = ModpowVerCircuit {
             base,
             exponent,
             result,
