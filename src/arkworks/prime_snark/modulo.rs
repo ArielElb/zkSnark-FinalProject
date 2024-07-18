@@ -10,8 +10,8 @@ use ark_r1cs_std::{alloc::AllocVar, ToBitsGadget};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use num_bigint::BigUint;
 use std::str::FromStr;
-
-const NUM_BITS: usize = 381;
+use super::constants;
+const NUM_BITS: usize = constants::NUM_BITS;
 
 #[derive(Clone, Debug)]
 pub struct ModVals {
