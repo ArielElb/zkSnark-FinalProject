@@ -11,7 +11,8 @@ use ark_relations::r1cs::ConstraintSystemRef;
 use num_bigint::BigUint;
 use sha2::Digest;
 use sha2::Sha256;
-const K: usize = 2;
+use super::constants;
+const K: usize = constants::k;
 /// Finalizes a native SHA256 struct and gets the bytes
 pub fn finalize(sha256: Sha256) -> Vec<u8> {
     sha256.finalize().to_vec()

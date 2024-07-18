@@ -1,7 +1,6 @@
 use crate::arkworks::fermat::modpow_circut::{mod_witnesses, modpow_ver_circuit};
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_crypto_primitives::crh::sha256::constraints::DigestVar;
-use ark_crypto_primitives::crh::sha256::constraints::Sha256Gadget;
 use ark_ff::BigInteger;
 use ark_ff::{Field, PrimeField};
 use ark_r1cs_std::boolean::Boolean;
@@ -15,7 +14,6 @@ use ark_r1cs_std::ToBytesGadget;
 use ark_r1cs_std::{alloc::AllocVar, fields::FieldVar};
 use ark_relations::ns;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
-use modulo::{mod_pow_generate_witnesses, mod_vals, return_struct};
 use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -25,7 +23,8 @@ use super::hasher::{finalize, hash_to_bytes};
 use super::modulo;
 use itertools::Itertools;
 use sha2::{Digest, Sha256};
-const K: usize = 2;
+use super::constants;
+const K: usize = constants::k;
 use num_bigint::RandBigInt;
 // struct for Final circuit: PrimeCheck:
 #[derive(Clone)]
@@ -35,7 +34,6 @@ pub struct PrimeCheck<ConstraintF: PrimeField> {
     // r: ConstraintF,      // randomness // public input - r = hash(x + i || a_i = hash(x+i) || i )
     a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input - to check that we actually calculated the hash correctly
     a_i: Vec<u8>,        // a_i = hash(x+i) // public input
-    is_prime: bool,      // witness if the number is prime
     fermat_circuit: fermat_circuit<ConstraintF>,
 }
 
@@ -48,9 +46,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // create the public inputs:
         let x_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "x"), || Ok(self.x))?;
 
-        // create the witness:
-        let is_prime_var =
-            Boolean::new_witness(ark_relations::ns!(cs, "is_prime"), || Ok(self.is_prime))?;
         // for each j in 0..i-1:
         for j in 0..self.i {
             // compute x+j:
@@ -96,7 +91,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // // enforce that the n is the same:
         n_var_fermat.enforce_equal(&a_i_fpvar)?;
         // // enforce that the is_prime is the same:
-        is_prime_var_fermat.enforce_equal(&is_prime_var)?;
         // In the end create the constraints for the fermat circuit:
         self.fermat_circuit
             .generate_constraints(cs.clone())
@@ -139,11 +133,13 @@ mod tests {
     use ark_relations::r1cs::{
         ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef, SynthesisError,
     };
+
     use ark_snark::SNARK;
     use ark_std::test_rng;
     use itertools::Itertools;
     use rand::RngCore;
     use sha2::{Digest, Sha256};
+    use std::time::Instant;
 
     use ark_groth16::Groth16;
 
@@ -189,19 +185,19 @@ mod tests {
             i,
             a_j_s: a_j_s.clone(),
             a_i,
-            is_prime: is_prime(a_i_biguint, r_bytes),
             fermat_circuit,
         };
         circuit.generate_constraints(cs.clone()).unwrap();
         // check if the circuit is satisfied:
         assert!(cs.is_satisfied().unwrap());
     }
-
     #[test]
     fn groth16() {
+        let start_total = Instant::now();
+
         let x = Fr::from(5u64);
 
-        let i: u64 = 2;
+        let i: u64 = 6;
         // set it up using sha256 default:
         // create for each j in 0..i-1 the hash(x+j):
         let mut a_j_s = vec![];
@@ -214,6 +210,7 @@ mod tests {
             let a_j = finalize(sha256.clone());
             a_j_s.push(a_j);
         }
+
         let mut sha256 = Sha256::default();
         let x_plus_i = x + Fr::from(i);
         let x_plus_i_bytes = x_plus_i.into_bigint().to_bytes_le();
@@ -223,7 +220,7 @@ mod tests {
         // convert a_i to biguint:
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
         // r = hash(x + i || a_i = hash(x+i) || i )
-        // create the randomnes:
+        // create the randomness:
         let mut r_bytes = [0u8; 32];
         init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
         // convert r to Fr:
@@ -236,16 +233,23 @@ mod tests {
             i,
             a_j_s: a_j_s.clone(),
             a_i,
-            is_prime: is_prime(a_i_biguint, r_bytes),
             fermat_circuit,
         };
         // rng:
         let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
         // setup the groth16:
+        let start_setup = Instant::now();
         let (pk, vk) =
             Groth16::<Bls12_381>::circuit_specific_setup(circuit.clone(), &mut rng).unwrap();
+        let setup_duration = start_setup.elapsed();
+        println!("Setup time: {:?}", setup_duration);
+
         // create the proof:
+        let start_proof = Instant::now();
         let proof = Groth16::<Bls12_381>::prove(&pk, circuit.clone(), &mut rng).unwrap();
+        let proof_duration = start_proof.elapsed();
+        println!("Proof generation time: {:?}", proof_duration);
+
         // create the public input:
         let cs_too: ConstraintSystemRef<Fr> = ConstraintSystem::new_ref();
         circuit.generate_constraints(cs_too.clone()).unwrap();
@@ -253,11 +257,23 @@ mod tests {
             .unwrap()
             .instance_assignment
             .clone();
-        // print the public inpus one by one nicely:
-        for (i, input) in public_input.iter().enumerate() {
-            println!("public_input[{}]: {:?}", i, input);
-        }
+        // print the public inputs one by one nicely:
+        // for (i, input) in public_input.iter().enumerate() {
+        //     println!("public_input[{}]: {:?}", i, input);
+        // }
+
+        // verification:
+        let start_verification = Instant::now();
         let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
+        let verification_duration = start_verification.elapsed();
+        println!("Verification time: {:?}", verification_duration);
+
+        // print overall execution time:
+        let total_duration = start_total.elapsed();
+        println!("Total execution time: {:?}", total_duration);
+
         print!("is_correct: {:?}", is_correct);
+
+        println!("Number of constraints: {}", cs_too.num_constraints());
     }
 }
