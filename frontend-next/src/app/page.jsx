@@ -7,7 +7,7 @@ export default function Home() {
       <div className={styles.container}>
         <header className={styles.header}>
           <div className={styles.headerParagraph}>
-            <h1>Zero-Knowledge Proofs Project</h1>
+            <h1>zkSnark-Final Project</h1>
             <h2>What is our project all about?</h2>
             <p>
               Our project is a Proof of Concept (PoC) for implementing zero-knowledge
@@ -60,6 +60,24 @@ export default function Home() {
               than checking the witness directly (this also implies that proofs are
               exponentially smaller than the size of the statement proven).
             </p>
+            <ul>
+              <strong>The key features of zk-SNARKs are:</strong>
+              <li>
+                <b>Zero-Knowledge:</b> The verifier learns nothing other than the fact
+                that the prover knows the solution.
+              </li>
+              <li>
+                <b>Succinctness:</b> The proof is very small and can be verified quickly.
+              </li>
+              <li>
+                <b>Non-Interactive: </b> After an initial setup phase, no interaction is
+                required between the prover and verifier to verify the proof.
+              </li>
+              <li>
+                <b>Arguments of Knowledge:</b> The proof convinces the verifier that the
+                prover actually knows the solution.
+              </li>
+            </ul>
           </div>
         </header>
         <main className={styles.main}>
