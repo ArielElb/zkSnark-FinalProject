@@ -1,4 +1,3 @@
-use super::utils::constants::K;
 use ark_bls12_381::Fr;
 use ark_crypto_primitives::crh::sha256::constraints::{DigestVar, Sha256Gadget};
 use ark_ff::BigInteger;
@@ -9,9 +8,12 @@ use ark_r1cs_std::fields::FieldVar;
 use ark_r1cs_std::R1CSVar;
 use ark_r1cs_std::ToBytesGadget;
 use ark_relations::r1cs::ConstraintSystemRef;
+use constants::K;
 use num_bigint::BigUint;
 use sha2::Digest;
 use sha2::Sha256;
+
+use super::constants;
 
 /// Finalizes a native SHA256 struct and gets the bytes
 pub fn finalize(sha256: Sha256) -> Vec<u8> {

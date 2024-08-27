@@ -1,6 +1,6 @@
 use super::fermat_circut::FermatCircuit;
-use super::hasher::{finalize, hash_to_bytes};
 use super::utils::constants;
+use super::utils::hasher::{finalize, hash_to_bytes};
 use super::utils::modulo;
 use crate::arkworks::prime_snark::modpow_circut::{ModWitnesses, ModpowVerCircuit};
 use ark_bls12_381::{Bls12_381, Fr};

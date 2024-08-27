@@ -16,9 +16,9 @@ use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use std::ops::{AddAssign, MulAssign};
 const K: usize = constants::K;
 const NUM_BITS: usize = constants::NUM_BITS;
-use super::hasher::generate_bases_a;
-use super::hasher::generate_bases_native;
+use super::utils::hasher::generate_bases_native;
 use super::modpow_circut::struct_initializer;
+use super::utils::hasher::generate_bases_a;
 use crate::arkworks::prime_snark::utils::modulo;
 
 // struct for fermat circuit:
