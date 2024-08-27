@@ -1,16 +1,7 @@
-use ark_bls12_381::Fr;
-use ark_ff::PrimeField;
-use ark_r1cs_std::boolean::Boolean;
-use ark_r1cs_std::eq::EqGadget;
-use ark_r1cs_std::fields::fp::FpVar;
-use ark_r1cs_std::fields::FieldVar;
-use ark_r1cs_std::select::CondSelectGadget;
-use ark_r1cs_std::R1CSVar;
+use super::constants;
 use ark_r1cs_std::{alloc::AllocVar, ToBitsGadget};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use num_bigint::BigUint;
-use std::str::FromStr;
-use super::constants;
 const NUM_BITS: usize = constants::NUM_BITS;
 
 #[derive(Clone, Debug)]
@@ -36,7 +27,6 @@ fn get_mod_vals(num: &BigUint, div: &BigUint) -> ModVals {
         remainder,
     }
 }
-
 pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp: BigUint) -> ReturnStruct {
     let mut elem;
     let mut cur_pow = base.clone();

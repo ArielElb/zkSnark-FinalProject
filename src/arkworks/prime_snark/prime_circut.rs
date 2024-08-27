@@ -1,7 +1,10 @@
+use super::fermat_circut::FermatCircuit;
+use super::hasher::{finalize, hash_to_bytes};
+use super::utils::constants;
+use super::utils::modulo;
 use crate::arkworks::prime_snark::modpow_circut::{ModWitnesses, ModpowVerCircuit};
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_crypto_primitives::crh::sha256::constraints::DigestVar;
-use ark_crypto_primitives::crh::sha256::constraints::Sha256Gadget;
 use ark_ff::BigInteger;
 use ark_ff::{Field, PrimeField};
 use ark_r1cs_std::boolean::Boolean;
@@ -15,16 +18,11 @@ use ark_r1cs_std::ToBytesGadget;
 use ark_r1cs_std::{alloc::AllocVar, fields::FieldVar};
 use ark_relations::ns;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
+use itertools::Itertools;
 use modulo::{mod_pow_generate_witnesses, ModVals, ReturnStruct};
 use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-
-use super::constants;
-use super::fermat_circut::FermatCircuit;
-use super::hasher::{finalize, hash_to_bytes};
-use super::modulo;
-use itertools::Itertools;
 use sha2::{Digest, Sha256};
 const K: usize = constants::K;
 use num_bigint::RandBigInt;
@@ -46,19 +44,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
     ) -> Result<(), SynthesisError> {
         // create the public inputs:
         let x_var = FpVar::<ConstraintF>::new_input(ark_relations::ns!(cs, "x"), || Ok(self.x))?;
-        // for each j in 0..i-1:
-        for j in 0..self.i {
-            // compute x+j:
-            let x_plus_j = &x_var + FpVar::<ConstraintF>::constant(ConstraintF::from(j)); // x+j
-            let calculated_a_j = hash_to_bytes(x_plus_j);
-            // enforce that a_j = hash(x+j):
-            let a_j_var =
-                DigestVar::new_input(
-                    ark_relations::ns!(cs, "a_j"),
-                    || Ok(&self.a_j_s[j as usize]),
-                )?;
-            a_j_var.enforce_equal(&calculated_a_j)?;
-        }
         // compute x+i:
         let x_plus_i = x_var + FpVar::<ConstraintF>::constant(ConstraintF::from(self.i));
         // calculate the hash(x+i):
@@ -66,24 +51,19 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // enforce that a_i = hash(x+i):
         let a_i_var = DigestVar::new_input(ark_relations::ns!(cs, "a_i"), || Ok(self.a_i))?;
         a_i_var.enforce_equal(&calculated_a_i)?;
-
         // TODO: fermat primality
         // TODO : validate that what i calculated is what in fermat_circuit.
-
         let a_i_fpvar =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
                 Ok(ConstraintF::from_le_bytes_mod_order(
                     &a_i_var.to_bytes().unwrap().value().unwrap(),
                 ))
             })?;
-
         let n_var_fermat =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
                 Ok(self.fermat_circuit.n)
             })?;
-
         // generate a_1,a_2,a_3 by doing : a_1 = hash(r || 1 ) ,a_2 = hash(r|| 2) ,...
-
         n_var_fermat.enforce_equal(&a_i_fpvar)?;
         // // enforce that the is_prime is the same:
         // In the end create the constraints for the fermat circuit:
@@ -93,17 +73,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
 
         Ok(())
     }
-}
-fn is_prime(n: BigUint, r: [u8; 32]) -> bool {
-    let mut rng: StdRng = rand::SeedableRng::from_seed(r);
-    // now run for K times:
-    for _ in 0..K {
-        let a: BigUint = rng.gen_biguint_range(&BigUint::from(2u64), &n);
-        if a.modpow(&(&n - 1u32), &n) != BigUint::from(1u32) {
-            return false;
-        }
-    }
-    return true;
 }
 
 // function to create the randomness:
@@ -127,19 +96,16 @@ mod tests {
     use ark_ff::{BigInt, BigInteger};
     use ark_ff::{Field, PrimeField};
 
+    use ark_groth16::Groth16;
     use ark_relations::r1cs::{
         ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef, SynthesisError,
     };
-
     use ark_snark::SNARK;
     use ark_std::test_rng;
     use itertools::Itertools;
     use rand::RngCore;
     use sha2::{Digest, Sha256};
     use std::time::Instant;
-
-    use ark_groth16::Groth16;
-
     #[test]
     fn initial_procces() {
         let mut rng = ark_std::test_rng();
@@ -195,7 +161,7 @@ mod tests {
 
         let x = Fr::from(5u64);
 
-        let i: u64 = 6;
+        let i: u64 = 3;
         // set it up using sha256 default:
         // create for each j in 0..i-1 the hash(x+j):
         let mut a_j_s = vec![];
@@ -208,7 +174,6 @@ mod tests {
             let a_j = finalize(sha256.clone());
             a_j_s.push(a_j);
         }
-
         let mut sha256 = Sha256::default();
         let x_plus_i = x + Fr::from(i);
         let x_plus_i_bytes = x_plus_i.into_bigint().to_bytes_le();
@@ -241,7 +206,6 @@ mod tests {
             Groth16::<Bls12_381>::circuit_specific_setup(circuit.clone(), &mut rng).unwrap();
         let setup_duration = start_setup.elapsed();
         println!("Setup time: {:?}", setup_duration);
-
         // create the proof:
         let start_proof = Instant::now();
         let proof = Groth16::<Bls12_381>::prove(&pk, circuit.clone(), &mut rng).unwrap();
@@ -259,13 +223,11 @@ mod tests {
         // for (i, input) in public_input.iter().enumerate() {
         //     println!("public_input[{}]: {:?}", i, input);
         // }
-
         // verification:
         let start_verification = Instant::now();
         let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
         let verification_duration = start_verification.elapsed();
         println!("Verification time: {:?}", verification_duration);
-
         // print overall execution time:
         let total_duration = start_total.elapsed();
         println!("Total execution time: {:?}", total_duration);
