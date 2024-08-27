@@ -41,7 +41,7 @@
   }
   
   .imageContainer {
-    width: 80%;
+    width: 99%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -56,7 +56,7 @@
   }
   
   .image {
-    width: 45%; /* Slightly reduced width to accommodate larger margins */
+    width: 49%; /* Slightly reduced width to accommodate larger margins */
     height: auto;
     border-radius: 8px;
   }
