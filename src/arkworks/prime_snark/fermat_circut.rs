@@ -16,18 +16,18 @@ use num_bigint::{BigUint, ToBigInt, ToBigUint};
 use std::ops::{AddAssign, MulAssign};
 const K: usize = constants::K;
 const NUM_BITS: usize = constants::NUM_BITS;
-use super::utils::hasher::generate_bases_native;
 use super::modpow_circut::struct_initializer;
 use super::utils::hasher::generate_bases_a;
+use super::utils::hasher::generate_bases_native;
 use crate::arkworks::prime_snark::utils::modulo;
 
 // struct for fermat circuit:
 #[derive(Clone)]
 pub struct FermatCircuit<ConstraintF: PrimeField> {
-    pub n: ConstraintF,
-    pub a: ConstraintF,        // randomness
+    pub n: ConstraintF, // the modulus and the number we want to check if it is prime
+    pub a: ConstraintF, // randomness
     results: Vec<ConstraintF>, // result of the modpow
-    pub is_prime: bool,        // witness if the number is prime
+    pub is_prime: bool, // witness if the number is prime
     modpow_ver_circuits: Vec<ModpowVerCircuit<ConstraintF>>,
 }
 
@@ -142,7 +142,9 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
     let modpow_circuit = struct_initializer::<ConstraintF>(a.clone(), n.clone() - 1u32, n.clone());
     let mut circuits = vec![modpow_circuit; K];
     let mut results = vec![ConstraintF::from(0u8); K];
+    // we need to make sure that each base is between 1 and n-1
     let bases = generate_bases_native(&a);
+    
     for i in 0..K {
         circuits[i] =
             struct_initializer::<ConstraintF>(bases[i].clone(), n.clone() - 1u32, n.clone());
@@ -168,7 +170,6 @@ mod tests {
     use ark_relations::r1cs::SynthesisError;
     use ark_std::test_rng;
     use ark_std::UniformRand;
-
     #[test]
     fn test_fermat_circuit() {
         let cs = ConstraintSystem::<Fr>::new_ref();

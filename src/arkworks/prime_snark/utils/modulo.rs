@@ -28,6 +28,9 @@ fn get_mod_vals(num: &BigUint, div: &BigUint) -> ModVals {
     }
 }
 pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp: BigUint) -> ReturnStruct {
+    println!("base: {}", base);
+    println!("div: {}", div);
+    println!("exp: {}", exp);
     let mut elem;
     let mut cur_pow = base.clone();
     let mut power = base.clone();
@@ -40,10 +43,10 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp: BigUint) -> 
         q: zero.clone(),
         remainder: zero.clone(),
     };
-    let mut v: Vec<ModVals> = vec![def_val.clone(); 382];
-    let mut mod_pow_vals: Vec<ModVals> = vec![def_val; 382];
-    let mut bits: Vec<u8> = vec![0u8; 382];
-    for i in 0..382 {
+    let mut v: Vec<ModVals> = vec![def_val.clone(); NUM_BITS];
+    let mut mod_pow_vals: Vec<ModVals> = vec![def_val; NUM_BITS];
+    let mut bits: Vec<u8> = vec![0u8; NUM_BITS];
+    for i in 0..NUM_BITS {
         power = power.clone() * power;
         mod_pow_vals[i] = get_mod_vals(&power, &div);
         power %= &div;

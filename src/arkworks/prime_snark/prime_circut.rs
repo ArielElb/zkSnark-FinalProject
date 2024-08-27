@@ -53,6 +53,8 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         a_i_var.enforce_equal(&calculated_a_i)?;
         // TODO: fermat primality
         // TODO : validate that what i calculated is what in fermat_circuit.
+
+        // a_i is the number we want to check if it is prime:
         let a_i_fpvar =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
                 Ok(ConstraintF::from_le_bytes_mod_order(
@@ -65,7 +67,6 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
             })?;
         // generate a_1,a_2,a_3 by doing : a_1 = hash(r || 1 ) ,a_2 = hash(r|| 2) ,...
         n_var_fermat.enforce_equal(&a_i_fpvar)?;
-        // // enforce that the is_prime is the same:
         // In the end create the constraints for the fermat circuit:
         self.fermat_circuit
             .generate_constraints(cs.clone())
@@ -106,6 +107,45 @@ mod tests {
     use rand::RngCore;
     use sha2::{Digest, Sha256};
     use std::time::Instant;
+
+    #[test]
+    fn test_one_round() {
+        let mut rng = ark_std::test_rng();
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        let mut x = Fr::from(5u64);
+        let mut r_bytes = [0u8; 32];
+        rng.fill_bytes(&mut r_bytes);
+        let i: u64 = 1;
+        let mut a_j_s = vec![];
+
+        // create the number to check for primality:
+        let mut sha256 = Sha256::default();
+        let x_plus_i = x + Fr::from(i);
+        let x_plus_i_bytes = x_plus_i.into_bigint().to_bytes_le();
+        // do the hash for x+i:
+        sha256.update(&x_plus_i_bytes);
+        let a_i = finalize(sha256.clone());
+        // convert a_i to biguint:
+        let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
+        // r = hash(x + i || a_i = hash(x+i) || i )
+        // create the randomnes:
+        init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
+        // convert r to Fr:
+        let r = Fr::from_le_bytes_mod_order(&r_bytes);
+        // create fermat circuit:
+        let fermat_circuit = fermat_constructor::<Fr>(BigUint::from(r), a_i_biguint.clone());
+        // create the circuit:
+        let circuit = PrimeCheck {
+            x,
+            i,
+            a_j_s: a_j_s.clone(),
+            a_i,
+            fermat_circuit,
+        };
+        circuit.generate_constraints(cs.clone()).unwrap();
+        // check if the circuit is satisfied:
+        assert!(cs.is_satisfied().unwrap());
+    }
     #[test]
     fn initial_procces() {
         let mut rng = ark_std::test_rng();
@@ -148,7 +188,6 @@ mod tests {
             i,
             a_j_s: a_j_s.clone(),
             a_i,
-
             fermat_circuit,
         };
         circuit.generate_constraints(cs.clone()).unwrap();
@@ -158,9 +197,7 @@ mod tests {
     #[test]
     fn groth16() {
         let start_total = Instant::now();
-
         let x = Fr::from(5u64);
-
         let i: u64 = 3;
         // set it up using sha256 default:
         // create for each j in 0..i-1 the hash(x+j):
