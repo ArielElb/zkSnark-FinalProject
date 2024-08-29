@@ -1,6 +1,9 @@
+use super::modpow_circut::mod_vals_to_mod_witness;
+use super::modpow_circut::vector_convertor;
 use super::utils::constants;
 use crate::arkworks::prime_snark::modpow_circut::{ModWitnesses, ModpowVerCircuit};
 use ark_bls12_381::{Bls12_381, Fr};
+use ark_ff::One;
 use ark_ff::{Field, PrimeField};
 use ark_r1cs_std::boolean::Boolean;
 use ark_r1cs_std::eq::EqGadget;
@@ -29,6 +32,7 @@ pub struct FermatCircuit<ConstraintF: PrimeField> {
     results: Vec<ConstraintF>, // result of the modpow
     pub is_prime: bool,        // witness if the number is prime
     modpow_ver_circuits: Vec<ModpowVerCircuit<ConstraintF>>,
+    mod_base_ver: Vec<ModWitnesses<ConstraintF>>,
 }
 
 fn check_bits_is_exp<ConstraintF: PrimeField>(
@@ -104,7 +108,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for FermatCircu
     ) -> Result<(), SynthesisError> {
         let n = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.n))?;
         let a = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a))?;
-        let bases = generate_bases_a(cs.clone(), &a);
+        let bases = generate_bases_a(cs.clone(), &a,self.mod_base_ver,self.n-ConstraintF::one());
         let one = FpVar::<ConstraintF>::constant(ConstraintF::one());
         for i in 0..K {
             let result = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.results[i]))?;
@@ -126,7 +130,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for FermatCircu
 }
 fn fermat_test(a: &BigUint, p: &BigUint) -> bool {
     let one_val = BigUint::from(1u32);
-    let bases = generate_bases_native(a);
+    let bases = generate_bases_native(a,p).0;
     for i in 0..K {
         if bases[i].modpow(&(p - &one_val), p) == one_val {
             return true;
@@ -142,7 +146,10 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
     let modpow_circuit = struct_initializer::<ConstraintF>(a.clone(), n.clone() - 1u32, n.clone());
     let mut circuits = vec![modpow_circuit; K];
     let mut results = vec![ConstraintF::from(0u8); K];
-    let bases = generate_bases_native(&a);
+    let base_outputs = generate_bases_native(&a,&n);
+    let bases = base_outputs.0;
+    let mod_vals = base_outputs.1;
+    let witnesses = vector_convertor::<ConstraintF>(mod_vals);
     for i in 0..K {
         circuits[i] =
             struct_initializer::<ConstraintF>(bases[i].clone(), n.clone() - 1u32, n.clone());
@@ -154,6 +161,7 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
         a: ConstraintF::from(a),
         results: results,
         modpow_ver_circuits: circuits,
+        mod_base_ver: witnesses,
     };
 }
 
@@ -161,10 +169,8 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::arkworks::prime_snark::modpow_circut::bits_vector_convertor;
-    use crate::arkworks::prime_snark::modpow_circut::vector_convertor;
+
     use ark_relations::r1cs::ConstraintSystem;
-    use ark_relations::r1cs::ConstraintSystemRef;
     use ark_relations::r1cs::SynthesisError;
     use ark_std::test_rng;
     use ark_std::UniformRand;

@@ -3,6 +3,7 @@ use ark_crypto_primitives::crh::sha256::constraints::{DigestVar, Sha256Gadget};
 use ark_ff::BigInteger;
 use ark_ff::PrimeField;
 use ark_r1cs_std::alloc::AllocVar;
+use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_r1cs_std::fields::FieldVar;
 use ark_r1cs_std::R1CSVar;
@@ -13,7 +14,11 @@ use num_bigint::BigUint;
 use sha2::Digest;
 use sha2::Sha256;
 
+use crate::arkworks::prime_snark::modpow_circut::ModWitnesses;
+
 use super::constants;
+use super::modulo::get_mod_vals;
+use super::modulo::ModVals;
 
 /// Finalizes a native SHA256 struct and gets the bytes
 pub fn finalize(sha256: Sha256) -> Vec<u8> {
@@ -31,8 +36,9 @@ pub fn hash_to_bytes<ConstraintF: PrimeField>(
     let result = sha256_var.finalize().unwrap();
     result
 }
-pub fn generate_bases_native(x: &BigUint) -> Vec<BigUint> {
+pub fn generate_bases_native(x: &BigUint, n_value:&BigUint) -> (Vec<num_bigint::BigUint>, Vec<ModVals>) {
     let mut a_j_s = vec![];
+    let mut witnesses:Vec<ModVals> = vec![];
     for j in 0..K {
         let mut sha256 = Sha256::default();
         let x_fr = Fr::from(x.clone());
@@ -47,14 +53,17 @@ pub fn generate_bases_native(x: &BigUint) -> Vec<BigUint> {
         let a_j = finalize(sha256.clone()); // hash(x || j)
                                             // convert a_j to BigUint:
         let a_j = BigUint::from_bytes_le(&a_j);
-
-        a_j_s.push(a_j);
+        
+        a_j_s.push(a_j.clone() % n_value);
+        witnesses.push(get_mod_vals(&a_j,n_value));
     }
-    a_j_s
+    (a_j_s, witnesses)
 }
 pub fn generate_bases_a<ConstraintF: PrimeField>(
     cs: ConstraintSystemRef<ConstraintF>,
     r: &FpVar<ConstraintF>,
+    witnesses: Vec<ModWitnesses<ConstraintF>>,
+    divisor: ConstraintF,
 ) -> Vec<FpVar<ConstraintF>> {
     let mut a_j_s = vec![];
     for j in 0..K {
@@ -73,7 +82,12 @@ pub fn generate_bases_a<ConstraintF: PrimeField>(
                 ))
             })
             .unwrap();
-        a_j_s.push(a_j_fpvar);
+        let remainder = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(witnesses[j].remainder)).unwrap();
+        let quaitent = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(witnesses[j].q)).unwrap();
+        let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(divisor)).unwrap();
+        let result = quaitent * div + &remainder;
+        result.enforce_equal(&a_j_fpvar);
+        a_j_s.push(remainder);
     }
     a_j_s
 }
