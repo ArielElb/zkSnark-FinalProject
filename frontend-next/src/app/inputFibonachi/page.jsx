@@ -17,6 +17,9 @@ const InputFibonacciPage = () => {
   const [verifyResult, setVerifyResult] = useState("");
   const [verifyingTime, setVerifyingTime] = useState("");
   const [isLoadingVerify, setIsLoadingVerify] = useState(false);
+  BigInt.prototype.toJSON = function () {
+    return { $bigint: this.toString() };
+  };
   const handleProve = () => {
     // Reset previous stats
     setProvingTime(null);
