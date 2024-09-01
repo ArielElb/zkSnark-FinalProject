@@ -39,6 +39,7 @@ pub fn hash_to_bytes<ConstraintF: PrimeField>(
 pub fn generate_bases_native(x: &BigUint, n_value:&BigUint) -> (Vec<num_bigint::BigUint>, Vec<ModVals>) {
     let mut a_j_s = vec![];
     let mut witnesses:Vec<ModVals> = vec![];
+    let divisor = n_value;// + BigUint::from(1u8);
     for j in 0..K {
         let mut sha256 = Sha256::default();
         let x_fr = Fr::from(x.clone());
@@ -54,8 +55,8 @@ pub fn generate_bases_native(x: &BigUint, n_value:&BigUint) -> (Vec<num_bigint::
                                             // convert a_j to BigUint:
         let a_j = BigUint::from_bytes_le(&a_j);
         
-        a_j_s.push(a_j.clone() % n_value);
-        witnesses.push(get_mod_vals(&a_j,n_value));
+        a_j_s.push(a_j.clone() % divisor);
+        witnesses.push(get_mod_vals(&a_j,&divisor));
     }
     (a_j_s, witnesses)
 }
@@ -82,11 +83,16 @@ pub fn generate_bases_a<ConstraintF: PrimeField>(
                 ))
             })
             .unwrap();
+        let bozo = divisor + ConstraintF::one();
         let remainder = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(witnesses[j].remainder)).unwrap();
         let quaitent = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(witnesses[j].q)).unwrap();
-        let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(divisor)).unwrap();
-        let result = quaitent * div + &remainder;
+        let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(bozo)).unwrap();
+        let result = quaitent * &div + &remainder;
         result.enforce_equal(&a_j_fpvar);
+        println!("{}",result.value().unwrap().to_string());
+        println!("{}",a_j_fpvar.value().unwrap().to_string());
+        println!("{}",div.value().unwrap().to_string());
+
         a_j_s.push(remainder);
     }
     a_j_s
