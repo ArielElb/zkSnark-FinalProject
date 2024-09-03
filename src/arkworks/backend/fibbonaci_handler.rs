@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 pub struct InputDataFib {
     pub a: u64,
     pub b: u64,
-    pub result: u64,
+    pub result: String,
     pub num_of_rounds: usize,
 }
 
@@ -47,7 +47,7 @@ pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Respon
         a: Some(BlsFr::from(data.a)),
         b: Some(BlsFr::from(data.b)),
         num_of_steps: data.num_of_rounds,
-        result: Some(BlsFr::from(data.result)),
+        result: Some(BlsFr::from(data.result.parse::<u128>().unwrap())),
     };
 
     //   pub numb_of_steps: usize,

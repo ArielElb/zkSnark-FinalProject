@@ -26,7 +26,7 @@ const InputFibonacciPage = () => {
     const requestData = {
       a: parseInt(a),
       b: parseInt(b),
-      result: parseInt(number),
+      result: number.toString(),
       num_of_rounds: parseInt(rounds),
     };
     localStorage.setItem("first_number", JSON.stringify(parseInt(a)));
