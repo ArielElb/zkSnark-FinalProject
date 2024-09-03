@@ -28,9 +28,6 @@ fn get_mod_vals(num: &BigUint, div: &BigUint) -> ModVals {
     }
 }
 pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp: BigUint) -> ReturnStruct {
-    println!("base: {}", base);
-    println!("div: {}", div);
-    println!("exp: {}", exp);
     let mut elem;
     let mut cur_pow = base.clone();
     let mut power = base.clone();

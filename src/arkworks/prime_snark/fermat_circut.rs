@@ -144,7 +144,7 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
     let mut results = vec![ConstraintF::from(0u8); K];
     // we need to make sure that each base is between 1 and n-1
     let bases = generate_bases_native(&a);
-    
+
     for i in 0..K {
         circuits[i] =
             struct_initializer::<ConstraintF>(bases[i].clone(), n.clone() - 1u32, n.clone());

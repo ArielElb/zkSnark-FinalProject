@@ -125,6 +125,7 @@ pub fn struct_initializer<ConstraintF: PrimeField>(
     let returnted_val: ReturnStruct =
         mod_pow_generate_witnesses(base.clone(), modulo.clone(), exp.clone());
     let base = ConstraintF::from(base);
+    // println!("Base bits: {:?}", base);
     let exponent = ConstraintF::from(exp);
     let result = ConstraintF::from(res);
     let divisor = ConstraintF::from(modulo);
