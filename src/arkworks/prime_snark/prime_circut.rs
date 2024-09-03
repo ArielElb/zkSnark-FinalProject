@@ -343,7 +343,6 @@ mod tests {
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
 
         // a_i_biguint is the number we want to check if it is prime:
-
         // create the randomness:
         // r = hash(x + i || a_i = hash(x+i) || i )
         // create the randomness:
