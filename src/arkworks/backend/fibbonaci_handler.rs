@@ -10,12 +10,30 @@ use ark_snark::SNARK;
 use ark_std::rand::SeedableRng;
 use rand::rngs::StdRng;
 use serde::{Deserialize, Serialize};
+fn fibonacci(x: usize, first: u128, second: u128) -> u128 {
+    if x == 0 {
+        return first;
+    } else if x == 1 {
+        return second;
+    }
+
+    let mut prev: u128 = first;
+    let mut current: u128 = second;
+
+    for _ in 2..=x {
+        let next: u128 = prev + current;
+        prev = current;
+        current = next;
+    }
+
+    current
+}
+
 
 #[derive(Deserialize)]
 pub struct InputDataFib {
     pub a: u64,
     pub b: u64,
-    pub result: String,
     pub num_of_rounds: usize,
 }
 
@@ -31,7 +49,7 @@ pub struct InputDataFibVer {
 pub struct OutputDataFib {
     pub proof: String,
     pub pvk: String,
-
+    pub fib_number: String,
     pub proving_time: f64,
 }
 
@@ -43,11 +61,12 @@ pub struct OutputVerifyData {
 
 pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Responder {
     let mut rng = StdRng::seed_from_u64(42);
+    let fibo_num=fibonacci(data.num_of_rounds,data.a as u128,data.b as u128);
     let circuit = FibonacciCircuit::<BlsFr> {
         a: Some(BlsFr::from(data.a)),
         b: Some(BlsFr::from(data.b)),
         num_of_steps: data.num_of_rounds,
-        result: Some(BlsFr::from(data.result.parse::<u128>().unwrap())),
+        result: Some(BlsFr::from(fibo_num)),
     };
 
     //   pub numb_of_steps: usize,
@@ -62,6 +81,7 @@ pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Respon
     let result = OutputDataFib {
         proof: encode_proof::<Bls12_381>(&proof),
         pvk: encode_pvk::<Bls12_381>(&pvk),
+        fib_number: fibo_num.to_string(),
         proving_time,
     };
 

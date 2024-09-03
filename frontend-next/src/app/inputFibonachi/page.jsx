@@ -29,7 +29,6 @@ const InputFibonacciPage = () => {
     const requestData = {
       a: parseInt(a),
       b: parseInt(b),
-      result: number.toString(),
       num_of_rounds: parseInt(rounds),
     };
     localStorage.setItem("first_number", JSON.stringify(parseInt(a)));
@@ -38,10 +37,12 @@ const InputFibonacciPage = () => {
     axios
       .post("http://127.0.0.1:8080/api/fibbonaci/prove", requestData)
       .then((response) => {
-        const { proof, pvk, proving_time } = response.data;
+        const { proof, pvk,fib_number, proving_time } = response.data;
         localStorage.setItem("proof", JSON.stringify(proof));
         localStorage.setItem("pvk", JSON.stringify(pvk));
         setProvingTime(proving_time);
+        setNumber(fib_number);
+
       })
       .catch((error) => {
         console.error("Error proving fibonacci:", error);
@@ -110,13 +111,6 @@ const InputFibonacciPage = () => {
             <input
               type='text'
               className={styles.inputField}
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              placeholder='enter the fibonacci number'
-            />
-            <input
-              type='text'
-              className={styles.inputField}
               value={rounds}
               onChange={(e) => setRounds(e.target.value)}
               placeholder='enter the number of rounds'
@@ -147,7 +141,13 @@ const InputFibonacciPage = () => {
           )}
           <div className={styles.additionalInfo}>
             {provingTime !== null && (
-              <p>Proving Time: {provingTime.toFixed(6)} seconds</p>
+              <>
+                            <p>the fibonacci number is: {number} </p>
+                            <p>Proving Time: {provingTime.toFixed(6)} seconds</p>
+
+
+              </>
+              
             )}
           </div>
         </>
