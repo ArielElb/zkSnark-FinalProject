@@ -12,10 +12,10 @@ use sha2::digest::consts::True;
 use std::str::FromStr;
 use std::{char::from_u32, ops::MulAssign};
 
-use super::modulo::mod_pow_generate_witnesses;
-use super::modulo::ModVals;
-use super::modulo::ReturnStruct;
-use super::constants;
+use super::utils::constants;
+use super::utils::modulo::mod_pow_generate_witnesses;
+use super::utils::modulo::ModVals;
+use super::utils::modulo::ReturnStruct;
 const NUM_BITS: usize = constants::NUM_BITS;
 #[derive(Clone)]
 pub struct ModWitnesses<ConstraintF: PrimeField> {
@@ -59,11 +59,8 @@ pub fn bits_vector_convertor<ConstraintF: PrimeField>(bit_vec: Vec<u8>) -> Vec<C
         .collect();
     return vec_wits;
 }
-
 // fn mod_pow_constraints
-impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF>
-    for ModpowVerCircuit<ConstraintF>
-{
+impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for ModpowVerCircuit<ConstraintF> {
     fn generate_constraints(
         self,
         cs: ConstraintSystemRef<ConstraintF>,
@@ -128,6 +125,7 @@ pub fn struct_initializer<ConstraintF: PrimeField>(
     let returnted_val: ReturnStruct =
         mod_pow_generate_witnesses(base.clone(), modulo.clone(), exp.clone());
     let base = ConstraintF::from(base);
+    // println!("Base bits: {:?}", base);
     let exponent = ConstraintF::from(exp);
     let result = ConstraintF::from(res);
     let divisor = ConstraintF::from(modulo);
@@ -147,8 +145,8 @@ pub fn struct_initializer<ConstraintF: PrimeField>(
 }
 #[cfg(test)]
 mod tests {
+    use super::super::utils::modulo;
     use super::*;
-    use crate::arkworks::prime_snark::modulo;
     use ark_bls12_381::Fr;
     use ark_ff::fields::PrimeField;
     use ark_relations::r1cs::ConstraintSystem;

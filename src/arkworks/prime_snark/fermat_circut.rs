@@ -1,9 +1,6 @@
+use super::utils::constants;
 use crate::arkworks::prime_snark::modpow_circut::{ModWitnesses, ModpowVerCircuit};
-use modulo::{mod_pow_generate_witnesses, ModVals, ReturnStruct};
-
-use super::constants;
 use ark_bls12_381::{Bls12_381, Fr};
-use ark_crypto_primitives::sponge::DuplexSpongeMode;
 use ark_ff::{Field, PrimeField};
 use ark_r1cs_std::boolean::Boolean;
 use ark_r1cs_std::eq::EqGadget;
@@ -15,24 +12,22 @@ use ark_r1cs_std::{alloc::AllocVar, fields::FieldVar};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use num_bigint::RandBigInt;
 use num_bigint::{BigUint, ToBigInt, ToBigUint};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-use std::ops::AddAssign;
-use std::{char::from_u32, ops::MulAssign};
+
+use std::ops::{AddAssign, MulAssign};
 const K: usize = constants::K;
 const NUM_BITS: usize = constants::NUM_BITS;
-use super::hasher::generate_bases_a;
-use super::hasher::generate_bases_native;
 use super::modpow_circut::struct_initializer;
-use super::modulo;
+use super::utils::hasher::generate_bases_a;
+use super::utils::hasher::generate_bases_native;
+use crate::arkworks::prime_snark::utils::modulo;
 
 // struct for fermat circuit:
 #[derive(Clone)]
 pub struct FermatCircuit<ConstraintF: PrimeField> {
-    pub n: ConstraintF,
-    pub a: ConstraintF,        // randomness
+    pub n: ConstraintF, // the modulus and the number we want to check if it is prime
+    pub a: ConstraintF, // randomness
     results: Vec<ConstraintF>, // result of the modpow
-    pub is_prime: bool,        // witness if the number is prime
+    pub is_prime: bool, // witness if the number is prime
     modpow_ver_circuits: Vec<ModpowVerCircuit<ConstraintF>>,
 }
 
@@ -72,7 +67,6 @@ fn modpow<ConstraintF: PrimeField>(
         let elem_val = &bits[i];
         let elem = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(elem_val))?;
         calculated_res.mul_assign(elem * (&cur_pow - &one) + &one);
-
         let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || {
             Ok(modpow_ver_circuit.modulo_witnesses[i].q)
         })?;
@@ -81,12 +75,9 @@ fn modpow<ConstraintF: PrimeField>(
                 Ok(modpow_ver_circuit.modulo_witnesses[i].remainder)
             })?;
         let result_of_vars = cur_q * divisor + &cur_remainder;
-
         result_of_vars.enforce_equal(&calculated_res)?;
         let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less, false)?;
-
         calculated_res = cur_remainder;
-
         cur_pow.mul_assign(cur_pow.clone());
         let cur_q: FpVar<ConstraintF> = FpVar::<ConstraintF>::new_witness(cs.clone(), || {
             Ok(modpow_ver_circuit.modulo_of_pow_witnesses[i].q)
@@ -98,7 +89,6 @@ fn modpow<ConstraintF: PrimeField>(
         let result_of_vars = cur_q * divisor + &cur_remainder;
         result_of_vars.enforce_equal(&cur_pow)?;
         let cmp_res = cur_remainder.is_cmp_unchecked(&divisor, std::cmp::Ordering::Less, false)?;
-
         cur_pow = cur_remainder;
     }
     calculated_res.enforce_equal(&result)?;
@@ -152,7 +142,9 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
     let modpow_circuit = struct_initializer::<ConstraintF>(a.clone(), n.clone() - 1u32, n.clone());
     let mut circuits = vec![modpow_circuit; K];
     let mut results = vec![ConstraintF::from(0u8); K];
+    // we need to make sure that each base is between 1 and n-1
     let bases = generate_bases_native(&a);
+
     for i in 0..K {
         circuits[i] =
             struct_initializer::<ConstraintF>(bases[i].clone(), n.clone() - 1u32, n.clone());
@@ -178,12 +170,10 @@ mod tests {
     use ark_relations::r1cs::SynthesisError;
     use ark_std::test_rng;
     use ark_std::UniformRand;
-
     #[test]
     fn test_fermat_circuit() {
         let cs = ConstraintSystem::<Fr>::new_ref();
         let rng = &mut test_rng();
-
         // create the witnesses for the modpow circuit:
         let base_val = BigUint::from(13123u32);
         //let exp = BigUint::from(1231231u32); // number is 17 to check
