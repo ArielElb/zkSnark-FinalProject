@@ -17,10 +17,13 @@ const InputFibonacciPage = () => {
   const [verifyResult, setVerifyResult] = useState("");
   const [verifyingTime, setVerifyingTime] = useState("");
   const [isLoadingVerify, setIsLoadingVerify] = useState(false);
-  BigInt.prototype.toJSON = function () {
-    return { $bigint: this.toString() };
-  };
+  const [error, setError] = useState(""); // State for error messages
   const handleProve = () => {
+    if(rounds>186) {
+      setError("the maximum number of rounds is 186");
+      return; // Exit the function if the condition is met
+    }
+    setError("");
     // Reset previous stats
     setProvingTime(null);
     const requestData = {
@@ -136,6 +139,7 @@ const InputFibonacciPage = () => {
           <button onClick={handleProve} className={styles.saveButton}>
             Prove
           </button>
+          {error && <p className={styles.error}>{error}</p>}
           {isLoadingProof && (
             <div className={styles.loading}>
               <p>Loading proof...</p>

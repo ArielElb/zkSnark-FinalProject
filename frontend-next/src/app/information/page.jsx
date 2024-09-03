@@ -241,8 +241,8 @@ const InformationPage = ({ searchParams }) => {
       <div className={styles.imageContainer}>
           
       <div className={styles.imageRow}>
-        <img src="/fib_1.png" alt="Image 1" className={styles.image} />
-        <img src="/fib_2.png" alt="Image 2" className={styles.image} />
+        <img src="/fib_186_1.png" alt="Image 1" className={styles.image} />
+        <img src="/fib_186_2.png" alt="Image 2" className={styles.image} />
       </div>
     </div>}
         {searchParams.type=="matrix multification"&& //explain about matrix multification
@@ -250,11 +250,11 @@ const InformationPage = ({ searchParams }) => {
         <div className={styles.imageContainer}>
               
         <div className={styles.imageRow}>
-          <img src="/matrixGraph1.png" alt="Image 1" className={styles.image} />
-          <img src="/matrixGraph2.png" alt="Image 2" className={styles.image} />
+          <img src="/matrix_mult_50_1.png" alt="Image 1" className={styles.image} />
+          <img src="/matrix_mult_50_2.png" alt="Image 2" className={styles.image} />
         </div>
         <div className={styles.imageRow}>
-          <img src="/matrixGraph3.png" alt="Image 3" className={styles.image} />
+          <img src="/matrix_mult_50_3.png" alt="Image 3" className={styles.image} />
         </div>
         </div>}
 

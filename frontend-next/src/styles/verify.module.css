@@ -105,3 +105,8 @@
 .topRightButton:hover {
   background-color: #005bb5; /* צבע רקע כשמעבירים את העכבר מעל הכפתור */
 }
+.error {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+}
