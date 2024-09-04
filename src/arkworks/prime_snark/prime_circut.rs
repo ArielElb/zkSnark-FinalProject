@@ -1,5 +1,5 @@
 use super::fermat_circut::FermatCircuit;
-use super::utils::constants;
+use super::utils::constants::{self, get_max_val};
 use super::utils::hasher::{finalize, hash_to_bytes};
 use super::utils::modulo;
 use crate::arkworks::prime_snark::modpow_circut::{ModWitnesses, ModpowVerCircuit};
@@ -33,6 +33,7 @@ pub struct PrimeCheck<ConstraintF: PrimeField> {
     i: u64,              // the index i s.t we check if a_i=hash(x+i) is prime // public input
     a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input - to check that we actually calculated the hash correctly
     a_i: Vec<u8>,        // a_i = hash(x+i) // public input
+    a_i_mod: ModWitnesses<ConstraintF>,
     fermat_circuit: FermatCircuit<ConstraintF>, // The randomness is inside this struct
 }
 
@@ -53,12 +54,26 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         a_i_var.enforce_equal(&calculated_a_i)?;
         // TODO: fermat primality
         // TODO : validate that what i calculated is what in fermat_circuit.
-        let a_i_fpvar =
+        let mut a_i_fpvar =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
                 Ok(ConstraintF::from_le_bytes_mod_order(
                     &a_i_var.to_bytes().unwrap().value().unwrap(),
                 ))
             })?;
+        //set the values of the witness of the mod
+        let max_val = ConstraintF::from_le_bytes_mod_order(&get_max_val().to_bytes_le());
+        let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(max_val)).unwrap();
+        let origin = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(self.a_i_mod.n)).unwrap();
+        let remainder = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(self.a_i_mod.remainder)).unwrap();
+        let quaitent = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(self.a_i_mod.q)).unwrap();
+        
+        let result = &div*quaitent + &remainder;
+        result.enforce_equal(&origin);
+        origin.enforce_equal(&a_i_fpvar);
+        a_i_fpvar = remainder;
+        //let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(get_max_val())).unwrap();
+        //let result = quaitent * &div + &remainder;
+        //todo get modulo out of a_i and a_j_s
         let n_var_fermat =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "n_var_fermat"), || {
                 Ok(self.fermat_circuit.n)
@@ -90,6 +105,7 @@ fn init_randomness(randomness: &mut [u8; 32], x_plus_i_bytes: Vec<u8>, a_i: Vec<
 #[cfg(test)]
 mod tests {
     use crate::arkworks::prime_snark::fermat_circut::fermat_constructor;
+    use crate::arkworks::prime_snark::modpow_circut::mod_vals_to_mod_witness;
 
     use super::*;
     use ark_bls12_381::{Bls12_381, Fr};
@@ -102,7 +118,9 @@ mod tests {
     };
     use ark_snark::SNARK;
     use ark_std::test_rng;
+    use constants::get_max_val;
     use itertools::Itertools;
+    use modulo::get_mod_vals;
     use rand::RngCore;
     use sha2::{Digest, Sha256};
     use std::time::Instant;
@@ -133,22 +151,26 @@ mod tests {
         // do the hash for x+i:
         sha256.update(&x_plus_i_bytes);
         let a_i = finalize(sha256.clone());
+        // a_i defined
+        //todo add modulo from a_i and a_j_s
         // convert a_i to biguint:
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
+        let vals = get_mod_vals(&a_i_biguint, &get_max_val());
+
         // r = hash(x + i || a_i = hash(x+i) || i )
         // create the randomnes:
         init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
         // convert r to Fr:
         let r = Fr::from_le_bytes_mod_order(&r_bytes);
         // create fermat circuit:
-        let fermat_circuit = fermat_constructor::<Fr>(BigUint::from(r), a_i_biguint.clone());
+        let fermat_circuit = fermat_constructor::<Fr>(BigUint::from(r), vals.remainder.clone());
         // create the circuit:
         let circuit = PrimeCheck {
             x,
             i,
             a_j_s: a_j_s.clone(),
             a_i,
-
+            a_i_mod: mod_vals_to_mod_witness(vals),
             fermat_circuit,
         };
         circuit.generate_constraints(cs.clone()).unwrap();
@@ -196,6 +218,7 @@ mod tests {
             i,
             a_j_s: a_j_s.clone(),
             a_i,
+            a_i_mod: mod_vals_to_mod_witness(get_mod_vals(&a_i_biguint, &get_max_val())),
             fermat_circuit,
         };
         // rng:

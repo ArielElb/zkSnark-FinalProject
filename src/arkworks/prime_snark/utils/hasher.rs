@@ -89,10 +89,6 @@ pub fn generate_bases_a<ConstraintF: PrimeField>(
         let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(bozo)).unwrap();
         let result = quaitent * &div + &remainder;
         result.enforce_equal(&a_j_fpvar);
-        println!("{}",result.value().unwrap().to_string());
-        println!("{}",a_j_fpvar.value().unwrap().to_string());
-        println!("{}",div.value().unwrap().to_string());
-
         a_j_s.push(remainder);
     }
     a_j_s
