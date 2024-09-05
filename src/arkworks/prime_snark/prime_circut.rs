@@ -204,6 +204,8 @@ mod tests {
         let a_i = finalize(sha256.clone());
         // convert a_i to biguint:
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
+        let vals = get_mod_vals(&a_i_biguint, &get_max_val());
+
         // r = hash(x + i || a_i = hash(x+i) || i )
         // create the randomness:
         let mut r_bytes = [0u8; 32];
@@ -211,7 +213,7 @@ mod tests {
         // convert r to Fr:
         let r = Fr::from_le_bytes_mod_order(&r_bytes);
         // create fermat circuit:
-        let fermat_circuit = fermat_constructor::<Fr>(BigUint::from(r), a_i_biguint.clone());
+        let fermat_circuit = fermat_constructor::<Fr>(BigUint::from(r), vals.remainder.clone());
         // create the circuit:
         let circuit = PrimeCheck {
             x,
