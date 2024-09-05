@@ -1,9 +1,9 @@
-use super::constants;
 use ark_bls12_381::Fr;
 use ark_crypto_primitives::crh::sha256::constraints::{DigestVar, Sha256Gadget};
 use ark_ff::BigInteger;
 use ark_ff::PrimeField;
 use ark_r1cs_std::alloc::AllocVar;
+use ark_r1cs_std::eq::EqGadget;
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_r1cs_std::fields::FieldVar;
 use ark_r1cs_std::R1CSVar;
@@ -13,6 +13,13 @@ use constants::K;
 use num_bigint::BigUint;
 use sha2::Digest;
 use sha2::Sha256;
+
+use crate::arkworks::prime_snark::modpow_circut::ModWitnesses;
+
+use super::constants;
+use super::modulo::get_mod_vals;
+use super::modulo::ModVals;
+
 /// Finalizes a native SHA256 struct and gets the bytes
 pub fn finalize(sha256: Sha256) -> Vec<u8> {
     sha256.finalize().to_vec()
@@ -29,12 +36,13 @@ pub fn hash_to_bytes<ConstraintF: PrimeField>(
     let result = sha256_var.finalize().unwrap();
     result
 }
-pub fn generate_bases_native(x: &BigUint) -> Vec<BigUint> {
+pub fn generate_bases_native(x: &BigUint, n_value:&BigUint) -> (Vec<num_bigint::BigUint>, Vec<ModVals>) {
     let mut a_j_s = vec![];
-    let x_fr: ark_ff::Fp<ark_ff::MontBackend<ark_bls12_381::FrConfig, 4>, 4> = Fr::from(x.clone());
-
+    let mut witnesses:Vec<ModVals> = vec![];
+    let divisor = n_value;// + BigUint::from(1u8);
     for j in 0..K {
         let mut sha256 = Sha256::default();
+        let x_fr = Fr::from(x.clone());
         let j_fr: ark_ff::Fp<ark_ff::MontBackend<ark_bls12_381::FrConfig, 4>, 4> =
             Fr::from(j as u64);
 
@@ -44,39 +52,30 @@ pub fn generate_bases_native(x: &BigUint) -> Vec<BigUint> {
         sha256.update(&x_bytes);
         sha256.update(&j_bytes);
         let a_j = finalize(sha256.clone()); // hash(x || j)
-                                            // we need to make sure that a_i  is between 1 and n-1
                                             // convert a_j to BigUint:
-                                            // let a_j = BigUint::from_bytes_le(&a_j);
-                                            //create field element from bytes:
-                                            // construct a_j mod modulus:
-
-        let a_j: BigUint = BigUint::from_bytes_le(&a_j);
-        a_j_s.push(a_j);
+        let a_j = BigUint::from_bytes_le(&a_j);
+        
+        a_j_s.push(a_j.clone() % divisor);
+        witnesses.push(get_mod_vals(&a_j,&divisor));
     }
-    a_j_s
+    (a_j_s, witnesses)
 }
 pub fn generate_bases_a<ConstraintF: PrimeField>(
     cs: ConstraintSystemRef<ConstraintF>,
     r: &FpVar<ConstraintF>,
+    witnesses: Vec<ModWitnesses<ConstraintF>>,
+    divisor: ConstraintF,
 ) -> Vec<FpVar<ConstraintF>> {
     let mut a_j_s = vec![];
-    let r: Vec<ark_r1cs_std::prelude::UInt8<ConstraintF>> = r.to_bytes().unwrap();
-
     for j in 0..K {
         let mut sha256_var = Sha256Gadget::default();
-        let j_bytes: Vec<ark_r1cs_std::prelude::UInt8<ConstraintF>> =
-            FpVar::<ConstraintF>::constant(ConstraintF::from(j as u64))
-                .to_bytes()
-                .unwrap();
+        let r = r.to_bytes().unwrap();
+        let j_bytes = FpVar::<ConstraintF>::constant(ConstraintF::from(j as u64))
+            .to_bytes()
+            .unwrap();
         sha256_var.update(&r).unwrap();
         sha256_var.update(&j_bytes).unwrap();
         let result: DigestVar<ConstraintF> = sha256_var.finalize().unwrap(); // a_i = hash(r || j)
-                                                                             // we need to make sure that a_i  is between 1 and n-1
-                                                                             // println!(
-                                                                             //     "index {:?} a_j: {:?}",
-                                                                             //     j,
-                                                                             //     result.to_bytes().unwrap().value().unwrap()
-                                                                             // );
         let a_j_fpvar =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "r_j_fpvar"), || {
                 Ok(ConstraintF::from_le_bytes_mod_order(
@@ -84,47 +83,13 @@ pub fn generate_bases_a<ConstraintF: PrimeField>(
                 ))
             })
             .unwrap();
-
-        // println!("index {:?} a_j_fpvar: {:?} ", j, a_j_fpvar.value().unwrap());
-        // println!(
-        //     "index {:?} a_j_fpvar: {:?} ",
-        //     j,
-        //     a_j_fpvar.to_bytes().unwrap().value().unwrap()
-        // );
-
-        a_j_s.push(a_j_fpvar);
+        let bozo = divisor + ConstraintF::one();
+        let remainder = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(witnesses[j].remainder)).unwrap();
+        let quaitent = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(witnesses[j].q)).unwrap();
+        let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(bozo)).unwrap();
+        let result = quaitent * &div + &remainder;
+        result.enforce_equal(&a_j_fpvar);
+        a_j_s.push(remainder);
     }
     a_j_s
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ark_relations::r1cs::ConstraintSystem;
-    use ark_relations::r1cs::ConstraintSystemRef;
-    use ark_std::test_rng;
-    use ark_std::UniformRand;
-    use rand::RngCore;
-
-    #[test]
-    fn test_generate_bases() {
-        let rng = &mut test_rng();
-        let cs = ConstraintSystem::<Fr>::new_ref();
-        let mut r_bytes = [1u8; 32];
-        rng.fill_bytes(&mut r_bytes);
-
-        // Convert r to Fr
-        let r = Fr::from_le_bytes_mod_order(&r_bytes);
-        let r_fpvar =
-            FpVar::<Fr>::new_witness(ark_relations::ns!(cs, "r_fpvar"), || Ok(r)).unwrap();
-
-        let a_j_fpvar = generate_bases_a(cs.clone(), &r_fpvar);
-        let a_j_native = generate_bases_native(&BigUint::from_bytes_le(&r_bytes));
-
-        for (native, gadget) in a_j_native.iter().zip(a_j_fpvar.iter()) {
-            let native_bytes = native.to_bytes_le();
-            let gadget_bytes = gadget.to_bytes().unwrap().value().unwrap();
-            assert_eq!(native_bytes, gadget_bytes);
-        }
-    }
 }
