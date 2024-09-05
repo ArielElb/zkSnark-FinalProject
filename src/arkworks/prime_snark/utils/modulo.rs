@@ -18,9 +18,10 @@ pub struct ReturnStruct {
     pub bits: Vec<u8>,
 }
 
-fn get_mod_vals(num: &BigUint, div: &BigUint) -> ModVals {
+pub fn get_mod_vals(num: &BigUint, div: &BigUint) -> ModVals {
     let q = num / div;
     let remainder = num % div;
+    let result = &q*div+&remainder;
     ModVals {
         num: num.clone(), // Still necessary to clone if ownership is needed outside
         q,
@@ -40,10 +41,10 @@ pub fn mod_pow_generate_witnesses(base: BigUint, div: BigUint, exp: BigUint) -> 
         q: zero.clone(),
         remainder: zero.clone(),
     };
-    let mut v: Vec<ModVals> = vec![def_val.clone(); NUM_BITS];
-    let mut mod_pow_vals: Vec<ModVals> = vec![def_val; NUM_BITS];
-    let mut bits: Vec<u8> = vec![0u8; NUM_BITS];
-    for i in 0..NUM_BITS {
+    let mut v: Vec<ModVals> = vec![def_val.clone(); 382];
+    let mut mod_pow_vals: Vec<ModVals> = vec![def_val; 382];
+    let mut bits: Vec<u8> = vec![0u8; 382];
+    for i in 0..382 {
         power = power.clone() * power;
         mod_pow_vals[i] = get_mod_vals(&power, &div);
         power %= &div;
@@ -95,78 +96,6 @@ mod test {
     use ark_relations::r1cs::ConstraintSystem;
     use num_bigint::BigUint;
     use rand::{thread_rng, Rng};
-    /*
-    #[test]
-    fn test_mod_exp_circuit() {
-        // 3^5 mod 7 = 5
-        // the maximum number of reductions is :  3^7 / 7 = 2187 / 7 = 312
-        // Example parameters (for testing purposes)
-        let base = BigUint::from(3u64);
-        let exponent = BigUint::from(5u64);
-        let modulus = BigUint::from(7u64);
-        let res = base.modpow(&exponent, &modulus);
-
-        // Convert big integers to field elements
-        let base = Fr::from_str(&base.to_string()).unwrap();
-        let exponent = Fr::from_str(&exponent.to_string()).unwrap();
-        let modulus = Fr::from_str(&modulus.to_string()).unwrap();
-        let res = Fr::from_str(&res.to_string()).unwrap();
-
-        println!("base: {}", base);
-        println!("exponent: {}", exponent);
-        println!("modulus: {}", modulus);
-        println!("res: {}", res);
-
-        // Create the circuit
-        let circuit = ModExpCircuit {
-            base,
-            exponent,
-            modulus,
-            res,
-        };
-
-        // Setup the constraint system
-        let cs = ConstraintSystem::<Fr>::new_ref();
-
-        // Generate constraints
-        circuit.generate_constraints(cs.clone()).unwrap();
-
-        // Check if the constraint system is satisfied
-        assert!(cs.is_satisfied().unwrap());
-    }
-    */
-    /*
-    #[test]
-    fn second_example() {
-        //  10^2 mod 3 = 1 // number of reductions at most is 100 / 3 = 33
-        // Example parameters (for testing purposes)
-        let base = BigUint::from(10u64);
-        let exponent = BigUint::from(2u64);
-        let modulus = BigUint::from(3u64);
-        let res = base.modpow(&exponent, &modulus);
-        println!("res: {}", res);
-        // Convert big integers to field elements
-        let base = Fr::from_str(&base.to_string()).unwrap();
-        let exponent = Fr::from_str(&exponent.to_string()).unwrap();
-        let modulus = Fr::from_str(&modulus.to_string()).unwrap();
-        let res = Fr::from_str(&res.to_string()).unwrap();
-        // Create the circuit
-        let circuit = ModExpCircuit {
-            base,
-            exponent,
-            modulus,
-            res,
-        };
-
-        // Setup the constraint system
-        let cs = ConstraintSystem::<Fr>::new_ref();
-        // Generate constraints
-        circuit.generate_constraints(cs.clone()).unwrap();
-
-        // Check if the constraint system is satisfied
-        assert!(cs.is_satisfied().unwrap());
-    }
-     */
     fn generate_random_biguint(num_bytes: usize) -> BigUint {
         let mut rng = thread_rng();
         let mut bytes = vec![0u8; num_bytes];
