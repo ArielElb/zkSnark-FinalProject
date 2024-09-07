@@ -11,7 +11,6 @@ use crate::arkworks::matrix_proof_of_work::io::{
     write_proof_to_file,
 };
 use ark_ff::fields::models::fp::Fp;
-
 use actix_web::{web, HttpResponse, Responder};
 use ark_bls12_381::{Bls12_381, Config, Fr as F};
 use ark_ec::bls12::Bls12;
@@ -31,7 +30,6 @@ use std::string::String;
 
 use serde::{Deserialize, Serialize};
 use serde_json;
-// create ne
 // create a struct of InputData that will be used to get the data from the user
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InputData {
@@ -82,7 +80,6 @@ pub struct ProveInput {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProveOutPut {
     hash_a: String,
-
     hash_b: String,
     hash_c: String,
     setup_time: f64,

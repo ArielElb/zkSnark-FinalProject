@@ -36,10 +36,25 @@ pub fn hash_to_bytes<ConstraintF: PrimeField>(
     let result = sha256_var.finalize().unwrap();
     result
 }
-pub fn generate_bases_native(x: &BigUint, n_value:&BigUint) -> (Vec<num_bigint::BigUint>, Vec<ModVals>) {
+
+pub fn hash_x_plus_i_native<F: PrimeField>(x: F, i: u64) -> Vec<u8> {
+    let mut sha256 = Sha256::new();
+    let x_plus_i = x + F::from(i);
+    let x_plus_i_bytes = x_plus_i.into_bigint().to_bytes_le();
+
+    // Update the hash with the bytes of x + i
+    sha256.update(&x_plus_i_bytes);
+
+    // Finalize and return the resulting hash as a byte vector
+    sha256.finalize().to_vec()
+}
+pub fn generate_bases_native(
+    x: &BigUint,
+    n_value: &BigUint,
+) -> (Vec<num_bigint::BigUint>, Vec<ModVals>) {
     let mut a_j_s = vec![];
-    let mut witnesses:Vec<ModVals> = vec![];
-    let divisor = n_value;// + BigUint::from(1u8);
+    let mut witnesses: Vec<ModVals> = vec![];
+    let divisor = n_value; // + BigUint::from(1u8);
     for j in 0..K {
         let mut sha256 = Sha256::default();
         let x_fr = Fr::from(x.clone());
@@ -54,9 +69,9 @@ pub fn generate_bases_native(x: &BigUint, n_value:&BigUint) -> (Vec<num_bigint::
         let a_j = finalize(sha256.clone()); // hash(x || j)
                                             // convert a_j to BigUint:
         let a_j = BigUint::from_bytes_le(&a_j);
-        
+
         a_j_s.push(a_j.clone() % divisor);
-        witnesses.push(get_mod_vals(&a_j,&divisor));
+        witnesses.push(get_mod_vals(&a_j, &divisor));
     }
     (a_j_s, witnesses)
 }
@@ -84,9 +99,11 @@ pub fn generate_bases_a<ConstraintF: PrimeField>(
             })
             .unwrap();
         let bozo = divisor + ConstraintF::one();
-        let remainder = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(witnesses[j].remainder)).unwrap();
-        let quaitent = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(witnesses[j].q)).unwrap();
-        let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(bozo)).unwrap();
+        let remainder =
+            FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(witnesses[j].remainder)).unwrap();
+        let quaitent =
+            FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(witnesses[j].q)).unwrap();
+        let div = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(bozo)).unwrap();
         let result = quaitent * &div + &remainder;
         result.enforce_equal(&a_j_fpvar);
         a_j_s.push(remainder);

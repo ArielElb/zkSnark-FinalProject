@@ -1,4 +1,5 @@
-use super::fermat_circut::FermatCircuit;
+use super::fermat_circut::{self, FermatCircuit};
+use super::modpow_circut;
 use super::utils::constants::{self, get_max_val};
 use super::utils::hasher::{finalize, hash_to_bytes};
 use super::utils::modulo;
@@ -28,17 +29,57 @@ const K: usize = constants::K;
 use num_bigint::RandBigInt;
 // struct for Final circuit: PrimeCheck:
 #[derive(Clone)]
-pub struct PrimeCheck<ConstraintF: PrimeField> {
+pub struct PrimeCircut<ConstraintF: PrimeField> {
     x: ConstraintF,      // a seed for the initial hash // public input
     i: u64,              // the index i s.t we check if a_i=hash(x+i) is prime // public input
     a_j_s: Vec<Vec<u8>>, // a vector of a_j = hash(x+j) for j in 0..i -1 // public input - to check that we actually calculated the hash correctly
     a_i: Vec<u8>,        // a_i = hash(x+i) // public input
     a_i_mod: ModWitnesses<ConstraintF>,
-    fermat_circuit: FermatCircuit<ConstraintF>, // The randomness is inside this struct
+    pub fermat_circuit: FermatCircuit<ConstraintF>, // The randomness is inside this struct
+}
+// create constructor for the circuit:
+impl PrimeCircut<Fr> {
+    /// Creates a new [`PrimeCircut<Fr>`].
+    pub fn new(x: Fr, i: u64) -> Self {
+        // hash x+i:
+        let mut sha256 = Sha256::new();
+        let x_plus_i = x + Fr::from(i);
+        let x_plus_i_bytes = x_plus_i.into_bigint().to_bytes_le();
+        // Update the hash with the bytes of x + i
+        sha256.update(&x_plus_i_bytes);
+        // Finalize and return the resulting hash as a byte vector
+        let a_i = sha256.finalize().to_vec();
+        let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        let mut r_bytes = [0u8; 32];
+
+        // r = hash(x + i || a_i = hash(x+i) || i )
+        // create the randomnes:
+        init_randomness(&mut r_bytes, x_plus_i_bytes.clone(), a_i.clone(), i);
+
+        // convert r to Fr:
+        let r = Fr::from_le_bytes_mod_order(&r_bytes);
+
+        let vals = modulo::get_mod_vals(&a_i_biguint, &get_max_val());
+        let fermat_circuit =
+            fermat_circut::fermat_constructor::<Fr>(BigUint::from(r), vals.remainder.clone());
+
+        //TODO: hash x+1 ... x+i-1
+        let a_j_s = vec![];
+        Self {
+            x,
+            i,
+            a_j_s,
+            a_i,
+            a_i_mod: modpow_circut::mod_vals_to_mod_witness(vals),
+            fermat_circuit,
+        }
+    }
 }
 
 // implement the constraints for the circuit:
-impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<ConstraintF> {
+impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircut<ConstraintF> {
     fn generate_constraints(
         self,
         cs: ConstraintSystemRef<ConstraintF>,
@@ -50,11 +91,11 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
         // calculate the hash(x+i):
         let calculated_a_i: DigestVar<ConstraintF> = hash_to_bytes(x_plus_i);
         // enforce that a_i = hash(x+i):
-        let a_i_var = DigestVar::new_input(ark_relations::ns!(cs, "a_i"), || Ok(self.a_i))?;
+        let a_i_var = DigestVar::new_witness(ark_relations::ns!(cs, "a_i"), || Ok(self.a_i))?;
         a_i_var.enforce_equal(&calculated_a_i)?;
-        // TODO: fermat primality
-        // TODO : validate that what i calculated is what in fermat_circuit.
-        let mut a_i_fpvar =
+
+        // create a_i fpvar:
+        let mut a_i_fpvar: FpVar<ConstraintF> =
             FpVar::<ConstraintF>::new_witness(ark_relations::ns!(cs, "a_i_fpvar"), || {
                 Ok(ConstraintF::from_le_bytes_mod_order(
                     &a_i_var.to_bytes().unwrap().value().unwrap(),
@@ -70,9 +111,10 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
             FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a_i_mod.q)).unwrap();
 
         let result = &div * quaitent + &remainder;
-        result.enforce_equal(&origin);
-        origin.enforce_equal(&a_i_fpvar);
+        let _ = result.enforce_equal(&origin);
+        let _ = origin.enforce_equal(&a_i_fpvar);
         a_i_fpvar = remainder;
+
         //let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(get_max_val())).unwrap();
         //let result = quaitent * &div + &remainder;
         //todo get modulo out of a_i and a_j_s
@@ -93,7 +135,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
 }
 
 // function to create the randomness:
-fn init_randomness(randomness: &mut [u8; 32], x_plus_i_bytes: Vec<u8>, a_i: Vec<u8>, i: u64) {
+pub fn init_randomness(randomness: &mut [u8; 32], x_plus_i_bytes: Vec<u8>, a_i: Vec<u8>, i: u64) {
     let mut sha256 = Sha256::default();
     sha256.update(&x_plus_i_bytes);
     sha256.update(&a_i);
@@ -104,6 +146,7 @@ fn init_randomness(randomness: &mut [u8; 32], x_plus_i_bytes: Vec<u8>, a_i: Vec<
     }
 }
 
+// pub fn check_if_is_prime_native_fermat
 #[cfg(test)]
 mod tests {
     use crate::arkworks::prime_snark::fermat_circut::fermat_constructor;
@@ -153,10 +196,10 @@ mod tests {
         // do the hash for x+i:
         sha256.update(&x_plus_i_bytes);
         let a_i = finalize(sha256.clone());
-        // a_i defined
-        //todo add modulo from a_i and a_j_s
+        // a_i defined as hash(x+i)
         // convert a_i to biguint:
         let a_i_biguint: BigUint = BigUint::from_bytes_le(&a_i);
+
         let vals = get_mod_vals(&a_i_biguint, &get_max_val());
 
         // r = hash(x + i || a_i = hash(x+i) || i )
@@ -167,25 +210,27 @@ mod tests {
         // create fermat circuit:
         let fermat_circuit = fermat_constructor::<Fr>(BigUint::from(r), vals.remainder.clone());
         // create the circuit:
-        let circuit = PrimeCheck {
-            x,
-            i,
+        let circuit = PrimeCircut {
+            x, // a seed for the initial hash
+            i, // the index i s.t we check if a_i=hash(x+i) is prime
             a_j_s: a_j_s.clone(),
-            a_i,
-            a_i_mod: mod_vals_to_mod_witness(vals),
+            a_i, // the hash of x+i - the number we want to check if it is prime
+            a_i_mod: mod_vals_to_mod_witness(vals), //
             fermat_circuit,
         };
         circuit.generate_constraints(cs.clone()).unwrap();
         // check if the circuit is satisfied:
         assert!(cs.is_satisfied().unwrap());
     }
+
     #[test]
+
     fn groth16() {
         let start_total = Instant::now();
 
         let x = Fr::from(5u64);
 
-        let i: u64 = 3;
+        let i: u64 = 10;
         // set it up using sha256 default:
         // create for each j in 0..i-1 the hash(x+j):
         let mut a_j_s = vec![];
@@ -217,7 +262,7 @@ mod tests {
         // create fermat circuit:
         let fermat_circuit = fermat_constructor::<Fr>(BigUint::from(r), vals.remainder.clone());
         // create the circuit:
-        let circuit = PrimeCheck {
+        let circuit = PrimeCircut {
             x,
             i,
             a_j_s: a_j_s.clone(),
@@ -247,9 +292,9 @@ mod tests {
             .instance_assignment
             .clone();
         // print the public inputs one by one nicely:
-        // for (i, input) in public_input.iter().enumerate() {
-        //     println!("public_input[{}]: {:?}", i, input);
-        // }
+        for (i, input) in public_input.iter().enumerate() {
+            println!("public_input[{}]: {:?}", i, input);
+        }
         // verification:
         let start_verification = Instant::now();
         let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
