@@ -23,7 +23,7 @@ export default function Home() {
               party (the prover) to prove to another party (the verifier) that they know a
               value or statement without revealing any information about the value itself.
               This project leverages the SP1 framework and{" "}
-              <a href='https://arkworks.rs/' target='_blank' rel='noopener noreferrer'>
+              <a href='https://arkworks.rs/' target='_blank' rel='noopener noreferrer' className={styles.link}>
                 arkworks.rs
               </a>{" "}
               to implement zkProofs for various computational tasks, including:
