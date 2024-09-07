@@ -62,12 +62,14 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCheck<
             })?;
         //set the values of the witness of the mod
         let max_val = ConstraintF::from_le_bytes_mod_order(&get_max_val().to_bytes_le());
-        let div = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(max_val)).unwrap();
-        let origin = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(self.a_i_mod.n)).unwrap();
-        let remainder = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(self.a_i_mod.remainder)).unwrap();
-        let quaitent = FpVar::<ConstraintF>::new_witness(cs.clone(),||Ok(self.a_i_mod.q)).unwrap();
-        
-        let result = &div*quaitent + &remainder;
+        let div = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(max_val)).unwrap();
+        let origin = FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a_i_mod.n)).unwrap();
+        let remainder =
+            FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a_i_mod.remainder)).unwrap();
+        let quaitent =
+            FpVar::<ConstraintF>::new_witness(cs.clone(), || Ok(self.a_i_mod.q)).unwrap();
+
+        let result = &div * quaitent + &remainder;
         result.enforce_equal(&origin);
         origin.enforce_equal(&a_i_fpvar);
         a_i_fpvar = remainder;
