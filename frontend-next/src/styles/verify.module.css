@@ -19,7 +19,7 @@
 }
 .title {
   margin-bottom: 20px;
-  color: #0070f3;
+  color: #8AC7DB;;
 }
 
 .label {
@@ -104,4 +104,9 @@
 
 .topRightButton:hover {
   background-color: #005bb5; /* צבע רקע כשמעבירים את העכבר מעל הכפתור */
+}
+.error {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
 }

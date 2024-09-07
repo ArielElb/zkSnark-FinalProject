@@ -25,7 +25,7 @@
 
 .header h1 {
   font-size: 2.5rem;
-  color: #00f;
+  color: #8AC7DB;
 }
 
 .headerParagraph {
@@ -108,4 +108,11 @@
     flex: 0 0 100%;
     margin-bottom: 1.5rem;
   }
+}
+.link {
+  color: #8AC7DB;
+}
+
+.link:hover {
+  color: #66A3B2; /* צבע עבור ה-hover */
 }
