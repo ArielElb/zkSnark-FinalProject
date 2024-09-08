@@ -431,10 +431,17 @@ mod tests {
                 .instance_assignment
                 .clone();
 
-            // print the public inputs one by one nicely:
-            for (i, input) in real_public_input.iter().enumerate() {
+            let public_input = real_public_input.clone()[1..].to_vec();
+            // // // print the public inputs one by one nicely:
+            for (i, input) in public_input.iter().enumerate() {
                 println!("real public_input[{}]: {:?}", i, input);
             }
+
+            // // print the public inputs one by one nicely:
+            // for (i, input) in real_public_input.iter().enumerate() {
+            //     println!("real public_input[{}]: {:?}", i, input);
+            // }
+            // encode the public input to a byte array
 
             // // // Verify the proof
             // let start_verification = Instant::now();

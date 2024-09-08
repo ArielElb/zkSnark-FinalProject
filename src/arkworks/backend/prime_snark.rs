@@ -13,8 +13,9 @@ use ark_bls12_381::{Bls12_381, Fr as BlsFr};
 use ark_ff::BigInteger;
 use ark_ff::PrimeField;
 use ark_groth16::{prepare_verifying_key, Groth16};
-use ark_relations::r1cs::ConstraintSynthesizer;
+use ark_r1cs_std::{ToBitsGadget, ToBytesGadget};
 use ark_relations::r1cs::ConstraintSystem;
+use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_snark::SNARK;
 use ark_std::rand::SeedableRng;
 use ark_std::test_rng;
@@ -35,6 +36,7 @@ pub struct ProveInput {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProveOutput {
     num_constraints: usize,
+    j: u64,
     num_variables: usize,
     setup_time: f64,
     proving_time: f64,
@@ -72,6 +74,7 @@ pub async fn prove_prime(data: web::Json<ProveInput>) -> impl Responder {
         println!("No prime number found in the given range.");
         return HttpResponse::Ok().json(ProveOutput {
             proof: "".to_string(),
+            j: 0,
             num_constraints: 0,
             num_variables: 0,
             setup_time: 0.0,
@@ -128,6 +131,7 @@ pub async fn prove_prime(data: web::Json<ProveInput>) -> impl Responder {
 
     HttpResponse::Ok().json(ProveOutput {
         proof: encode_proof::<Bls12_381>(&proof),
+        j: found_j,
         num_constraints: cs.num_constraints(),
         num_variables: cs.num_instance_variables() + cs.num_witness_variables(),
         setup_time: setup_duration.as_secs_f64(),
@@ -135,5 +139,69 @@ pub async fn prove_prime(data: web::Json<ProveInput>) -> impl Responder {
         found_prime: true,
         prime_num: found_prime.unwrap().to_string(),
         pvk: encode_pvk::<Bls12_381>(&prepare_verifying_key::<Bls12_381>(&vk)),
+    })
+}
+
+// now for the verification part:
+// create a struct of VerifyInput that will be used to get the data from the user : proof - the proof of the computation , public_input - the public input of the computation , pvk - the verifying key of the computation
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyInput {
+    j: u64,
+    x: u64,
+    proof: String,
+    public_input: String,
+    pvk: String,
+}
+
+// create a struct of VerifyOutput that will be used to send the data to the user : verifying_time - the time it took to verify the computation , valid - if the computation is valid or not
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyOutput {
+    verifying_time: f64,
+    valid: bool,
+}
+
+pub async fn verify_prime(data: web::Json<VerifyInput>) -> impl Responder {
+    // extract the data from the user
+    let data = data.into_inner();
+    let j = data.j; // j- the value of j where the prime was found
+    let x = data.x; // x- a intial seed number
+    let proof = decode_proof::<Bls12_381>(&data.proof); // proof- the proof of the computation
+                                                        // let public_input = decode_proof::<Bls12_381>(&data.public_input); // public_input- the public input of the computation
+    let pvk = decode_pvk::<Bls12_381>(&data.pvk); // pvk- the verifying key of the computation
+
+    let check_result = check_if_next_is_prime(BlsFr::from(x), j);
+
+    // Create the prime circuit using the found prime and the j from the loop
+    let prime_circuit = PrimeCircuit::new(
+        check_result.3.clone(),
+        check_result.2.remainder.clone(),
+        BlsFr::from(x),
+        check_result.0.clone(),
+        j, // Use the found j from the loop
+        check_result.2.clone(),
+    );
+
+    let cs = ConstraintSystem::<BlsFr>::new_ref();
+    prime_circuit.generate_constraints(cs.clone()).unwrap();
+    let real_public_input = ConstraintSystemRef::borrow(&cs)
+        .unwrap()
+        .instance_assignment
+        .clone();
+    // Verify the proof
+    let start_verify = Instant::now();
+    let is_valid = Groth16::<Bls12_381>::verify_with_processed_vk(
+        &pvk.unwrap(),
+        &real_public_input[1..],
+        &proof.unwrap(),
+    )
+    .unwrap();
+
+    let verify_duration = start_verify.elapsed();
+    println!("Verification time: {:?}", verify_duration);
+
+    // Return the verification result
+    HttpResponse::Ok().json(VerifyOutput {
+        verifying_time: verify_duration.as_secs_f64(),
+        valid: is_valid,
     })
 }
