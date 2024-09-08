@@ -21,7 +21,7 @@ pub struct ReturnStruct {
 pub fn get_mod_vals(num: &BigUint, div: &BigUint) -> ModVals {
     let q = num / div;
     let remainder = num % div;
-    let result = &q*div+&remainder;
+    let result = &q * div + &remainder;
     ModVals {
         num: num.clone(), // Still necessary to clone if ownership is needed outside
         q,

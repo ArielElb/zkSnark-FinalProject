@@ -128,7 +128,7 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for FermatCircu
         Ok(())
     }
 }
-fn fermat_test(a: &BigUint, p: &BigUint) -> bool {
+pub fn fermat_test(a: &BigUint, p: &BigUint) -> bool {
     let one_val = BigUint::from(1u32);
     let bases = generate_bases_native(a,p).0;
     for i in 0..K {
@@ -159,7 +159,7 @@ pub fn fermat_constructor<ConstraintF: PrimeField>(
         is_prime: fermat_test(&a, &n),
         n: ConstraintF::from(n),
         a: ConstraintF::from(a),
-        results: results,
+        results,
         modpow_ver_circuits: circuits,
         mod_base_ver: witnesses,
     };

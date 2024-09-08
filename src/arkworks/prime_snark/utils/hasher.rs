@@ -60,7 +60,6 @@ pub fn generate_bases_native(
         let x_fr = Fr::from(x.clone());
         let j_fr: ark_ff::Fp<ark_ff::MontBackend<ark_bls12_381::FrConfig, 4>, 4> =
             Fr::from(j as u64);
-
         let x_bytes = x_fr.into_bigint().to_bytes_le();
         let j_bytes = j_fr.into_bigint().to_bytes_le();
         // do the hash for x || j
