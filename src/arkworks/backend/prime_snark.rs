@@ -149,7 +149,6 @@ pub struct VerifyInput {
     j: u64,
     x: u64,
     proof: String,
-    public_input: String,
     pvk: String,
 }
 
