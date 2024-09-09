@@ -14,7 +14,7 @@ const InformationPage = ({ searchParams }) => {
         <button onClick={handleBack} className={styles.topRightButton}>
           back to verify
         </button>
-        <h1 className={styles.title}>information about {searchParams.type}</h1>
+        <h1 className={styles.title}>Information about {searchParams.type}</h1>
 
         {searchParams.type == "Prime number" && ( //explain about prime
           <p className={styles.description}>
@@ -23,7 +23,7 @@ const InformationPage = ({ searchParams }) => {
             not want the client to compute the prime number on their own. Conversely, we
             do not want the server to have full control over the selection of the prime
             number. <br></br> <br></br>
-            with zk proof we can use the server to work on checking if the number is a
+            With zk proof we can use the server to work on checking if the number is a
             prime number and the client will need only to verify it.
           </p>
         )}

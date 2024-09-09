@@ -42,6 +42,8 @@ const InputFibonacciPage = () => {
         localStorage.setItem("pvk", JSON.stringify(pvk));
         setProvingTime(proving_time);
         setNumber(fib_number);
+        localStorage.setItem("fib_number", JSON.stringify(parseInt(fib_number)));
+
 
       })
       .catch((error) => {
@@ -106,7 +108,7 @@ const InputFibonacciPage = () => {
 
       {currentOption === "prove" && (
         <>
-          <h1 className={styles.title}>fibonacci input</h1>
+          <h1 className={styles.title}>Fibonacci input</h1>
           <div className={styles.inputRows}>
             <input
               type='text'
@@ -156,6 +158,14 @@ const InputFibonacciPage = () => {
       {currentOption === "verify" && (
         <div className={styles.option2Container}>
           <h1 className={styles.title}>Verify Proof</h1>
+          {localStorage.getItem("first_number")&&(
+             <div>
+             <h2>The first number is {localStorage.getItem("first_number")}</h2>
+             <h2>The second number is {localStorage.getItem("second_number")}</h2>
+             <h2>The fibonacci number we get is {localStorage.getItem("fib_number")}</h2>
+
+           </div>
+          )}
           <button onClick={handleVerify} className={styles.saveButton}>
             Verify
           </button>
@@ -165,7 +175,7 @@ const InputFibonacciPage = () => {
             </div>
           )}
           {verifyResult && !isLoadingVerify && (
-            <div className={styles.verifyResult}>
+            <div>
               <h2>Verification Result:</h2>
               <p>{verifyResult}</p>
               <p>{verifyingTime}</p>

@@ -30,7 +30,7 @@ const InputPrimePage = () => {
 
       {currentOption === "prove" && (
         <>
-          <h1 className={styles.title}>prime input</h1>
+          <h1 className={styles.title}>Prime input</h1>
           <div className={styles.inputRows}>
           <input type="text" className={styles.inputField} value={number}
               onChange={(e) => setNumber(e.target.value)}  placeholder="enter the prime number" />
