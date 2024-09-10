@@ -8,7 +8,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-image: url("../public/black.jpg");
+  background-color: #2e2e2e; /* Dark but not black background */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

@@ -6,7 +6,7 @@
   overflow: hidden;
 }
 .container {
-  background-color: #000;
+  background-color: #2e2e2e;
   display: flex;
   flex-direction: column;
 
