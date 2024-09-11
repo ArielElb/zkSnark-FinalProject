@@ -228,12 +228,8 @@ const InformationPage = ({ searchParams }) => {
        <div className={styles.imageContainer}>
           
        <div className={styles.imageRow}>
-         <img src="/logo.jpg" alt="Image 1" className={styles.image} />
-         <img src="/logo.jpg" alt="Image 2" className={styles.image} />
-       </div>
-       <div className={styles.imageRow}>
-         <img src="/logo.jpg" alt="Image 3" className={styles.image} />
-         <img src="/logo.jpg" alt="Image 4" className={styles.image} />
+         <img src="/prime1.png" alt="Image 1" className={styles.image} />
+         <img src="/prime2.png" alt="Image 2" className={styles.image} />
        </div>
      </div>}
         {searchParams.type=="fibonachi number"&& //explain about fibonachi number
