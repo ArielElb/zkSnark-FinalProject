@@ -250,11 +250,11 @@ const InformationPage = ({ searchParams }) => {
         <div className={styles.imageContainer}>
               
         <div className={styles.imageRow}>
-          <img src="/matrix_mult_50_1.png" alt="Image 1" className={styles.image} />
-          <img src="/matrix_mult_50_2.png" alt="Image 2" className={styles.image} />
+          <img src="/matrix_mult_power_1.png" alt="Image 1" className={styles.image} />
+          <img src="/matrix_mult_power_2.png" alt="Image 2" className={styles.image} />
         </div>
         <div className={styles.imageRow}>
-          <img src="/matrix_mult_50_3.png" alt="Image 3" className={styles.image} />
+          <img src="/matrix_mult_power_3.png" alt="Image 3" className={styles.image} />
         </div>
         </div>}
 
