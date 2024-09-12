@@ -22,10 +22,10 @@ pub struct FibonacciCircuit<F: PrimeField> {
 impl<F: PrimeField> ConstraintSynthesizer<F> for FibonacciCircuit<F> {
     fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
         let mut fi_minus_one = FpVar::<F>::new_input(cs.clone(), || {
-            self.a.ok_or(SynthesisError::AssignmentMissing)
+            self.b.ok_or(SynthesisError::AssignmentMissing)
         })?;
         let mut fi_minus_two = FpVar::<F>::new_input(cs.clone(), || {
-            self.b.ok_or(SynthesisError::AssignmentMissing)
+            self.a.ok_or(SynthesisError::AssignmentMissing)
         })?;
         // create one dummy variable for making it 2^n - 1
         let _dummy = FpVar::<F>::new_input(cs.clone(), || Ok(F::one()))?;
@@ -35,7 +35,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for FibonacciCircuit<F> {
         // Initialize fi as a witness variable
         let mut fi = FpVar::<F>::new_witness(cs.clone(), || Ok(F::zero()))?;
         // Do the loop only when verifying the circuit
-        for _i in 0..self.num_of_steps {
+        for _i in 1..self.num_of_steps {
             fi = fi_minus_one.clone() + &fi_minus_two;
             fi.enforce_equal(&(&fi_minus_one + &fi_minus_two))?;
             fi_minus_two = fi_minus_one;
@@ -75,12 +75,12 @@ mod marlin {
 
         let a = Fr::from(1u64);
         let b = Fr::from(1u64);
-        let mut fi = a;
+        let mut fi = Fr::from(0u64);
         let mut fi_minus_one = b;
         let mut fi_minus_two = a;
 
         // witness - the result of the fibonacci
-        for _ in 0..num_of_steps {
+        for _ in 1..num_of_steps {
             let new_fi = fi_minus_one + fi_minus_two;
             fi_minus_two = fi_minus_one;
             fi_minus_one = new_fi;
@@ -152,17 +152,18 @@ mod groth16 {
         let cs = ConstraintSystem::<BlsFr>::new_ref();
         let a = BlsFr::from(0u64);
         let b = BlsFr::from(1u64);
-        let num_of_steps = 50;
+        let num_of_steps = 10;
+        let mut fi_minus_one = b;
+        let mut fi_minus_two = a;
         let mut fi = BlsFr::from(0);
-        let mut fi_minus_one = a;
-        let mut fi_minus_two = b;
 
         // witness - the result of the fibonacci
-        for _ in 0..num_of_steps {
+        for _ in 1..num_of_steps {
             fi = fi_minus_one + fi_minus_two;
             fi_minus_two = fi_minus_one;
             fi_minus_one = fi;
         }
+
         // Ensure the number of public inputs matches 2^n - 1
         // Here we have 2 inputs (a, b), we need to adjust accordingly
         let num_inputs = 2 + 1; // a, b, and result
@@ -201,7 +202,7 @@ mod groth16 {
         let mut fi_minus_two = b;
 
         // witness - the result of the fibonacci
-        for _ in 0..num_of_steps {
+        for _ in 1..num_of_steps {
             fi = fi_minus_one + fi_minus_two;
             fi_minus_two = fi_minus_one;
             fi_minus_one = fi;

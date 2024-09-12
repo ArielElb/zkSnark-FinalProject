@@ -358,8 +358,8 @@ mod tests {
     }
     #[test]
     fn test_groth_with_constructor() {
-        let x = 113130u64;
-        let i = 3;
+        let x = 32224;
+        let i = 20;
         let mut found_prime = None; // To store the first prime found
         let mut check_result = None;
         let mut found_j = 0; // Store the value of j when the prime is found
