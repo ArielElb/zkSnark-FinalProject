@@ -104,9 +104,6 @@ pub async fn fibbonaci_snark_proof(data: web::Json<InputDataFib>) -> impl Respon
         num_of_steps: data.num_of_rounds,
         result: Some(BlsFr::from(fibo_num)),
     };
-
-    //   pub numb_of_steps: usize,
-    //pub result: Option<F>,
     let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(circuit.clone(), &mut rng).unwrap();
     let pvk = prepare_verifying_key::<Bls12_381>(&vk);
     let start = ark_std::time::Instant::now();
