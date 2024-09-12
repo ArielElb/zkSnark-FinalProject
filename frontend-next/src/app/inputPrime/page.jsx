@@ -145,8 +145,8 @@ const InputPrimePage = () => {
               <p>Proving Time: {primeResult.proving_time} seconds</p>
               <p>Number of Constraints: {primeResult.num_constraints}</p>
               <p>Number of Variables: {primeResult.num_variables}</p>
-              <p>The proof: {recProof.substring(0, 150)}</p>
-              <p>{recProof.substring(150, 300)}</p>
+              <p>The proof: {recProof.substring(0, 120)}</p>
+              <p>{recProof.substring(120, 300)}</p>
               {primeResult.found_prime ? (
                 <p style={{ color: "green" }}>Prime found: {primeResult.prime_num}</p>
               ) : (

@@ -20,6 +20,9 @@ const InputFibonacciPage = () => {
   const [recProof,setRecProof] = useState("");
   const [error, setError] = useState(""); // State for error messages
   const handleProve = () => {
+    if(rounds&&a&&b) {
+
+    
     if(rounds>186) {
       setError("the maximum number of rounds is 186");
       return; // Exit the function if the condition is met
@@ -55,6 +58,10 @@ const InputFibonacciPage = () => {
       .finally(() => {
         setIsLoadingProof(false);
       });
+    } else {
+      alert("Please enter the number of rounds and the first and second fibonacci number.");
+
+    }
   };
   const handleVerify = () => {
     const pvk = JSON.parse(localStorage.getItem("pvk"));
@@ -149,8 +156,8 @@ const InputFibonacciPage = () => {
               <>
                     <p>The fibonacci number is: {number}</p>
                     <p>Proving Time: {provingTime.toFixed(6)} seconds</p>
-                    <p>The proof: {recProof.substring(0, 150)}</p>
-                    <p>{recProof.substring(150, 300)}</p>
+                    <p>The proof: {recProof.substring(0, 120)}</p>
+                    <p>{recProof.substring(120, 300)}</p>
 
               </>
               

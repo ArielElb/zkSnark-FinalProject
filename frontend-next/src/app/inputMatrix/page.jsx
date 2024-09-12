@@ -247,8 +247,8 @@ const InputMatrixPage = () => {
               <p>Hash A: {hashes.hash_a}</p>
               <p>Hash B: {hashes.hash_b}</p>
               <p>Hash C: {hashes.hash_c}</p>
-              <p>The proof: {recProof.substring(0, 150)}</p>
-              <p>{recProof.substring(150, 300)}</p>
+              <p>The proof: {recProof.substring(0, 120)}</p>
+              <p>{recProof.substring(120, 300)}</p>
 
 
             </div>
