@@ -12,6 +12,7 @@ const InputPrimePage = () => {
   const [isLoading, setIsLoading] = useState(false); // Loading state for proof
   const [verifyResult, setVerifyResult] = useState(""); // Verification result
   const [verifyingTime, setVerifyingTime] = useState(""); // Verification time
+  const [recProof,setRecProof] = useState("");
 
   const handleProvePrime = () => {
     if (number && rounds) {
@@ -42,6 +43,7 @@ const InputPrimePage = () => {
           localStorage.setItem("prime_num", prime_num); // Store prime number
           localStorage.setItem("prime_round", j); // Store the round where prime was found
           localStorage.setItem("seed_number", number); // Save the seed number (x)
+          setRecProof(proof)
         })
         .catch((error) => {
           console.error("Error proving prime:", error);
@@ -143,6 +145,7 @@ const InputPrimePage = () => {
               <p>Proving Time: {primeResult.proving_time} seconds</p>
               <p>Number of Constraints: {primeResult.num_constraints}</p>
               <p>Number of Variables: {primeResult.num_variables}</p>
+              <p>The proof: {recProof.substring(0, 150)}</p>
               {primeResult.found_prime ? (
                 <p style={{ color: "green" }}>Prime found: {primeResult.prime_num}</p>
               ) : (

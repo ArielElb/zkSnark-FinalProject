@@ -17,6 +17,7 @@ const InputFibonacciPage = () => {
   const [verifyResult, setVerifyResult] = useState("");
   const [verifyingTime, setVerifyingTime] = useState("");
   const [isLoadingVerify, setIsLoadingVerify] = useState(false);
+  const [recProof,setRecProof] = useState("");
   const [error, setError] = useState(""); // State for error messages
   const handleProve = () => {
     if(rounds>186) {
@@ -42,6 +43,8 @@ const InputFibonacciPage = () => {
         localStorage.setItem("pvk", JSON.stringify(pvk));
         setProvingTime(proving_time);
         setNumber(fib_number);
+        console.log(proof);
+        setRecProof(proof);
         localStorage.setItem("fib_number", JSON.stringify(parseInt(fib_number)));
 
 
@@ -144,9 +147,9 @@ const InputFibonacciPage = () => {
           <div className={styles.additionalInfo}>
             {provingTime !== null && (
               <>
-                            <p>the fibonacci number is: {number} </p>
-                            <p>Proving Time: {provingTime.toFixed(6)} seconds</p>
-
+                    <p>The fibonacci number is: {number}</p>
+                    <p>Proving Time: {provingTime.toFixed(6)} seconds</p>
+                    <p>The proof: {recProof.substring(0, 150)}</p>
 
               </>
               

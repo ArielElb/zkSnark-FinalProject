@@ -29,6 +29,8 @@ const InputMatrixPage = () => {
   const [provingTime, setProvingTime] = useState(null);
   const [numConstraints, setNumConstraints] = useState(null);
   const [numVariables, setNumVariables] = useState(null);
+  const [recProof,setRecProof] = useState("");
+
 
   useEffect(() => {
     setSavedMatrix1(matrix1);
@@ -104,6 +106,7 @@ const InputMatrixPage = () => {
         localStorage.setItem("proof", JSON.stringify(proof));
         localStorage.setItem("pvk", JSON.stringify(pvk));
         setHashes({ hash_a, hash_b, hash_c });
+        setRecProof(proof)
         localStorage.setItem("hash_a", JSON.stringify(hash_a));
         localStorage.setItem("hash_b", JSON.stringify(hash_b));
         localStorage.setItem("hash_c", JSON.stringify(hash_c));
@@ -244,6 +247,8 @@ const InputMatrixPage = () => {
               <p>Hash A: {hashes.hash_a}</p>
               <p>Hash B: {hashes.hash_b}</p>
               <p>Hash C: {hashes.hash_c}</p>
+              <p>The proof: {recProof.substring(0, 150)}</p>
+
             </div>
           )}
           <AdditionalInfo /> {/* Render additional information component */}
