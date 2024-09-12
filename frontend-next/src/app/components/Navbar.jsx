@@ -13,7 +13,7 @@ const Navbar = () => {
           <Link href='../options'>Options</Link>
         </li>
         <li className={styles.navItem}>
-          <Link href='../inputFibonachi/'>Fibonacci</Link>
+          <Link href='../inputFibonacci/'>Fibonacci</Link>
         </li>
         <li className={styles.navItem}>
           <Link href='../inputMatrix/'>Matrix</Link>

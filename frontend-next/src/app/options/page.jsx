@@ -25,7 +25,7 @@ const OptionsPage = () => {
           <Link href='../inputPrime' legacyBehavior>
             <button className={styles.option}>Prime Number</button>
           </Link>
-          <Link href='../inputFibonachi' legacyBehavior>
+          <Link href='../inputFibonacci' legacyBehavior>
             <button className={styles.option}>Fibonacci Number</button>
           </Link>
           <Link href='../inputMatrix' legacyBehavior>

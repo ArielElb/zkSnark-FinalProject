@@ -11,18 +11,12 @@ use ark_std::rand::SeedableRng;
 use rand::rngs::StdRng;
 use serde::{Deserialize, Serialize};
 pub fn fibonacci(num_of_steps: usize, a: u128, b: u128) -> u128 {
-    // if x == 0 {
-    //     return first;
-    // } else if x == 1 {
-    //     return second;
-    // }
-
     let mut fi = 0;
     let mut fi_minus_one = b;
     let mut fi_minus_two = a;
 
     // witness - the result of the fibonacci
-    for _ in 1..num_of_steps {
+    for _ in 0..num_of_steps {
         let new_fi = fi_minus_one + fi_minus_two;
         fi_minus_two = fi_minus_one;
         fi_minus_one = new_fi;
@@ -42,12 +36,28 @@ mod tests {
         let b = 1;
         let num_of_steps = 10;
         let result = fibonacci(num_of_steps, a, b);
-        assert_eq!(result, 55);
+        assert_eq!(result, 89);
     }
     #[test]
 
     fn test2_fibonacci() {
         let a = 1;
+        let b = 1;
+        let num_of_steps = 10;
+        let result = fibonacci(num_of_steps, a, b);
+        assert_eq!(result, 89);
+    }
+    #[test]
+    fn test3_fibonacci() {
+        let a = 1;
+        let b = 1;
+        let num_of_steps = 1;
+        let result = fibonacci(num_of_steps, a, b);
+        assert_eq!(result, 2);
+    }
+    #[test]
+    fn test4_fibonacci() {
+        let a = 0;
         let b = 1;
         let num_of_steps = 10;
         let result = fibonacci(num_of_steps, a, b);
@@ -66,6 +76,7 @@ pub struct InputDataFib {
 pub struct InputDataFibVer {
     pub proof: String,
     pub pvk: String,
+    pub fib_number: u128,
     pub a: u64,
     pub b: u64,
 }
@@ -120,7 +131,11 @@ pub async fn fibbonaci_snark_verify(data: web::Json<InputDataFibVer>) -> impl Re
     // the one is for dummy input!
     let result = Groth16::<Bls12_381>::verify_with_processed_vk(
         &pvk,
-        &[BlsFr::from(data.a), BlsFr::from(data.b), BlsFr::from(1)],
+        &[
+            BlsFr::from(data.a),
+            BlsFr::from(data.b),
+            BlsFr::from(data.fib_number),
+        ],
         &proof,
     )
     .unwrap();
