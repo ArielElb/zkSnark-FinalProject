@@ -150,6 +150,7 @@ const InputFibonacciPage = () => {
                     <p>The fibonacci number is: {number}</p>
                     <p>Proving Time: {provingTime.toFixed(6)} seconds</p>
                     <p>The proof: {recProof.substring(0, 150)}</p>
+                    <p>{recProof.substring(150, 300)}</p>
 
               </>
               
