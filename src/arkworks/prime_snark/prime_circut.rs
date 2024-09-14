@@ -4,6 +4,7 @@ use super::utils::constants::{self, get_max_val};
 use super::utils::hasher::{finalize, hash_to_bytes};
 use super::utils::modulo::{self, get_mod_vals};
 use crate::arkworks::prime_snark::modpow_circut::{ModWitnesses, ModpowVerCircuit};
+use alloy_sol_types::sol_data::Bool;
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_crypto_primitives::crh::sha256::constraints::DigestVar;
 use ark_ff::BigInteger;
@@ -71,7 +72,6 @@ impl PrimeCircuit<Fr> {
         // let r = Fr::from_le_bytes_mod_order(&r_bytes);
 
         // let vals: ModVals = modulo::get_mod_vals(&a_i_biguint, &get_max_val());
-        // println!("a_i after mod : {:?}", vals.remainder);
 
         let fermat_circuit = fermat_circut::fermat_constructor::<Fr>(a, num_to_prove);
 
@@ -136,9 +136,14 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircui
         n_var_fermat.enforce_equal(&a_i_fpvar)?;
         // // enforce that the is_prime is the same:
         // In the end create the constraints for the fermat circuit:
-        self.fermat_circuit
+
+        let _ = Boolean::new_witness(cs.clone(), ||{
+            self.fermat_circuit
             .generate_constraints(cs.clone())
             .unwrap();
+            Ok(true)
+        });
+
 
         Ok(())
     }
@@ -340,9 +345,9 @@ mod tests {
             .instance_assignment
             .clone();
         // print the public inputs one by one nicely:
-        for (i, input) in public_input.iter().enumerate() {
-            println!("public_input[{}]: {:?}", i, input);
-        }
+        //for (i, input) in public_input.iter().enumerate() {
+        //    println!("public_input[{}]: {:?}", i, input);
+        //}
         // verification:
         let start_verification = Instant::now();
         let is_correct = Groth16::<Bls12_381>::verify(&vk, &public_input[1..], &proof).unwrap();
@@ -358,8 +363,8 @@ mod tests {
     }
     #[test]
     fn test_groth_with_constructor() {
-        let x = 32224;
-        let i = 20;
+        let x = 113130u64;
+        let i = 3;
         let mut found_prime = None; // To store the first prime found
         let mut check_result = None;
         let mut found_j = 0; // Store the value of j when the prime is found
