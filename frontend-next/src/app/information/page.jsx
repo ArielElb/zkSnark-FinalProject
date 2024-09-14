@@ -228,7 +228,7 @@ const InformationPage = ({ searchParams }) => {
        <div className={styles.imageContainer}>
           
        <div className={styles.imageRow}>
-         <img src="/prime1.png" alt="Image 1" className={styles.image} />
+         <img src="/prime3.png" alt="Image 1" className={styles.image} />
          <img src="/prime2.png" alt="Image 2" className={styles.image} />
        </div>
      </div>}
