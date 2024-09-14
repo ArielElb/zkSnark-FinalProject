@@ -196,7 +196,6 @@ pub async fn verify_proof(data: web::Json<VerifyInput>) -> impl Responder {
     let hash_value_c = Fp::from_le_bytes_mod_order(&decode_hash(&hash_c).unwrap());
     let hash_value_a = Fp::from_le_bytes_mod_order(&decode_hash(&hash_a).unwrap());
     let hash_value_b = Fp::from_le_bytes_mod_order(&decode_hash(&hash_b).unwrap());
-
     let verfiying_time = std::time::Instant::now();
     let is_valid = Groth16::<Bls12_381>::verify_with_processed_vk(
         &pvk,
