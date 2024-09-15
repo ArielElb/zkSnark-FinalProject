@@ -137,13 +137,9 @@ impl<ConstraintF: PrimeField> ConstraintSynthesizer<ConstraintF> for PrimeCircui
         // // enforce that the is_prime is the same:
         // In the end create the constraints for the fermat circuit:
 
-        let _ = Boolean::new_witness(cs.clone(), ||{
-            self.fermat_circuit
+        self.fermat_circuit
             .generate_constraints(cs.clone())
             .unwrap();
-            Ok(true)
-        });
-
 
         Ok(())
     }
@@ -171,7 +167,6 @@ pub fn check_if_next_is_prime(x: Fr, j: u64) -> IsPrimeStruct {
     let mut sha256 = Sha256::default();
     let x_plus_j = x + Fr::from(j);
     let x_plus_j_bytes = x_plus_j.into_bigint().to_bytes_le();
-
     // do the hash for x+j:
     sha256.update(&x_plus_j_bytes);
     let a_j = finalize(sha256);
@@ -276,7 +271,6 @@ mod tests {
     }
 
     #[test]
-
     fn groth16() {
         let start_total = Instant::now();
 
@@ -362,9 +356,10 @@ mod tests {
         println!("Number of constraints: {}", cs_too.num_constraints());
     }
     #[test]
+
     fn test_groth_with_constructor() {
-        let x = 113130u64;
-        let i = 3;
+        let x = 5;
+        let i = 22;
         let mut found_prime = None; // To store the first prime found
         let mut check_result = None;
         let mut found_j = 0; // Store the value of j when the prime is found
@@ -412,21 +407,21 @@ mod tests {
             );
 
             // // Set up the Groth16 proof system
-            // let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
+            let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(test_rng().next_u64());
 
             // // Setup the Groth16 proving key and verification key
-            // let start_setup = Instant::now();
-            // let (pk, vk) =
-            //     Groth16::<Bls12_381>::circuit_specific_setup(prime_circuit.clone(), &mut rng)
-            //         .unwrap();
-            // let setup_duration = start_setup.elapsed();
-            // println!("Setup time: {:?}", setup_duration);
+            let start_setup = Instant::now();
+            let (pk, vk) =
+                Groth16::<Bls12_381>::circuit_specific_setup(prime_circuit.clone(), &mut rng)
+                    .unwrap();
+            let setup_duration = start_setup.elapsed();
+            println!("Setup time: {:?}", setup_duration);
 
             // // Create the proof
-            // let start_proof = Instant::now();
-            // let proof = Groth16::<Bls12_381>::prove(&pk, prime_circuit.clone(), &mut rng).unwrap();
-            // let proof_duration = start_proof.elapsed();
-            // println!("Proof generation time: {:?}", proof_duration);
+            let start_proof = Instant::now();
+            let proof = Groth16::<Bls12_381>::prove(&pk, prime_circuit.clone(), &mut rng).unwrap();
+            let proof_duration = start_proof.elapsed();
+            println!("Proof generation time: {:?}", proof_duration);
 
             // Extract the public input
             let cs = ConstraintSystem::<Fr>::new_ref();
@@ -435,27 +430,16 @@ mod tests {
                 .unwrap()
                 .instance_assignment
                 .clone();
-
-            let public_input = real_public_input.clone()[1..].to_vec();
-            // // // print the public inputs one by one nicely:
-            for (i, input) in public_input.iter().enumerate() {
-                println!("real public_input[{}]: {:?}", i, input);
-            }
-
-            // // print the public inputs one by one nicely:
-            // for (i, input) in real_public_input.iter().enumerate() {
-            //     println!("real public_input[{}]: {:?}", i, input);
-            // }
             // encode the public input to a byte array
 
-            // // // Verify the proof
-            // let start_verification = Instant::now();
-            // let is_correct =
-            //     Groth16::<Bls12_381>::verify(&vk, &real_public_input[2..], &proof).unwrap();
-            // let verification_duration = start_verification.elapsed();
-            // println!("Verification time: {:?}", verification_duration);
+            // // Verify the proof
+            let start_verification = Instant::now();
+            let is_correct =
+                Groth16::<Bls12_381>::verify(&vk, &real_public_input[1..], &proof).unwrap();
+            let verification_duration = start_verification.elapsed();
+            println!("Verification time: {:?}", verification_duration);
 
-            // assert!(is_correct, "Proof verification failed.");
+            assert!(is_correct, "Proof verification failed.");
         }
     }
 }

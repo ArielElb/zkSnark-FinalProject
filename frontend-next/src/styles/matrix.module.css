@@ -17,7 +17,7 @@
 
 .title {
   margin-bottom: 20px;
-  color: #8AC7DB;;
+  color: #8ac7db;
 }
 
 .label {
@@ -45,8 +45,6 @@
   min-width: max-content; /* מבטיח שהמטריצה לא תיחתך */
   max-height: 90vh; /* הגבלת גובה המטריצות */
 }
-
-
 
 .row {
   display: flex;
@@ -131,6 +129,9 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   margin-bottom: 20px;
+  width: 100%; /* Make it take full width of its container */
+  max-width: 500px; /* Set a max-width if needed */
+  box-sizing: border-box; /* Ensure padding and border are included in width */
 }
 .topRightButton {
   position: fixed; /* מקבע את הכפתור כך שיהיה תמיד במקום הזה במסך */

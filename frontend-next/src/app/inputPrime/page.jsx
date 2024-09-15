@@ -12,7 +12,7 @@ const InputPrimePage = () => {
   const [isLoading, setIsLoading] = useState(false); // Loading state for proof
   const [verifyResult, setVerifyResult] = useState(""); // Verification result
   const [verifyingTime, setVerifyingTime] = useState(""); // Verification time
-  const [recProof,setRecProof] = useState("");
+  const [recProof, setRecProof] = useState("");
 
   const handleProvePrime = () => {
     if (number && rounds) {
@@ -43,7 +43,7 @@ const InputPrimePage = () => {
           localStorage.setItem("prime_num", prime_num); // Store prime number
           localStorage.setItem("prime_round", j); // Store the round where prime was found
           localStorage.setItem("seed_number", number); // Save the seed number (x)
-          setRecProof(proof)
+          setRecProof(proof);
         })
         .catch((error) => {
           console.error("Error proving prime:", error);
@@ -59,6 +59,10 @@ const InputPrimePage = () => {
   const handleVerifyPrime = () => {
     const proof = JSON.parse(localStorage.getItem("prime_proof")); // Parse proof from localStorage
     const pvk = JSON.parse(localStorage.getItem("pvk")); // Parse pvk from localStorage
+    // read the pvk from pvk.txt :
+    // const fs = require("fs");
+    // const pvk = fs.readFileSync("pvk.txt", "utf8");
+
     const prime_round = localStorage.getItem("prime_round"); // The round from localStorage
     const seed_number = localStorage.getItem("seed_number"); // The seed number from localStorage
 
@@ -139,7 +143,6 @@ const InputPrimePage = () => {
           {primeResult && !isLoading && (
             <div className={styles.resultContainer}>
               <h2>Prime Prove Results:</h2>
-              <p>Prime Number: {primeResult.prime_num}</p>
               <p>Prime was found in the {primeResult.j}-th round</p>
               <p>Setup Time: {primeResult.setup_time} seconds</p>
               <p>Proving Time: {primeResult.proving_time} seconds</p>

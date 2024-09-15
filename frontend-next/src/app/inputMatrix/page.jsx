@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import styles from "../../styles/matrix.module.css";
 import Link from "next/link";
-
 import axios from "axios";
 
 const InputMatrixPage = () => {
@@ -12,14 +11,9 @@ const InputMatrixPage = () => {
   const [savedMatrix1, setSavedMatrix1] = useState(matrix1);
   const [savedMatrix2, setSavedMatrix2] = useState(matrix2);
   const [currentOption, setCurrentOption] = useState("prove");
-  const [verifyHashes, setVerifyHashes] = useState({
-    hash_a: "",
-    hash_b: "",
-    hash_c: "",
-  });
-  const [verifyHashA,setVerifyHashA]=useState("");
-  const [verifyHashB,setVerifyHashB]=useState("");
-  const [verifyHashC,setVerifyHashC]=useState("");
+  const [verifyHashA, setVerifyHashA] = useState("");
+  const [verifyHashB, setVerifyHashB] = useState("");
+  const [verifyHashC, setVerifyHashC] = useState("");
   const [hashes, setHashes] = useState({ hash_a: "", hash_b: "", hash_c: "" });
   const [verifyResult, setVerifyResult] = useState("");
   const [verifyingTime, setVerifyingTime] = useState("");
@@ -29,8 +23,7 @@ const InputMatrixPage = () => {
   const [provingTime, setProvingTime] = useState(null);
   const [numConstraints, setNumConstraints] = useState(null);
   const [numVariables, setNumVariables] = useState(null);
-  const [recProof,setRecProof] = useState("");
-
+  const [recProof, setRecProof] = useState("");
 
   useEffect(() => {
     setSavedMatrix1(matrix1);
@@ -40,7 +33,17 @@ const InputMatrixPage = () => {
     setSavedMatrix2(matrix2);
   }, [matrix2]);
 
-  // Function to generate random matrix of given size
+  useEffect(() => {
+    if (currentOption === "verify") {
+      const hashA = localStorage.getItem("hash_a");
+      const hashB = localStorage.getItem("hash_b");
+      const hashC = localStorage.getItem("hash_c");
+      if (hashA) setVerifyHashA(JSON.parse(hashA));
+      if (hashB) setVerifyHashB(JSON.parse(hashB));
+      if (hashC) setVerifyHashC(JSON.parse(hashC));
+    }
+  }, [currentOption]);
+
   function generateRandomMatrix(size) {
     return Array(size)
       .fill("")
@@ -106,7 +109,7 @@ const InputMatrixPage = () => {
         localStorage.setItem("proof", JSON.stringify(proof));
         localStorage.setItem("pvk", JSON.stringify(pvk));
         setHashes({ hash_a, hash_b, hash_c });
-        setRecProof(proof)
+        setRecProof(proof);
         localStorage.setItem("hash_a", JSON.stringify(hash_a));
         localStorage.setItem("hash_b", JSON.stringify(hash_b));
         localStorage.setItem("hash_c", JSON.stringify(hash_c));
@@ -135,7 +138,7 @@ const InputMatrixPage = () => {
       hash_b: verifyHashB,
       hash_c: verifyHashC,
     };
-    console.log(requestData);
+
     setIsLoadingVerify(true);
     axios
       .post("http://127.0.0.1:8080/api/matrix_prove/verify", requestData)
@@ -188,9 +191,11 @@ const InputMatrixPage = () => {
 
   return (
     <div className={styles.container}>
-       <Link href={{pathname: '../information/' , query: {type:"matrix multification"},}}>
-       <button className={styles.topRightButton}>More Information</button>
-       </Link>
+      <Link
+        href={{ pathname: "../information/", query: { type: "matrix multiplication" } }}
+      >
+        <button className={styles.topRightButton}>More Information</button>
+      </Link>
       <div className={styles.optionButtons}>
         <button
           onClick={() => setCurrentOption("prove")}
@@ -199,17 +204,7 @@ const InputMatrixPage = () => {
           Prove
         </button>
         <button
-          onClick={() => {setCurrentOption("verify");
-          if (localStorage.getItem("hash_a")) {
-          setVerifyHashA(JSON.parse(localStorage.getItem("hash_a")));
-            }
-            if (localStorage.getItem("hash_b")) {
-              setVerifyHashB(JSON.parse(localStorage.getItem("hash_b")));
-                }
-                if (localStorage.getItem("hash_c")) {
-                  setVerifyHashC(JSON.parse(localStorage.getItem("hash_c")));
-                    }
-          }}
+          onClick={() => setCurrentOption("verify")}
           className={currentOption === "verify" ? styles.activeButton : ""}
         >
           Verify
@@ -249,8 +244,6 @@ const InputMatrixPage = () => {
               <p>Hash C: {hashes.hash_c}</p>
               <p>The proof: {recProof.substring(0, 120)}</p>
               <p>{recProof.substring(120, 300)}</p>
-
-
             </div>
           )}
           <AdditionalInfo /> {/* Render additional information component */}
@@ -258,17 +251,14 @@ const InputMatrixPage = () => {
       )}
 
       {currentOption === "verify" && (
-        
         <div className={styles.option2Container}>
           <h1 className={styles.title}>Verify Proof</h1>
           <label className={styles.label}>
             Enter Hash A:
             <input
               type='text'
-              value={JSON.parse(localStorage.getItem("hash_a"))}
-              onChange={(e) =>
-                setVerifyHashA( e.target.value )
-              }
+              value={verifyHashA}
+              onChange={(e) => setVerifyHashA(e.target.value)}
               className={styles.inputBox}
             />
           </label>
@@ -276,10 +266,8 @@ const InputMatrixPage = () => {
             Enter Hash B:
             <input
               type='text'
-              value={JSON.parse(localStorage.getItem("hash_b"))}
-              onChange={(e) =>
-                setVerifyHashB( e.target.value )
-              }
+              value={verifyHashB}
+              onChange={(e) => setVerifyHashB(e.target.value)}
               className={styles.inputBox}
             />
           </label>
@@ -287,10 +275,8 @@ const InputMatrixPage = () => {
             Enter Hash C:
             <input
               type='text'
-              value={JSON.parse(localStorage.getItem("hash_c"))}
-              onChange={(e) =>
-                setVerifyHashC( e.target.value )
-              }
+              value={verifyHashC}
+              onChange={(e) => setVerifyHashC(e.target.value)}
               className={styles.inputBox}
             />
           </label>

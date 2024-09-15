@@ -19,7 +19,7 @@
 }
 .title {
   margin-bottom: 20px;
-  color: #8AC7DB;;
+  color: #8ac7db;
 }
 
 .label {
@@ -75,6 +75,9 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   margin-bottom: 20px;
+  width: 100%; /* Make it take full width of its container */
+  max-width: 500px; /* Set a max-width if needed */
+  box-sizing: border-box; /* Ensure padding and border are included in width */
 }
 
 .inputRows {
@@ -110,4 +113,3 @@
   font-weight: bold;
   margin-top: 10px;
 }
-
