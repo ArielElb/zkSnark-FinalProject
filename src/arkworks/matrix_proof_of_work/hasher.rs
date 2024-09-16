@@ -9,6 +9,7 @@ use ark_crypto_primitives::sponge::{
 };
 // use ark_crypto_primitives::{absorb, absorb_gadget};
 use ark_ff::PrimeField;
+use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::{fields::fp::FpVar, R1CSVar};
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 use std::ops::ShrAssign;
@@ -34,6 +35,36 @@ pub fn hasher_var<ConstraintF: PrimeField>(
     let mut sponge = PoseidonSpongeVar::<ConstraintF>::new(cs, &sponge_param);
     let flattened_matrix = flatten_fpvar2d_var(c)?;
     sponge.absorb(&flattened_matrix)?;
+    let hash = sponge.squeeze_field_elements(1)?;
+    Ok(hash)
+}
+
+// do hasher that get a string and return a hash:
+pub fn hasher_string_native<ConstraintF: PrimeField + Absorb>(
+    c: &str,
+) -> Result<Vec<Fr>, SynthesisError> {
+    let sponge_param: ark_crypto_primitives::sponge::poseidon::PoseidonConfig<_> =
+        poseidon_parameters_for_test();
+    let mut sponge: PoseidonSponge<Fr> = PoseidonSponge::<Fr>::new(&sponge_param);
+    let c_bytes = c.as_bytes();
+    let vec_fe: Vec<ConstraintF> = c_bytes.iter().map(|v| ConstraintF::from(*v)).collect();
+    sponge.absorb(&vec_fe);
+    let hash = sponge.squeeze_native_field_elements(1).to_vec();
+    Ok(hash)
+}
+// now do hasher Var that get a string and return a hash:
+pub fn hasher_string_var<ConstraintF: PrimeField>(
+    cs: ConstraintSystemRef<ConstraintF>,
+    c: &str,
+) -> Result<Vec<FpVar<ConstraintF>>, SynthesisError> {
+    let sponge_param = poseidon_parameters_for_test();
+    let mut sponge = PoseidonSpongeVar::<ConstraintF>::new(cs.clone(), &sponge_param);
+    let c_bytes = c.as_bytes().to_vec();
+    let c_bytes_var: Vec<FpVar<ConstraintF>> = c_bytes
+        .iter()
+        .map(|v| FpVar::<ConstraintF>::new_input(cs.clone(), || Ok(ConstraintF::from(*v))))
+        .collect::<Result<Vec<FpVar<ConstraintF>>, SynthesisError>>()?;
+    sponge.absorb(&c_bytes_var)?;
     let hash = sponge.squeeze_field_elements(1)?;
     Ok(hash)
 }
@@ -139,5 +170,17 @@ mod tests {
         let hash: Vec<ark_ff::Fp<ark_ff::MontBackend<ark_bls12_381::FrConfig, 4>, 4>> =
             hasher(&c_var).unwrap();
         assert!(!hash.is_empty());
+    }
+
+    #[test]
+    fn test_hashing_string() {
+        let cs = ConstraintSystem::<F>::new_ref();
+        let c = "hello";
+        let c_var = hasher_string_var(cs.clone(), c).unwrap();
+        let hash = hasher_string_native::<F>(c).unwrap();
+        // print the number of the constraints:
+        println!("Number of constraints: {:?}", cs.num_constraints());
+
+        assert_eq!(c_var.value().unwrap(), hash);
     }
 }
