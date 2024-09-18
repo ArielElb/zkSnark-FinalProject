@@ -1,3 +1,4 @@
+use crate::arkworks::preimage_poseidon::pf::Field64;
 use ark_crypto_primitives::sponge::{
     poseidon::{PoseidonConfig, PoseidonSponge},
     CryptographicSponge, DuplexSpongeMode,
@@ -10,7 +11,33 @@ use ark_r1cs_std::{
     ToBitsGadget, ToBytesGadget, ToConstraintFieldGadget,
 };
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
+use rand::Rng;
 
+// Generate round constants (ark) for a given number of rounds and state size
+fn generate_ark<F: PrimeField, R: Rng>(
+    rng: &mut R,
+    num_rounds: usize,
+    state_size: usize,
+) -> Vec<Vec<F>> {
+    let mut ark = Vec::with_capacity(num_rounds);
+    for _ in 0..num_rounds {
+        let mut round_constants = Vec::with_capacity(state_size);
+        for _ in 0..state_size {
+            round_constants.push(F::rand(rng)); // Random field element in Fp
+        }
+        ark.push(round_constants);
+    }
+    ark
+}
+fn generate_mds<F: PrimeField>(t: usize) -> Vec<Vec<F>> {
+    let mut mds = vec![vec![F::zero(); t]; t];
+    for i in 0..t {
+        for j in 0..t {
+            mds[i][j] = F::from((i + 1 + j) as u64); // Elements will be reduced modulo p
+        }
+    }
+    mds
+}
 /// Generate default parameters (bls381-fr-only) for alpha = 17, state-size = 8
 pub fn poseidon_parameters_for_test<F: PrimeField>() -> PoseidonConfig<F> {
     let alpha = 17;
@@ -714,6 +741,33 @@ pub fn poseidon_parameters_for_test<F: PrimeField>() -> PoseidonConfig<F> {
     }
 }
 
+// generate the parameters for Field64 prime field and alpha = 17
+pub fn poseidon_parameters_for_test_field64<F: PrimeField>() -> PoseidonConfig<F> {
+    let full_rounds = 8;
+    let partial_rounds = 57;
+    let alpha = 5; // Example for Poseidon
+
+    let rate = 2;
+    let capacity = 1;
+    let state_size = rate + capacity;
+
+    // Generate MDS matrix
+    let mds = generate_mds::<F>(state_size);
+
+    // Generate round constants (ark)
+    let mut rng = ark_std::test_rng();
+    let ark = generate_ark::<F, _>(&mut rng, full_rounds + partial_rounds, state_size);
+
+    PoseidonConfig {
+        full_rounds,
+        partial_rounds,
+        alpha,
+        ark,
+        mds,
+        rate,
+        capacity,
+    }
+}
 #[derive(Clone)]
 pub struct PoseidonSpongeVar<F: PrimeField> {
     /// Constraint system

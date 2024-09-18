@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 ark-std = { version = "^0.4.0", features= ["std", "colored","print-trace"] }
-ark-ff = { version = "^0.4.2", default-features = true }
+ark-ff = { version = "0.4", features = ["asm"] }
 ark-serialize = { version = "^0.4.0", default-features = true }
 ark-relations = { version = "^0.4.0", default-features = true }
 ark-ec = { version = "^0.4.2", default-features = true }
@@ -16,7 +16,6 @@ ark-bls12-381 = { version = "^0.4.0", default-features = true, features = [ "cur
 ark-snark = { version = "^0.4.0", default-features = true }
 ark-r1cs-std = { version = "^0.4.0", default-features = false }
 ark-groth16 = {version = "^0.4.0", default-features = false }
-blake2 = { version = "0.9", default-features = false }
 sha2 = "0.10.8"
 ark-crypto-primitives = { version = "^0.4.0", features = ["ark-r1cs-std", "commitment", "crh", "r1cs", "snark", "print-trace", "prf","sponge"] }
 num-bigint = { version = "0.4.4", features = ["rand"] }
@@ -30,12 +29,12 @@ actix-cors = "0.7.0"
 actix-rt = "2.4.0"
 num-traits = "0.2.19"
 tracing-subscriber = "0.3.18"
-itertools = "0.10.1"
+itertools = "0.13.0"
 sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.8-testnet" }
 
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 clap = { version = "4.0", features = ["derive", "env"] }
-alloy-sol-types = "0.7.2"
+alloy-sol-types = "0.8.3"
 sp1-derive = { git = "https://github.com/succinctlabs/sp1.git" }
 
 base64 = "0.22.1"
