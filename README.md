@@ -63,8 +63,8 @@ The Next.js frontend provides an interactive UI for input and proof verification
 ## Project Setup and Usage
 ```bash
 # 1. Clone the Repository
-git clone <repository-url>
-cd <repository-name>
+git clone [<repository-url>](https://github.com/ArielElb/zkSnark-FinalProject.git)
+cd zkSnark-FinalProject
 
 # 2. Running the Backend
 # The backend, implemented in Rust, handles zk-SNARK proof generation and verification.
