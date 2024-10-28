@@ -1,100 +1,78 @@
-# README
+# Applications of zk-SNARKs
 
-## ZKProof Implementation for Miller-Rabin and Matrix Multiplication
+This project presents various applications of zk-SNARKs (Zero-Knowledge Succinct Non-Interactive Arguments of Knowledge) developed using the ArkWorks library in Rust, with a Next.js frontend for interaction. The project showcases cryptographic proof applications such as Fibonacci sequence computation, matrix multiplication verification, and primality testing with Fermat’s algorithm.
 
-Welcome to our project repository, where we implement zero-knowledge proofs (ZKProofs) for the Miller-Rabin primality test and matrix multiplication using the SP1 framework and `arkworks.rs`. This repository also includes a web front-end built with Next.js to interact with our ZKProof implementations.
+## Table of Contents
+- [Overview](#overview)
+- [What are zk-SNARKs?](#what-are-zk-snarks)
+- [zk-SNARKs vs zk-STARKs](#zk-snarks-vs-zk-starks)
+- [Implemented Applications](#implemented-applications)
+  - [1. Fibonacci SNARK](#1-fibonacci-snark)
+  - [2. Matrix Multiplication SNARK](#2-matrix-multiplication-snark)
+  - [3. Prime SNARK (Fermat Test)](#3-prime-snark-fermat-test)
+- [Next.js Frontend](#nextjs-frontend)
+- [Project Setup and Usage](#project-setup-and-usage)
+- [Benchmarks](#benchmarks)
+- [Dependencies](#dependencies)
+- [Contributors](#contributors)
 
-### Table of Contents
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Web Front-End](#web-front-end)
-- [Contributing](#contributing)
-- [License](#license)
+## Overview
+This project, supervised by Dr. Eylon Yogev, demonstrates zk-SNARK applications using the ArkWorks Rust library. It covers:
+1. **zk-SNARK Properties**: Key features include succinct proofs, non-interactiveness, computational soundness, and zero-knowledge privacy.
+2. **zk-SNARKs vs zk-STARKs**: A comparison between zk-SNARKs and zk-STARKs, highlighting differences in scalability and the need (or lack) for a trusted setup.
+3. **Programming in ArkWorks**: Using the Rust-based ArkWorks library, which offers efficient tools for zk-SNARK implementation, such as handling finite fields and setting up constraint systems.
 
-## Introduction
+## What are zk-SNARKs?
+zk-SNARKs are cryptographic protocols that allow one party (the prover) to prove to another (the verifier) that a certain computation was performed correctly without revealing any details of the computation itself. The main properties of zk-SNARKs include:
+- **Succinctness**: The proof size and verification time are minimal, regardless of the complexity of the computation.
+- **Non-interactiveness**: No back-and-forth communication is required between prover and verifier after proof generation.
+- **Arguments of Knowledge**: Ensures the prover actually knows the solution, rather than producing it by chance.
+- **Zero Knowledge**: The verifier learns nothing beyond the fact that the computation is correct.
 
-Zero-Knowledge Proofs (ZKProofs) allow one party to prove to another that they know a value without revealing the value itself. This project leverages the SP1 framework and `arkworks.rs` to create ZKProofs for two specific problems:
-1. **Miller-Rabin Primality Test**: A probabilistic test to determine if a number is a prime.
-2. **Matrix Multiplication Verification**: Proving the correctness of the multiplication of two matrices and their resultant hash using zkSNARKs.
+## zk-SNARKs vs zk-STARKs
+While zk-SNARKs are efficient, they require a trusted setup, which can introduce risks of centralization and security vulnerabilities. zk-STARKs (Zero-Knowledge Scalable Transparent Arguments of Knowledge) provide a scalable alternative that doesn't require a trusted setup and supports larger computations with minimal complexity, making them preferable for applications needing high scalability.
 
-## Features
+## Implemented Applications
+### 1. Fibonacci SNARK
+A Fibonacci sequence proof generator that computes the nth Fibonacci number based on initial values \( a \) and \( b \). The proof generation provides the following information:
+- **Verification Time**: Constant, regardless of the position in the Fibonacci sequence.
+- **Proof Size**: A compact 384 bytes when using the Groth16 proof system in ArkWorks.
 
-- **Miller-Rabin Primality Test with ZKProof**: Implemented using the SP1 framework.
-- **Matrix Multiplication ZKProof**: Using `arkworks.rs`, we prove that given witness matrices \(A\) and \(B\), and a public input hash of \(A \times B\), the computation is correctly executed and hashed.
-- **Next.js Web Front-End**: An intuitive web interface for users to interact with the ZKProofs.
-- **Cryptographic Primitives**: We use the Poseidon sponge hash function for matrix multiplication and SHA-256 for the primality test.
+### 2. Matrix Multiplication SNARK
+A zk-SNARK for verifying matrix multiplication. This implementation allows a client (verifier) to verify that a company (prover) correctly multiplied matrices \( A \) and \( B \) to obtain matrix \( C \), without revealing the actual matrices.
+- **Process**:
+  - The prover receives matrices \( A \) and \( B \) as witness inputs and computes \( C \).
+  - Poseidon hashing is applied to enforce consistency between the provided hashes and computed values.
+  - Proof is generated, and the verifier can verify this proof with minimal computational effort.
+- **Benchmarking**: As the matrix size grows, proving time increases, but verification time remains constant.
 
-## Installation
+### 3. Prime SNARK (Fermat Test)
+A zk-SNARK that uses Fermat's primality test to verify the smallest prime value derived from hashing an input value \( x \) with SHA-256.
+- **Circuit Implementation**:
+  - Uses SHA-256 for hashing \( x \).
+  - Implements modular exponentiation (modpow) and verifies primality through Fermat's test.
+  - Detects Carmichael numbers, which can occasionally pass Fermat’s test despite not being prime.
+- **Benchmarking**: Proving time increases with larger bit sizes, but verification time remains unaffected by input size.
 
-### Prerequisites
+## Next.js Frontend
+The Next.js frontend provides an interactive UI for input and proof verification. Users can:
+- Input values for Fibonacci, matrix multiplication, and primality testing.
+- Generate and verify zk-SNARK proofs directly from the interface.
+- View results and benchmark data in a user-friendly format.
 
-- Rust (for the ZKProof implementations)
-- Node.js and npm (for the Next.js front-end)
+## Project Setup and Usage
+```bash
+# 1. Clone the Repository
+git clone <repository-url>
+cd <repository-name>
 
-### Steps
+# 2. Running the Backend
+# The backend, implemented in Rust, handles zk-SNARK proof generation and verification.
+cd backend
+cargo run --release
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-username/zkproof-matrix-multiplication.git
-   cd zkproof-matrix-multiplication
-   ```
-
-2. **Set up the Rust environment**:
-   ```bash
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   source $HOME/.cargo/env
-   ```
-
-3. **Build the Rust project**:
-   ```bash
-   cargo build --release
-   ```
-
-4. **Set up the Next.js front-end**:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-## Usage
-
-# Start the backend server:
-
-   ```bash
-   cargo run --release
-   ```
-
-## Web Front-End
-
-The web front-end is built using Next.js and provides an interface for users to input data, generate ZKProofs, and verify them.
-
-1. **Start the Next.js development server**:
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-
-2. **Access the web interface**:
-   Open your web browser and navigate to `http://localhost:3000`.
-
-## Contributing
-
-Contributions are welcome! Please follow these steps to contribute:
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-xyz`).
-3. Make your changes.
-4. Commit your changes (`git commit -am 'Add some feature'`).
-5. Push to the branch (`git push origin feature-xyz`).
-6. Create a new Pull Request.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-Thank you for your interest in our project! If you have any questions or feedback, please open an issue or contact us directly.
+# 3. Running the Frontend
+# The frontend, built with Next.js, provides a user interface for interacting with the backend.
+cd frontend-next
+npm install
+npm run dev
